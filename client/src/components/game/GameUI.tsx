@@ -119,7 +119,7 @@ export default function GameUI() {
   if (gamePhase === 'trump_selection') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96">
+        <Card className="w-96 bg-gray-900 bg-opacity-80">
           <CardHeader>
             <CardTitle className="text-center">Choose Trump Suit</CardTitle>
             <p className="text-center text-sm text-muted-foreground">
@@ -175,11 +175,11 @@ export default function GameUI() {
   // Everyone sat out phase
   if (gamePhase === 'everyone_sat') {
     const bidder = players.find(p => p.id === highestBidder);
-    const isBidder = highestBidder === players[0]?.id; // Assuming first player is local
+    const isBidder = highestBidder === localPlayerId;
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96">
+        <Card className="w-96 bg-gray-900 bg-opacity-80">
           <CardHeader>
             <CardTitle className="text-center">Everyone Sat Out!</CardTitle>
             <p className="text-center text-sm text-muted-foreground">
@@ -233,7 +233,7 @@ export default function GameUI() {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96">
+        <Card className="w-96 bg-gray-900 bg-opacity-80">
           <CardHeader>
             <CardTitle className="text-center">Game Over!</CardTitle>
             <p className="text-center text-lg font-semibold text-green-600">

@@ -11,11 +11,12 @@ export default function SitPassPhase() {
     playingPlayers,
     bids,
     trumpSuit,
-    highestBidder
+    highestBidder,
+    localPlayerId
   } = useShnarps();
   
   const currentPlayer = players[currentPlayerIndex];
-  const isLocalPlayerTurn = currentPlayerIndex === 0; // Assuming first player is local
+  const isLocalPlayerTurn = currentPlayer?.id === localPlayerId;
   const highestBid = Math.max(0, ...Array.from(bids.values()));
   
   const handleSitOrPlay = (decision: 'sit' | 'play') => {
@@ -28,7 +29,7 @@ export default function SitPassPhase() {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-96 max-w-lg">
+      <Card className="w-96 max-w-lg bg-gray-900 bg-opacity-80">
         <CardHeader>
           <CardTitle className="text-center">Sit or Play Phase</CardTitle>
           <p className="text-center text-sm text-muted-foreground">

@@ -34,7 +34,7 @@ export default function BiddingPhase() {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-96 max-w-lg">
+      <Card className="w-96 max-w-lg bg-gray-900 bg-opacity-80">
         <CardHeader>
           <CardTitle className="text-center">Bidding Phase</CardTitle>
           <p className="text-center text-sm text-muted-foreground">
