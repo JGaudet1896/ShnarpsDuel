@@ -26,7 +26,9 @@ export default function GameUI() {
   const [playerName, setPlayerName] = useState('');
   const [trumpSuit, setTrumpSuit] = useState<string>('');
   
-  const isHighestBidder = highestBidder === players[0]?.id; // Assuming first player is local
+  // Find the local (non-AI) player
+  const localPlayer = players.find(p => !p.isAI);
+  const isHighestBidder = highestBidder === localPlayer?.id;
 
   // Setup phase
   if (gamePhase === 'setup') {
