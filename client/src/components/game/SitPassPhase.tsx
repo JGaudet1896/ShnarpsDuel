@@ -27,8 +27,18 @@ export default function SitPassPhase() {
   // Only show sit/play controls for local player's turn, positioned at bottom
   if (!isLocalPlayerTurn || !currentPlayer) return null;
 
+  const trumpSymbol = trumpSuit === 'hearts' ? '♥' : 
+                      trumpSuit === 'diamonds' ? '♦' : 
+                      trumpSuit === 'clubs' ? '♣' : '♠';
+  const trumpColor = trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-500' : 'text-white';
+
   return (
     <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-40">
+      <div className="text-center mb-2">
+        <p className="text-sm text-white bg-black bg-opacity-70 px-4 py-1 rounded inline-block">
+          Trump: <span className={`text-2xl font-bold ${trumpColor}`}>{trumpSymbol}</span> <span className="capitalize">{trumpSuit}</span>
+        </p>
+      </div>
       <div className="flex gap-4 bg-gray-900 bg-opacity-90 px-6 py-3 rounded-lg shadow-xl">
         <Button
           onClick={() => handleSitOrPlay('play')}
