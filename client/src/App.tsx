@@ -11,12 +11,17 @@ import { useAIPlayer } from "./lib/hooks/useAIPlayer";
 const queryClient = new QueryClient();
 
 function App() {
-  const { initializeGame } = useShnarps();
+  const { initializeGame, gamePhase, players } = useShnarps();
   useAIPlayer(); // Enable AI player automation
 
   useEffect(() => {
     initializeGame();
   }, [initializeGame]);
+
+  useEffect(() => {
+    console.log('Game Phase:', gamePhase);
+    console.log('Players:', players.length);
+  }, [gamePhase, players]);
 
   return (
     <QueryClientProvider client={queryClient}>

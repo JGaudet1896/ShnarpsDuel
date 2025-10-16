@@ -31,8 +31,8 @@ export default function GameUI() {
   // Setup phase
   if (gamePhase === 'setup') {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96">
+      <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center" style={{ zIndex: 9999 }}>
+        <Card className="w-96 shadow-2xl">
           <CardHeader>
             <CardTitle className="text-center">Shnarps Card Game</CardTitle>
             <p className="text-center text-sm text-muted-foreground">
