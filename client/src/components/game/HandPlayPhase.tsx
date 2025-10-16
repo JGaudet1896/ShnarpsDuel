@@ -52,8 +52,8 @@ export default function HandPlayPhase() {
   // Local player's turn - show hand
   if (isLocalPlayerTurn && localPlayer) {
     return (
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 max-w-full px-4">
-        <div className="flex flex-wrap gap-2 justify-center mb-3">
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 max-w-full px-2">
+        <div className="flex gap-1 justify-center mb-3 overflow-x-auto pb-2">
           {localPlayer.hand.map((card, index) => {
             const isPlayable = isCardPlayable(card);
             const isSelected = selectedCard?.suit === card.suit && selectedCard?.rank === card.rank;
@@ -64,21 +64,20 @@ export default function HandPlayPhase() {
               <Button
                 key={index}
                 variant={isSelected ? "default" : "outline"}
-                size="lg"
                 onClick={() => {
                   if (isPlayable) {
                     setSelectedCard(card);
                   }
                 }}
                 disabled={!isPlayable}
-                className={`flex flex-col h-auto p-2 min-w-[60px] transition-all bg-white border-gray-600 touch-manipulation ${
+                className={`flex flex-col h-auto p-1 min-w-[45px] transition-all bg-white border-gray-600 touch-manipulation ${
                   isSelected ? 'ring-2 ring-blue-400 scale-110' : ''
                 } ${
                   isPlayable ? 'hover:scale-105 cursor-pointer' : 'opacity-40'
                 }`}
               >
-                <span className={`text-xs font-bold ${cardColor}`}>{card.rank}</span>
-                <span className={`text-xl ${cardColor}`}>
+                <span className={`text-[10px] font-bold ${cardColor}`}>{card.rank}</span>
+                <span className={`text-lg ${cardColor}`}>
                   {card.suit === 'hearts' ? '♥' : 
                    card.suit === 'diamonds' ? '♦' : 
                    card.suit === 'clubs' ? '♣' : '♠'}
