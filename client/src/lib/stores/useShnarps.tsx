@@ -81,7 +81,8 @@ export const useShnarps = create<ShnarpsState>()(
         consecutiveSits: 0,
         isAI: false,
         avatar,
-        wallet: 100.00 // Starting money
+        wallet: 100.00,
+        punts: 0
       };
       
       const newScores = new Map(state.scores);
@@ -131,7 +132,8 @@ export const useShnarps = create<ShnarpsState>()(
         isAI: true,
         aiDifficulty: difficulty,
         avatar: randomAvatar,
-        wallet: 100.00 // Starting money
+        wallet: 100.00,
+        punts: 0
       };
       
       const newScores = new Map(state.scores);
@@ -546,8 +548,10 @@ export const useShnarps = create<ShnarpsState>()(
                           state.highestBidder && 
                           tricksWonByPlayer.get(state.highestBidder) === 5;
         
-        // Track score changes for history
+        // Track score changes and punts for history
         const scoreChanges = new Map<string, number>();
+        const puntsThisRound = new Map<string, number>();
+        const updatedPlayersAfterScoring = [...state.players];
         
         if (spadingOut) {
           // Spading out: instant win for the bidder
@@ -563,17 +567,32 @@ export const useShnarps = create<ShnarpsState>()(
             const isHighestBidder = playerId === state.highestBidder;
             
             let scoreChange = 0;
+            let isPunt = false;
             
             // Check for punt conditions
             if (tricksWon === 0) {
               // Didn't win any tricks: punt (+5)
               scoreChange = 5;
+              isPunt = true;
             } else if (isHighestBidder && tricksWon < bid) {
               // Highest bidder didn't meet their bid: punt (+5)
               scoreChange = 5;
+              isPunt = true;
             } else {
               // Normal scoring: -1 per trick won
               scoreChange = -tricksWon;
+            }
+            
+            // Track punt for this round and increment player's total punts
+            if (isPunt) {
+              puntsThisRound.set(playerId, 1);
+              const playerIndex = updatedPlayersAfterScoring.findIndex(p => p.id === playerId);
+              if (playerIndex !== -1) {
+                updatedPlayersAfterScoring[playerIndex] = {
+                  ...updatedPlayersAfterScoring[playerIndex],
+                  punts: (updatedPlayersAfterScoring[playerIndex].punts || 0) + 1
+                };
+              }
             }
             
             scoreChanges.set(playerId, scoreChange);
@@ -591,11 +610,12 @@ export const useShnarps = create<ShnarpsState>()(
           playingPlayers: Array.from(state.playingPlayers),
           tricksWon: tricksWonByPlayer,
           scoreChanges,
-          finalScores: new Map(newScores)
+          finalScores: new Map(newScores),
+          punts: puntsThisRound
         };
         
         // Check for eliminated players (score > 32) and winners (score <= 0)
-        const activePlayers = state.players.filter(player => {
+        const activePlayers = updatedPlayersAfterScoring.filter(player => {
           const score = newScores.get(player.id) || 16;
           return score <= 32 && score > 0;
         });
@@ -605,10 +625,10 @@ export const useShnarps = create<ShnarpsState>()(
         
         if (activePlayers.length <= 1 || hasWinner) {
           // Calculate money payout at game end
-          const moneyChanges = calculateGameEndPayout(state.players, newScores);
+          const moneyChanges = calculateGameEndPayout(updatedPlayersAfterScoring, newScores);
           
           // Update player wallets with game-end payout
-          const updatedPlayersWithPayout = state.players.map(player => ({
+          const updatedPlayersWithPayout = updatedPlayersAfterScoring.map(player => ({
             ...player,
             wallet: (player.wallet || 100) + (moneyChanges.get(player.id) || 0)
           }));
@@ -634,7 +654,8 @@ export const useShnarps = create<ShnarpsState>()(
           const updatedPlayers = activePlayers.map((player, index) => ({
             ...player,
             hand: dealtCards[index] || [],
-            isActive: true
+            isActive: true,
+            punts: player.punts || 0
           }));
           
           set({
@@ -707,7 +728,8 @@ export const useShnarps = create<ShnarpsState>()(
         ...player,
         hand: dealtCards[index] || [],
         wallet: playerWallets.get(player.id) || 100,
-        avatar: playerAvatars.get(player.id)
+        avatar: playerAvatars.get(player.id),
+        punts: 0
       }));
       
       const newScores = new Map();
