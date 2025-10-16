@@ -66,14 +66,19 @@ export default function GameBoard() {
       {/* Current trick cards positioned in front of each player */}
       <AnimatePresence>
         {currentTrick.map((play, index) => {
-          const player = players.find(p => p.id === play.playerId);
           const playerIndex = players.findIndex(p => p.id === play.playerId);
           const playerPos = playerPositions[playerIndex];
           
           if (!playerPos) return null;
           
-          // Position card slightly towards center from player position
-          const angle = (playerIndex / players.length) * Math.PI * 2 - Math.PI / 2;
+          // Calculate the visual position index (accounting for local player at bottom)
+          const localPlayerIndex = players.findIndex(p => p.id === localPlayerId);
+          const visualIndex = localPlayerIndex >= 0 
+            ? (playerIndex - localPlayerIndex + players.length) % players.length 
+            : playerIndex;
+          
+          // Position card towards center from player's visual position
+          const angle = (visualIndex / players.length) * Math.PI * 2 + Math.PI / 2;
           const cardRadius = 25; // Closer to center than player
           const cardX = 50 + Math.cos(angle) * cardRadius;
           const cardY = 50 + Math.sin(angle) * cardRadius;
