@@ -181,9 +181,11 @@ export default function GameBoard() {
                 ${isCurrentPlayer ? 'bg-yellow-400 text-gray-900' : 'bg-gray-800 text-white'}
               `}>
                 <div className="flex items-center gap-1">
-                  {/* Dealer indicator */}
+                  {/* Dealer chip indicator */}
                   {index === dealerIndex && (
-                    <span className="text-sm" title="Dealer">🃏</span>
+                    <div className="w-5 h-5 rounded-full bg-white border-2 border-gray-800 flex items-center justify-center" title="Dealer">
+                      <span className="text-[8px] font-bold text-gray-800">D</span>
+                    </div>
                   )}
                   
                   <div className="flex items-center gap-2">
