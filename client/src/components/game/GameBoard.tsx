@@ -262,12 +262,14 @@ export default function GameBoard() {
                 </div>
               )}
 
-              {/* Player hand */}
-              <PlayerHand
-                cards={player.hand}
-                isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && isPlaying}
-                faceUp={isLocalPlayer && gamePhase !== 'hand_play'}
-              />
+              {/* Player hand - hidden when sitting out */}
+              {isPlaying && (
+                <PlayerHand
+                  cards={player.hand}
+                  isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && isPlaying}
+                  faceUp={isLocalPlayer && gamePhase !== 'hand_play'}
+                />
+              )}
             </div>
           </div>
         );
