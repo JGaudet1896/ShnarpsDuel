@@ -463,29 +463,6 @@ export default function GameUI() {
         </Card>
       </div>
 
-      {/* Scores overlay */}
-      <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-30">
-        <Card className="w-40 sm:w-56 bg-white/95">
-          <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm">Scores</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-0.5 sm:space-y-1 p-2 sm:p-4 pt-0">
-            {players.map((player) => {
-              const score = scores.get(player.id) || 16;
-              return (
-                <div key={player.id} className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-                  {player.avatar && <Avatar avatar={player.avatar} size="sm" showBorder={false} />}
-                  <span className="truncate flex-1">{player.name}</span>
-                  <span className={`font-mono ${score <= 0 ? 'text-green-600' : score > 32 ? 'text-red-600' : ''}`}>
-                    {score}
-                  </span>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Phase-specific overlays */}
       {gamePhase === 'bidding' && <BiddingPhase />}
       {gamePhase === 'sit_pass' && <SitPassPhase />}
