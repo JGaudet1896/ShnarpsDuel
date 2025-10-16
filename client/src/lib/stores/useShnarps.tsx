@@ -7,7 +7,7 @@ interface ShnarpsState extends GameState {
   localPlayerId: string | null;
   // Actions
   initializeGame: () => void;
-  joinGame: (playerName: string) => void;
+  joinGame: (playerName: string, avatar?: { color: string; icon: string }) => void;
   addAIPlayer: (difficulty?: AIDifficulty) => void;
   startGame: () => void;
   placeBid: (playerId: string, bid: number) => void;
@@ -67,7 +67,7 @@ export const useShnarps = create<ShnarpsState>()(
       });
     },
 
-    joinGame: (playerName: string) => {
+    joinGame: (playerName: string, avatar?: { color: string; icon: string }) => {
       const state = get();
       if (state.players.length >= 8 || state.gamePhase !== 'setup') return;
       
@@ -77,7 +77,8 @@ export const useShnarps = create<ShnarpsState>()(
         hand: [],
         isActive: true,
         consecutiveSits: 0,
-        isAI: false
+        isAI: false,
+        avatar
       };
       
       const newScores = new Map(state.scores);
@@ -110,6 +111,14 @@ export const useShnarps = create<ShnarpsState>()(
         ? availableNames[Math.floor(Math.random() * availableNames.length)]
         : `AI ${state.players.length + 1}`;
       
+      // Random avatar for AI
+      const aiColors = ['#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#EAB308', '#14B8A6'];
+      const aiIcons = ['🤖', '🎮', '🎯', '🎲', '🃏', '⭐', '🔥', '💎'];
+      const randomAvatar = {
+        color: aiColors[Math.floor(Math.random() * aiColors.length)],
+        icon: aiIcons[Math.floor(Math.random() * aiIcons.length)]
+      };
+      
       const newPlayer: Player = {
         id: `ai_${Date.now()}_${Math.random()}`,
         name: aiName,
@@ -117,7 +126,8 @@ export const useShnarps = create<ShnarpsState>()(
         isActive: true,
         consecutiveSits: 0,
         isAI: true,
-        aiDifficulty: difficulty
+        aiDifficulty: difficulty,
+        avatar: randomAvatar
       };
       
       const newScores = new Map(state.scores);

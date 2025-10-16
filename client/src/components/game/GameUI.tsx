@@ -8,6 +8,7 @@ import SitPassPhase from './SitPassPhase';
 import HandPlayPhase from './HandPlayPhase';
 import GameHistory from './GameHistory';
 import MultiplayerSetup from './MultiplayerSetup';
+import AvatarCustomizer, { Avatar, type PlayerAvatar } from './AvatarCustomizer';
 import { useState } from 'react';
 import { AIDifficulty } from '../../lib/game/gameLogic';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
@@ -34,8 +35,14 @@ export default function GameUI() {
   const [trumpSuit, setTrumpSuit] = useState<string>('');
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('medium');
   const [gameMode, setGameMode] = useState<'menu' | 'local' | 'online'>('menu');
+  const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
+  const [currentAvatar, setCurrentAvatar] = useState<PlayerAvatar>({
+    color: '#3B82F6',
+    icon: '👤'
+  });
   
   const isHighestBidder = highestBidder === localPlayerId;
+  const localPlayer = players.find(p => p.id === localPlayerId);
 
   // Welcome screen - choose game mode
   if (gameMode === 'menu' && gamePhase === 'setup' && players.length === 0) {
@@ -95,38 +102,48 @@ export default function GameUI() {
             {players.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm">Players:</h3>
-                {players.map((player, index) => (
-                  <div key={player.id} className="text-sm flex justify-between">
-                    <span>
-                      {player.name}
-                      {player.isAI && ` 🤖 (${player.aiDifficulty || 'medium'})`}
-                    </span>
-                    <span className="text-muted-foreground">
-                      Score: {scores.get(player.id) || 16}
-                    </span>
+                {players.map((player) => (
+                  <div key={player.id} className="flex items-center gap-3 py-1">
+                    {player.avatar && <Avatar avatar={player.avatar} size="sm" />}
+                    <div className="flex-1 flex justify-between items-center">
+                      <span className="text-sm">
+                        {player.name}
+                        {player.isAI && ` 🤖 (${player.aiDifficulty || 'medium'})`}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        Score: {scores.get(player.id) || 16}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
             
             {/* Join game - only for local mode */}
-            {!isOnline && players.length < 8 && (
-              <div className="space-y-2">
-                <Input
-                  placeholder="Enter your name"
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && playerName.trim()) {
-                      joinGame(playerName.trim());
-                      setPlayerName('');
-                    }
-                  }}
-                />
+            {!isOnline && players.length < 8 && !localPlayer && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div onClick={() => setShowAvatarCustomizer(true)} className="cursor-pointer">
+                    <Avatar avatar={currentAvatar} size="md" />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      placeholder="Enter your name"
+                      value={playerName}
+                      onChange={(e) => setPlayerName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && playerName.trim()) {
+                          joinGame(playerName.trim(), currentAvatar);
+                          setPlayerName('');
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
                 <Button 
                   onClick={() => {
                     if (playerName.trim()) {
-                      joinGame(playerName.trim());
+                      joinGame(playerName.trim(), currentAvatar);
                       setPlayerName('');
                     }
                   }}
@@ -135,6 +152,9 @@ export default function GameUI() {
                 >
                   Join Game
                 </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  Click avatar to customize
+                </p>
               </div>
             )}
             
@@ -413,6 +433,14 @@ export default function GameUI() {
 
       {/* Game history */}
       {gamePhase !== 'setup' && <GameHistory />}
+
+      {/* Avatar customizer */}
+      <AvatarCustomizer
+        open={showAvatarCustomizer}
+        onClose={() => setShowAvatarCustomizer(false)}
+        currentAvatar={currentAvatar}
+        onSave={(avatar) => setCurrentAvatar(avatar)}
+      />
     </div>
   );
 }
