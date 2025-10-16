@@ -15,7 +15,8 @@ export default function GameBoard() {
     playingPlayers,
     scores,
     bids,
-    localPlayerId
+    localPlayerId,
+    highestBidder
   } = useShnarps();
 
   // Calculate player positions in a circle, with local player always at bottom
@@ -52,15 +53,25 @@ export default function GameBoard() {
         <div className="w-96 h-96 rounded-full bg-green-700 border-8 border-green-600 shadow-2xl" />
       </div>
 
-      {/* Trump suit indicator - persistent during hand play */}
+      {/* Trump suit and bidder info - persistent during hand play */}
       {trumpSuit && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-full w-16 h-16 flex items-center justify-center shadow-lg border-2 border-gray-300">
-          <p className={`text-3xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-600' : 'text-gray-800'}`}>
-            {trumpSuit === 'hearts' ? '♥' : 
-             trumpSuit === 'diamonds' ? '♦' : 
-             trumpSuit === 'clubs' ? '♣' : '♠'}
-          </p>
-        </div>
+        <>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-full w-16 h-16 flex items-center justify-center shadow-lg border-2 border-gray-300">
+            <p className={`text-3xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-600' : 'text-gray-800'}`}>
+              {trumpSuit === 'hearts' ? '♥' : 
+               trumpSuit === 'diamonds' ? '♦' : 
+               trumpSuit === 'clubs' ? '♣' : '♠'}
+            </p>
+          </div>
+          
+          {highestBidder && (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 translate-y-12 bg-gray-900 bg-opacity-90 text-white px-3 py-1 rounded-lg shadow-lg whitespace-nowrap">
+              <p className="text-xs font-medium">
+                {players.find(p => p.id === highestBidder)?.name}: Bid {bids.get(highestBidder) || 0}
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Current trick cards positioned in front of each player */}
