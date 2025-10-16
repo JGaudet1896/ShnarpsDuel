@@ -382,16 +382,18 @@ export default function GameUI() {
     const lastRound = history[history.length - 1];
     const moneyChanges = lastRound?.moneyChanges || new Map<string, number>();
     
+    // Find the winner (player with score <= 0)
+    const winner = players.find(p => (scores.get(p.id) || 16) <= 0);
+    
     const sortedPlayers = players
       .map(player => ({
         ...player,
         score: scores.get(player.id) || 16,
         wallet: player.wallet || 100,
-        moneyChange: moneyChanges.get(player.id) || 0
+        moneyChange: moneyChanges.get(player.id) || 0,
+        punts: player.punts || 0
       }))
       .sort((a, b) => a.score - b.score);
-    
-    const winner = sortedPlayers[0];
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
