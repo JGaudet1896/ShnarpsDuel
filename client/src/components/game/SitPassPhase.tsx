@@ -24,7 +24,7 @@ export default function SitPassPhase() {
   
   const canSit = currentPlayer ? canPlayerSit(currentPlayer, highestBid, trumpSuit) : false;
 
-  // Only show sit/play controls for local player's turn, positioned at bottom
+  // Only show sit/play controls for local player's turn, positioned above player
   if (!isLocalPlayerTurn || !currentPlayer) return null;
 
   const trumpSymbol = trumpSuit === 'hearts' ? '♥' : 
@@ -33,7 +33,7 @@ export default function SitPassPhase() {
   const trumpColor = trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-500' : 'text-white';
 
   return (
-    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-40">
+    <div className="fixed bottom-48 left-1/2 transform -translate-x-1/2 z-40">
       <div className="text-center mb-2">
         <p className="text-sm text-white bg-black bg-opacity-70 px-4 py-1 rounded inline-block">
           Trump: <span className={`text-2xl font-bold ${trumpColor}`}>{trumpSymbol}</span> <span className="capitalize">{trumpSuit}</span>

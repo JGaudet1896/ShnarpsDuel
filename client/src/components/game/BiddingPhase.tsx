@@ -27,11 +27,11 @@ export default function BiddingPhase() {
     return bid > highestBid && bid <= 5;
   };
 
-  // Only show bidding controls for local player's turn, positioned at bottom
+  // Only show bidding controls for local player's turn, positioned above player
   if (!isLocalPlayerTurn || !localPlayer) return null;
 
   return (
-    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-40">
+    <div className="fixed bottom-48 left-1/2 transform -translate-x-1/2 z-40">
       <div className="flex gap-2 bg-gray-900 bg-opacity-90 px-4 py-3 rounded-lg shadow-xl">
         <Button
           onClick={() => handleBid(0)}

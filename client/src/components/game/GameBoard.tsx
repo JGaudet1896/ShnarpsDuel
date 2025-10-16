@@ -166,12 +166,12 @@ export default function GameBoard() {
         return (
           <div
             key={player.id}
-            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
+            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
               !isPlaying && gamePhase === 'hand_play' ? 'opacity-30' : 'opacity-100'
             }`}
             style={{
               left: `${pos.x}%`,
-              top: isLocalPlayer && (gamePhase === 'bidding' || gamePhase === 'sit_pass') ? `${pos.y - 12}%` : `${pos.y}%`,
+              top: `${pos.y}%`,
             }}
           >
             <div className="flex flex-col items-center gap-1">
