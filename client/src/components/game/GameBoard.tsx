@@ -205,7 +205,7 @@ export default function GameBoard() {
               <PlayerHand
                 cards={player.hand}
                 isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && isPlaying}
-                faceUp={isLocalPlayer}
+                faceUp={isLocalPlayer && gamePhase !== 'hand_play'}
               />
             </div>
           </div>
