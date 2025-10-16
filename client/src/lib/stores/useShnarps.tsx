@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { Card, GamePhase, Player, GameState } from "../game/gameLogic";
+import { Card, GamePhase, Player, GameState, RoundHistory } from "../game/gameLogic";
 import { createDeck, shuffleDeck, dealCards, determineTrickWinner } from "../game/cardUtils";
 
 interface ShnarpsState extends GameState {
@@ -33,6 +33,7 @@ export const useShnarps = create<ShnarpsState>()(
     mustyPlayers: new Set(),
     scores: new Map(),
     round: 1,
+    history: [],
     
     initializeGame: () => {
       const deck = shuffleDeck(createDeck());
@@ -51,6 +52,7 @@ export const useShnarps = create<ShnarpsState>()(
         mustyPlayers: new Set(),
         scores: new Map(),
         round: 1,
+        history: [],
       });
     },
 
@@ -319,6 +321,9 @@ export const useShnarps = create<ShnarpsState>()(
           tricksWonByPlayer.set(winnerId, (tricksWonByPlayer.get(winnerId) || 0) + 1);
         }
         
+        // Track score changes for history
+        const scoreChanges = new Map<string, number>();
+        
         // Update scores based on tricks won and bids
         for (const playerId of state.playingPlayers) {
           const tricksWon = tricksWonByPlayer.get(playerId) || 0;
@@ -340,8 +345,21 @@ export const useShnarps = create<ShnarpsState>()(
             scoreChange = -tricksWon;
           }
           
+          scoreChanges.set(playerId, scoreChange);
           newScores.set(playerId, currentScore + scoreChange);
         }
+        
+        // Save round history
+        const roundHistory: RoundHistory = {
+          round: state.round,
+          bids: new Map(state.bids),
+          trumpSuit: state.trumpSuit,
+          highestBidder: state.highestBidder,
+          playingPlayers: Array.from(state.playingPlayers),
+          tricksWon: tricksWonByPlayer,
+          scoreChanges,
+          finalScores: new Map(newScores)
+        };
         
         // Check for eliminated players (score > 32) and winners (score <= 0)
         const activePlayers = state.players.filter(player => {
@@ -355,7 +373,8 @@ export const useShnarps = create<ShnarpsState>()(
         if (activePlayers.length <= 1 || hasWinner) {
           set({
             gamePhase: 'game_over',
-            scores: newScores
+            scores: newScores,
+            history: [...state.history, roundHistory]
           });
         } else {
           // Start next round
@@ -382,7 +401,8 @@ export const useShnarps = create<ShnarpsState>()(
             highestBidder: null,
             playingPlayers: new Set(),
             scores: newScores,
-            round: state.round + 1
+            round: state.round + 1,
+            history: [...state.history, roundHistory]
           });
         }
       } else {

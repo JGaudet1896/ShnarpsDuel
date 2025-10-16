@@ -5,6 +5,7 @@ import { Input } from '../ui/input';
 import BiddingPhase from './BiddingPhase';
 import SitPassPhase from './SitPassPhase';
 import HandPlayPhase from './HandPlayPhase';
+import GameHistory from './GameHistory';
 import { useState } from 'react';
 
 export default function GameUI() {
@@ -250,6 +251,9 @@ export default function GameUI() {
       {gamePhase === 'bidding' && <BiddingPhase />}
       {gamePhase === 'sit_pass' && <SitPassPhase />}
       {gamePhase === 'hand_play' && <HandPlayPhase />}
+
+      {/* Game history */}
+      {gamePhase !== 'setup' && <GameHistory />}
     </div>
   );
 }

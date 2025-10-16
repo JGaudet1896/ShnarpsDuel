@@ -10,6 +10,17 @@ export interface Player {
 
 export type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
 
+export interface RoundHistory {
+  round: number;
+  bids: Map<string, number>;
+  trumpSuit: string | null;
+  highestBidder: string | null;
+  playingPlayers: string[];
+  tricksWon: Map<string, number>;
+  scoreChanges: Map<string, number>;
+  finalScores: Map<string, number>;
+}
+
 export interface GameState {
   gamePhase: GamePhase;
   players: Player[];
@@ -25,6 +36,7 @@ export interface GameState {
   mustyPlayers: Set<string>;
   scores: Map<string, number>;
   round: number;
+  history: RoundHistory[];
 }
 
 export function calculateScore(
