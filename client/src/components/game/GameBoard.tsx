@@ -117,7 +117,7 @@ export default function GameBoard() {
         const pos = playerPositions[index];
         const isCurrentPlayer = index === currentPlayerIndex;
         const isPlaying = playingPlayers.has(player.id);
-        const isLocalPlayer = index === 0; // First player is local
+        const isLocalPlayer = player.id === localPlayerId;
         const score = scores.get(player.id) || 16;
 
         return (
