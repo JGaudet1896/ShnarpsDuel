@@ -69,21 +69,28 @@ export default function GameBoard() {
             <div className="flex gap-2">
               {currentTrick.map((play, index) => {
                 const player = players.find(p => p.id === play.playerId);
+                const playerIndex = players.findIndex(p => p.id === play.playerId);
+                const playerPos = playerPositions[playerIndex];
+                
+                // Calculate initial position relative to center (50%, 50%)
+                const startX = playerPos ? (playerPos.x - 50) * 8 : 0;
+                const startY = playerPos ? (playerPos.y - 50) * 8 : -100;
+                
                 return (
                   <motion.div 
                     key={`${play.playerId}-${index}`}
-                    initial={{ opacity: 0, scale: 0.3, x: 0, y: -100 }}
+                    initial={{ opacity: 0, scale: 0.5, x: startX, y: startY }}
                     animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
                     transition={{ 
                       type: "spring",
-                      stiffness: 200,
-                      damping: 20,
-                      delay: index * 0.1
+                      stiffness: 150,
+                      damping: 18,
+                      delay: index * 0.15
                     }}
                     className="flex flex-col items-center gap-1"
                   >
                     <Card card={play.card} isPlayable={false} />
-                    <p className="text-white text-xs font-medium bg-black bg-opacity-50 px-2 py-1 rounded">
+                    <p className="text-white text-xs font-semibold bg-black bg-opacity-70 px-2 py-1 rounded shadow-lg">
                       {player?.name}
                     </p>
                   </motion.div>
