@@ -25,19 +25,21 @@ export function useAIPlayer() {
     const currentPlayer = players[currentPlayerIndex];
     if (!currentPlayer || !currentPlayer.isAI) return;
 
+    const difficulty = currentPlayer.aiDifficulty || 'medium';
+
     // Add delay to make AI decisions feel more natural
     const aiDelay = setTimeout(() => {
       // Bidding phase
       if (gamePhase === 'bidding') {
         const currentHighestBid = Math.max(0, ...Array.from(bids.values()));
         const isDealer = currentPlayerIndex === useShnarps.getState().dealerIndex;
-        const aiBid = makeAIBid(currentPlayer.hand, currentHighestBid, isDealer, players.length);
+        const aiBid = makeAIBid(currentPlayer.hand, currentHighestBid, isDealer, players.length, difficulty);
         placeBid(currentPlayer.id, aiBid);
       }
 
       // Trump selection phase
       else if (gamePhase === 'trump_selection') {
-        const aiTrump = chooseAITrumpSuit(currentPlayer.hand);
+        const aiTrump = chooseAITrumpSuit(currentPlayer.hand, difficulty);
         chooseTrumpSuit(aiTrump);
       }
 
@@ -61,7 +63,8 @@ export function useAIPlayer() {
           trumpSuit,
           highestBid,
           canSit,
-          currentScore
+          currentScore,
+          difficulty
         );
         chooseSitOrPlay(currentPlayer.id, decision);
       }
@@ -77,7 +80,8 @@ export function useAIPlayer() {
             currentPlayer.hand,
             currentTrick,
             trumpSuit,
-            playableCards
+            playableCards,
+            difficulty
           );
           playCard(currentPlayer.id, cardToPlay);
         }
