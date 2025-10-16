@@ -677,7 +677,64 @@ export const useShnarps = create<ShnarpsState>()(
     },
 
     resetGame: () => {
+      const state = get();
+      
+      // Save player wallets and avatars before reset
+      const playerWallets = new Map<string, number>();
+      const playerAvatars = new Map<string, { color: string; icon: string }>();
+      const playerNames = new Map<string, string>();
+      const playerAI = new Map<string, boolean>();
+      const playerDifficulty = new Map<string, AIDifficulty>();
+      
+      state.players.forEach(player => {
+        playerWallets.set(player.id, player.wallet || 100);
+        if (player.avatar) {
+          playerAvatars.set(player.id, player.avatar);
+        }
+        playerNames.set(player.id, player.name);
+        playerAI.set(player.id, player.isAI);
+        if (player.aiDifficulty) {
+          playerDifficulty.set(player.id, player.aiDifficulty);
+        }
+      });
+      
+      // Initialize game
       get().initializeGame();
+      
+      // Restore players with their preserved wallets and avatars
+      const newState = get();
+      const deck = shuffleDeck(createDeck());
+      const dealtCards = dealCards(deck, state.players.length);
+      
+      const restoredPlayers = state.players.map((player, index) => ({
+        ...player,
+        hand: dealtCards[index] || [],
+        wallet: playerWallets.get(player.id) || 100,
+        avatar: playerAvatars.get(player.id)
+      }));
+      
+      const newScores = new Map();
+      restoredPlayers.forEach(player => {
+        newScores.set(player.id, 16);
+      });
+      
+      set({
+        gamePhase: 'setup',
+        players: restoredPlayers,
+        scores: newScores,
+        deck,
+        currentPlayerIndex: 0,
+        dealerIndex: 0,
+        currentTrick: [],
+        completedTricks: [],
+        bids: new Map(),
+        trumpSuit: null,
+        highestBidder: null,
+        playingPlayers: new Set(),
+        mustyPlayers: new Set(),
+        round: 1,
+        history: []
+      });
     },
 
     // Multiplayer methods

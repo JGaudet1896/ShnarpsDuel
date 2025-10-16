@@ -18,6 +18,8 @@ interface Player {
   consecutiveSits: number;
   isAI: boolean;
   aiDifficulty?: AIDifficulty;
+  avatar?: { color: string; icon: string };
+  wallet?: number;
 }
 
 interface GameRoom {
@@ -62,7 +64,8 @@ function createRoom(hostId: string, hostName: string): GameRoom {
     hand: [],
     isActive: true,
     consecutiveSits: 0,
-    isAI: false
+    isAI: false,
+    wallet: 100
   };
 
   const room: GameRoom = {
@@ -114,7 +117,9 @@ function serializeGameState(room: GameRoom, playerId: string) {
       isActive: p.isActive,
       consecutiveSits: p.consecutiveSits,
       isAI: p.isAI,
-      aiDifficulty: p.aiDifficulty
+      aiDifficulty: p.aiDifficulty,
+      avatar: p.avatar,
+      wallet: p.wallet || 100
     })),
     gameState: {
       ...room.gameState,
@@ -182,7 +187,8 @@ export function setupWebSocket(server: Server) {
               isActive: true,
               consecutiveSits: 0,
               isAI: false,
-              ws
+              ws,
+              wallet: 100
             };
 
             room.players.set(playerId, player);
@@ -219,7 +225,8 @@ export function setupWebSocket(server: Server) {
               isActive: true,
               consecutiveSits: 0,
               isAI: true,
-              aiDifficulty: message.difficulty
+              aiDifficulty: message.difficulty,
+              wallet: 100
             };
 
             room.players.set(aiId, aiPlayer);
