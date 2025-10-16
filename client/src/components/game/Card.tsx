@@ -84,6 +84,6 @@ export default function Card({
           {suitSymbol}
         </span>
       </div>
-    </button>
+    </motion.button>
   );
 }
