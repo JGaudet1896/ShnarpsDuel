@@ -418,9 +418,12 @@ export default function GameUI() {
         <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
           <CardHeader className="pb-3">
             <CardTitle className="text-center text-white text-xl md:text-2xl">Game Over!</CardTitle>
-            <p className="text-center text-lg md:text-xl font-semibold text-green-400">
-              {winner?.name} Wins!
-            </p>
+            <div className="text-center mt-2 mb-3 py-2 bg-green-900 bg-opacity-40 rounded border border-green-500">
+              <p className="text-2xl md:text-3xl font-bold text-green-400">
+                🎉 {winner?.name} 🎉
+              </p>
+              <p className="text-sm text-green-300 mt-1">Winner!</p>
+            </div>
             <p className="text-center text-sm text-yellow-400 font-bold">
               Total Pot: ${totalPot.toFixed(2)}
             </p>
