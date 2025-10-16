@@ -418,12 +418,41 @@ export const useShnarps = create<ShnarpsState>()(
       // Check if trick is complete (all playing players have played)
       const playingPlayersList = Array.from(state.playingPlayers);
       if (newTrick.length === playingPlayersList.length) {
-        // Determine trick winner and move to next trick
-        set({
-          players: updatedPlayers,
-          currentTrick: newTrick,
-          completedTricks: [...state.completedTricks, newTrick]
-        });
+        // Trick is complete - determine winner
+        const trickWinnerId = determineTrickWinner(newTrick, state.trumpSuit);
+        const newCompletedTricks = [...state.completedTricks, newTrick];
+        
+        // Check if all tricks are done (5 tricks total)
+        if (newCompletedTricks.length === 5) {
+          // Hand is complete - move to scoring
+          set({
+            players: updatedPlayers,
+            currentTrick: newTrick,
+            completedTricks: newCompletedTricks,
+            gamePhase: 'trick_complete'
+          });
+          
+          // Auto-trigger scoring after a delay
+          setTimeout(() => {
+            get().nextTrick();
+          }, 1500);
+        } else {
+          // More tricks to play - winner leads next trick
+          const winnerIndex = state.players.findIndex(p => p.id === trickWinnerId);
+          
+          set({
+            players: updatedPlayers,
+            currentTrick: [],
+            completedTricks: newCompletedTricks,
+            currentPlayerIndex: winnerIndex,
+            gamePhase: 'trick_complete'
+          });
+          
+          // Auto-transition back to hand_play after showing the trick winner
+          setTimeout(() => {
+            set({ gamePhase: 'hand_play' });
+          }, 1000);
+        }
       } else {
         // Move to next playing player
         let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
