@@ -24,23 +24,24 @@ export default function GameHistory() {
 
   return (
     <div className="fixed bottom-4 right-4 z-40 w-96 max-h-96">
-      <Card>
-        <CardHeader className="pb-2">
+      <Card className="bg-white border-2 border-gray-300 shadow-2xl">
+        <CardHeader className="pb-2 bg-white">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-lg">Game History</CardTitle>
+            <CardTitle className="text-lg text-gray-900">Game History</CardTitle>
             <Button
               onClick={() => setIsOpen(false)}
               variant="ghost"
               size="sm"
+              className="text-gray-900 hover:bg-gray-100"
             >
               ✕
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="bg-white">
           <ScrollArea className="h-80">
             {history.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="text-sm text-gray-600 text-center py-4">
                 No rounds completed yet
               </p>
             ) : (
@@ -53,7 +54,7 @@ export default function GameHistory() {
                   return (
                     <div
                       key={round.round}
-                      className="border rounded-lg p-3 bg-gray-50"
+                      className="border-2 border-gray-300 rounded-lg p-3 bg-gray-100"
                     >
                       <div className="flex justify-between items-center mb-2">
                         <h3 className="font-semibold text-sm">Round {round.round}</h3>
