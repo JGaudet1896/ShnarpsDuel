@@ -17,8 +17,49 @@ export default function GameBoard() {
     bids,
     localPlayerId,
     highestBidder,
-    lastTrickWinner
+    lastTrickWinner,
+    completedTricks
   } = useShnarps();
+
+  // Calculate tricks won by each player in current hand
+  const tricksWon = useMemo(() => {
+    const counts = new Map<string, number>();
+    completedTricks.forEach(trick => {
+      if (trick.length === 0 || !trumpSuit) return;
+      
+      // Determine winner of this trick
+      const leadSuit = trick[0].card.suit;
+      let winningPlay = trick[0];
+      
+      for (const play of trick) {
+        const isTrump = play.card.suit === trumpSuit;
+        const isWinningTrump = winningPlay.card.suit === trumpSuit;
+        
+        if (isTrump && !isWinningTrump) {
+          winningPlay = play;
+        } else if (isTrump && isWinningTrump) {
+          const rankValues: { [key: string]: number } = {
+            '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+            'J': 11, 'Q': 12, 'K': 13, 'A': 14
+          };
+          if (rankValues[play.card.rank] > rankValues[winningPlay.card.rank]) {
+            winningPlay = play;
+          }
+        } else if (!isTrump && !isWinningTrump && play.card.suit === leadSuit) {
+          const rankValues: { [key: string]: number } = {
+            '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+            'J': 11, 'Q': 12, 'K': 13, 'A': 14
+          };
+          if (rankValues[play.card.rank] > rankValues[winningPlay.card.rank]) {
+            winningPlay = play;
+          }
+        }
+      }
+      
+      counts.set(winningPlay.playerId, (counts.get(winningPlay.playerId) || 0) + 1);
+    });
+    return counts;
+  }, [completedTricks, trumpSuit]);
 
   // Calculate player positions in a circle, with local player always at bottom
   const playerPositions = useMemo(() => {
@@ -54,25 +95,15 @@ export default function GameBoard() {
         <div className="w-96 h-96 rounded-full bg-green-700 border-8 border-green-600 shadow-2xl" />
       </div>
 
-      {/* Trump suit and bidder info - persistent during hand play */}
+      {/* Trump suit indicator - persistent during hand play */}
       {trumpSuit && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
-        <>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-full w-16 h-16 flex items-center justify-center shadow-lg border-2 border-gray-300">
-            <p className={`text-3xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-600' : 'text-gray-800'}`}>
-              {trumpSuit === 'hearts' ? '♥' : 
-               trumpSuit === 'diamonds' ? '♦' : 
-               trumpSuit === 'clubs' ? '♣' : '♠'}
-            </p>
-          </div>
-          
-          {highestBidder && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 translate-y-12 bg-gray-900 bg-opacity-90 text-white px-3 py-1 rounded-lg shadow-lg whitespace-nowrap">
-              <p className="text-xs font-medium">
-                {players.find(p => p.id === highestBidder)?.name}: Bid {bids.get(highestBidder) || 0}
-              </p>
-            </div>
-          )}
-        </>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-full w-16 h-16 flex items-center justify-center shadow-lg border-2 border-gray-300">
+          <p className={`text-3xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-600' : 'text-gray-800'}`}>
+            {trumpSuit === 'hearts' ? '♥' : 
+             trumpSuit === 'diamonds' ? '♦' : 
+             trumpSuit === 'clubs' ? '♣' : '♠'}
+          </p>
+        </div>
       )}
 
       {/* Current trick cards positioned in front of each player */}
@@ -204,6 +235,15 @@ export default function GameBoard() {
                 </div>
               )}
 
+              {/* Bidder indicator */}
+              {highestBidder === player.id && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
+                <div className="mt-1 bg-purple-600 text-white px-3 py-1 rounded-lg shadow-md">
+                  <p className="text-xs font-bold text-center">
+                    Bid: {bids.get(player.id) || 0}
+                  </p>
+                </div>
+              )}
+
               {/* Flicker banner for players at 28+ score */}
               {score >= 28 && (
                 <div className="mt-1 bg-red-600 text-white px-3 py-1 rounded-lg shadow-md animate-pulse">
@@ -213,17 +253,13 @@ export default function GameBoard() {
                 </div>
               )}
 
-              {/* Trick winner indicator */}
-              {gamePhase === 'trick_complete' && lastTrickWinner === player.id && (
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="mt-1 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg"
-                >
-                  <p className="text-sm font-bold text-center">
-                    🏆 WON TRICK!
+              {/* Tricks won counter during hand play */}
+              {(gamePhase === 'hand_play' || gamePhase === 'trick_complete') && isPlaying && (
+                <div className="mt-1 bg-blue-600 text-white px-3 py-1 rounded-lg shadow-md">
+                  <p className="text-xs font-bold text-center">
+                    Tricks: {tricksWon.get(player.id) || 0}
                   </p>
-                </motion.div>
+                </div>
               )}
 
               {/* Player hand */}
