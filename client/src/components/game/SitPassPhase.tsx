@@ -1,24 +1,19 @@
 import { useShnarps } from '../../lib/stores/useShnarps';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { canPlayerSit } from '../../lib/game/gameLogic';
-import PlayerHand from './PlayerHand';
 
 export default function SitPassPhase() {
   const { 
     players, 
     currentPlayerIndex, 
     chooseSitOrPlay,
-    playingPlayers,
     bids,
     trumpSuit,
-    highestBidder,
     localPlayerId
   } = useShnarps();
   
   const currentPlayer = players[currentPlayerIndex];
   const isLocalPlayerTurn = currentPlayer?.id === localPlayerId;
-  const localPlayer = players.find(p => p.id === localPlayerId);
   const highestBid = Math.max(0, ...Array.from(bids.values()));
   
   const handleSitOrPlay = (decision: 'sit' | 'play') => {
@@ -29,97 +24,31 @@ export default function SitPassPhase() {
   
   const canSit = currentPlayer ? canPlayerSit(currentPlayer, highestBid, trumpSuit) : false;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
-      <Card className="w-full max-w-lg bg-gray-900 bg-opacity-95 text-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-center text-white text-lg md:text-xl">Sit or Play Phase</CardTitle>
-          <p className="text-center text-sm text-gray-300">
-            Current turn: <span className="font-semibold text-white">{currentPlayer?.name}</span>
-          </p>
-          <p className="text-center text-sm text-gray-300">
-            Trump suit: <span className="font-semibold text-white">{trumpSuit}</span>
-          </p>
-          <p className="text-center text-sm text-gray-300">
-            Winning bid: <span className="font-semibold text-white">{highestBid}</span>
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Your Hand */}
-          {localPlayer && (
-            <div className="space-y-2">
-              <h3 className="font-semibold text-sm text-white text-center">Your Hand:</h3>
-              <div className="flex justify-center bg-green-800 bg-opacity-30 p-3 rounded-lg">
-                <PlayerHand
-                  cards={localPlayer.hand}
-                  isCurrentPlayer={false}
-                  faceUp={true}
-                />
-              </div>
-            </div>
-          )}
+  // Only show sit/play controls for local player's turn, positioned at bottom
+  if (!isLocalPlayerTurn || !currentPlayer) return null;
 
-          {/* Show players' decisions */}
-          <div className="space-y-1.5">
-            <h3 className="font-semibold text-sm text-white">Player Status:</h3>
-            {players.map((player) => (
-              <div key={player.id} className="flex justify-between text-xs md:text-sm text-gray-200">
-                <span className="truncate max-w-[100px]">{player.name}</span>
-                <span className="font-mono text-xs whitespace-nowrap">
-                  {player.id === highestBidder ? 'Winner (Playing)' :
-                   playingPlayers.has(player.id) ? 'Playing' :
-                   player.consecutiveSits >= 2 ? 'Musty (Must Play)' :
-                   'Waiting...'}
-                </span>
-              </div>
-            ))}
-          </div>
-          
-          {/* Decision controls for local player */}
-          {isLocalPlayerTurn && (
-            <div className="space-y-3">
-              {!canSit && (
-                <p className="text-sm text-orange-400 font-medium text-center">
-                  You must play this hand
-                  {highestBid === 1 ? ' (bid of 1)' : 
-                   trumpSuit === 'spades' ? ' (trump is spades)' :
-                   currentPlayer?.consecutiveSits >= 2 ? ' (musty)' : ''}
-                </p>
-              )}
-              
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleSitOrPlay('play')}
-                  className="flex-1 h-12 text-base touch-manipulation"
-                  variant="default"
-                >
-                  Play
-                </Button>
-                <Button
-                  onClick={() => handleSitOrPlay('sit')}
-                  className="flex-1 h-12 text-base touch-manipulation"
-                  variant="outline"
-                  disabled={!canSit}
-                >
-                  Sit Out
-                </Button>
-              </div>
-              
-              {canSit && currentPlayer && (
-                <p className="text-xs text-gray-400 text-center">
-                  Consecutive sits: {currentPlayer.consecutiveSits}/2
-                </p>
-              )}
-            </div>
-          )}
-          
-          {!isLocalPlayerTurn && (
-            <p className="text-center text-sm text-gray-300">
-              Waiting for {currentPlayer?.name} to decide...
-            </p>
-          )}
-        </CardContent>
-      </Card>
+  return (
+    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-40">
+      <div className="flex gap-4 bg-gray-900 bg-opacity-90 px-6 py-3 rounded-lg shadow-xl">
+        <Button
+          onClick={() => handleSitOrPlay('play')}
+          className="min-w-[100px] h-12 touch-manipulation bg-green-600 hover:bg-green-700 text-white font-bold"
+        >
+          In
+        </Button>
+        <Button
+          onClick={() => handleSitOrPlay('sit')}
+          disabled={!canSit}
+          className="min-w-[100px] h-12 touch-manipulation bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-30"
+        >
+          Out
+        </Button>
+      </div>
+      {!canSit && (
+        <p className="text-xs text-orange-400 font-medium text-center mt-2 bg-black bg-opacity-70 px-3 py-1 rounded">
+          Must play{highestBid === 1 ? ' (bid 1)' : trumpSuit === 'spades' ? ' (spades)' : currentPlayer.consecutiveSits >= 2 ? ' (musty)' : ''}
+        </p>
+      )}
     </div>
   );
 }
