@@ -19,10 +19,10 @@ export default function PlayerHand({
 
   if (!faceUp) {
     return (
-      <div className="flex">
+      <div className="flex overflow-x-auto pb-2 touch-pan-x scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
         {cards.map((card, index) => (
           <div key={`${card.suit}-${card.rank}-${index}`} 
-               className={index > 0 ? '-ml-6' : ''}>
+               className={index > 0 ? '-ml-4 sm:-ml-6' : ''}>
             <Card
               card={card}
               faceDown={true}
@@ -35,10 +35,10 @@ export default function PlayerHand({
   }
 
   return (
-    <div className="flex">
+    <div className="flex overflow-x-auto pb-2 touch-pan-x scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
       {cards.map((card, index) => (
         <div key={`${card.suit}-${card.rank}-${index}`} 
-             className={index > 0 ? '-ml-6' : ''}>
+             className={index > 0 ? '-ml-4 sm:-ml-6' : ''}>
           <Card
             card={card}
             isSelected={selectedCard?.suit === card.suit && selectedCard?.rank === card.rank}

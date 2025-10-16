@@ -29,10 +29,10 @@ export default function Card({
         initial={{ opacity: 0, scale: 0.5, rotateY: 180 }}
         animate={{ opacity: 1, scale: 1, rotateY: 0 }}
         transition={{ duration: 0.3, delay }}
-        className={`w-16 h-24 bg-blue-700 border-2 border-blue-900 rounded-lg shadow-lg ${className}`}
+        className={`w-20 h-28 sm:w-16 sm:h-24 bg-blue-700 border-2 border-blue-900 rounded-lg shadow-lg ${className}`}
       >
         <div className="w-full h-full flex items-center justify-center">
-          <div className="text-blue-900 text-3xl">🂠</div>
+          <div className="text-blue-900 text-3xl sm:text-2xl">🂠</div>
         </div>
       </motion.div>
     );
@@ -47,14 +47,15 @@ export default function Card({
         y: isSelected ? -8 : 0 
       }}
       whileHover={isPlayable ? { scale: 1.05 } : {}}
+      whileTap={isPlayable ? { scale: 0.95 } : {}}
       transition={{ duration: 0.3, delay }}
       onClick={isPlayable ? onClick : undefined}
       disabled={!isPlayable}
       className={`
-        w-16 h-24 bg-white border-2 rounded-lg shadow-lg
-        flex flex-col relative
+        w-20 h-28 sm:w-16 sm:h-24 bg-white border-2 rounded-lg shadow-lg
+        flex flex-col relative touch-manipulation
         ${isSelected ? 'border-blue-500 shadow-xl' : 'border-gray-300'}
-        ${isPlayable ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'}
+        ${isPlayable ? 'cursor-pointer active:scale-95' : 'opacity-60 cursor-not-allowed'}
         ${className}
       `}
     >
