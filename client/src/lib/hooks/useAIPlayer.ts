@@ -54,12 +54,14 @@ export function useAIPlayer() {
       else if (gamePhase === 'sit_pass') {
         const highestBid = Math.max(0, ...Array.from(bids.values()));
         const canSit = canPlayerSit(currentPlayer, highestBid, trumpSuit);
+        const currentScore = scores.get(currentPlayer.id) || 16;
         const decision = makeAISitPlayDecision(
           currentPlayer,
           currentPlayer.hand,
           trumpSuit,
           highestBid,
-          canSit
+          canSit,
+          currentScore
         );
         chooseSitOrPlay(currentPlayer.id, decision);
       }

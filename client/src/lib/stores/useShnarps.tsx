@@ -343,6 +343,14 @@ export const useShnarps = create<ShnarpsState>()(
         updatedPlayers[playerIndex].consecutiveSits = 0;
       } else {
         updatedPlayers[playerIndex].consecutiveSits += 1;
+        
+        // If player is at 4 or lower and sits, add +1 to their score
+        const playerScore = state.scores.get(playerId) || 16;
+        if (playerScore <= 4) {
+          const newScores = new Map(state.scores);
+          newScores.set(playerId, playerScore + 1);
+          set({ scores: newScores });
+        }
       }
       
       // Move to next player

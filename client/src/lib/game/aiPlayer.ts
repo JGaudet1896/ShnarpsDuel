@@ -75,11 +75,21 @@ export function makeAISitPlayDecision(
   hand: Card[],
   trumpSuit: string | null,
   highestBid: number,
-  canSit: boolean
+  canSit: boolean,
+  currentScore?: number
 ): 'sit' | 'play' {
   if (!canSit) return 'play';
   
   const handStrength = evaluateHandStrength(hand, trumpSuit);
+  
+  // If at 4 or lower, avoid sitting (sitting gives +1 penalty)
+  // Only sit if hand is really terrible (strength 0)
+  if (currentScore !== undefined && currentScore <= 4) {
+    if (handStrength === 0 && player.consecutiveSits === 0) {
+      return 'sit'; // Only sit with worst hand possible
+    }
+    return 'play';
+  }
   
   // Play if hand is decent
   if (handStrength >= 2) return 'play';
