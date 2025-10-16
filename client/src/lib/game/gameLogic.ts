@@ -16,6 +16,7 @@ export interface Player {
   isAI: boolean;
   aiDifficulty?: AIDifficulty;
   avatar?: PlayerAvatar;
+  wallet?: number; // Hypothetical money balance
 }
 
 export type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'everyone_sat' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
@@ -29,6 +30,8 @@ export interface RoundHistory {
   tricksWon: Map<string, number>;
   scoreChanges: Map<string, number>;
   finalScores: Map<string, number>;
+  moneyChanges?: Map<string, number>;
+  finalWallets?: Map<string, number>;
 }
 
 export interface GameState {
@@ -61,6 +64,28 @@ export function calculateScore(
   } else {
     // Regular bid: -1 per trick won
     return currentScore - tricksWon;
+  }
+}
+
+export function calculateMoneyChange(
+  bid: number,
+  oldScore: number,
+  newScore: number
+): number {
+  // Stakes: $0.25 per point, $1 for every punt
+  const scoreChange = newScore - oldScore;
+  
+  if (bid === 0) {
+    // Punt: $1 for successful punt (gained 5 points), lose $1 per trick otherwise
+    if (scoreChange === 5) {
+      return 1.00; // Successful punt wins $1
+    } else {
+      // Failed punt: lose $1 per trick
+      return scoreChange * 0.25; // scoreChange will be negative
+    }
+  } else {
+    // Regular bid: $0.25 per point
+    return scoreChange * 0.25; // Negative scoreChange means earning money
   }
 }
 
