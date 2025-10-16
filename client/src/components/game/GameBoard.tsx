@@ -14,19 +14,28 @@ export default function GameBoard() {
     trumpSuit,
     playingPlayers,
     scores,
-    bids
+    bids,
+    localPlayerId
   } = useShnarps();
 
-  // Calculate player positions in a circle
+  // Calculate player positions in a circle, with local player always at bottom
   const playerPositions = useMemo(() => {
+    const localPlayerIndex = players.findIndex(p => p.id === localPlayerId);
+    
     return players.map((_, index) => {
-      const angle = (index / players.length) * Math.PI * 2 - Math.PI / 2;
+      // Calculate offset so local player is at bottom (Math.PI/2 = 90 degrees = bottom)
+      const positionIndex = localPlayerIndex >= 0 
+        ? (index - localPlayerIndex + players.length) % players.length 
+        : index;
+      
+      // Start at bottom and go counter-clockwise
+      const angle = (positionIndex / players.length) * Math.PI * 2 + Math.PI / 2;
       const radius = 35; // percentage
       const x = 50 + Math.cos(angle) * radius;
       const y = 50 + Math.sin(angle) * radius;
       return { x, y, angle };
     });
-  }, [players.length]);
+  }, [players.length, players, localPlayerId]);
 
   if (players.length === 0) {
     return (
