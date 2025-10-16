@@ -68,8 +68,8 @@ export default function HandPlayPhase() {
           {/* Local player controls */}
           {isLocalPlayerTurn && localPlayer && (
             <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Your Hand:</h3>
-              <div className="flex flex-wrap gap-2">
+              <h3 className="font-semibold text-sm">🃏 Your Hand - Click a card to play it:</h3>
+              <div className="flex flex-wrap gap-3 justify-center">
                 {localPlayer.hand.map((card, index) => {
                   const isPlayable = isCardPlayable(card);
                   const isSelected = selectedCard?.suit === card.suit && selectedCard?.rank === card.rank;
@@ -78,29 +78,45 @@ export default function HandPlayPhase() {
                     <Button
                       key={index}
                       variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedCard(card)}
+                      size="lg"
+                      onClick={() => {
+                        if (isPlayable) {
+                          setSelectedCard(card);
+                        }
+                      }}
                       disabled={!isPlayable}
-                      className="flex flex-col h-auto p-2 min-w-[60px]"
+                      className={`flex flex-col h-auto p-3 min-w-[80px] transition-all ${
+                        isSelected ? 'ring-2 ring-blue-500 scale-105' : ''
+                      } ${
+                        isPlayable ? 'hover:scale-105 cursor-pointer' : 'opacity-40'
+                      }`}
                     >
-                      <span className="text-xs">{card.rank}</span>
-                      <span className="text-lg">
+                      <span className="text-sm font-bold">{card.rank}</span>
+                      <span className="text-2xl">
                         {card.suit === 'hearts' ? '♥' : 
                          card.suit === 'diamonds' ? '♦' : 
                          card.suit === 'clubs' ? '♣' : '♠'}
                       </span>
+                      <span className="text-xs capitalize">{card.suit}</span>
                     </Button>
                   );
                 })}
               </div>
               
-              {selectedCard && (
+              {selectedCard ? (
                 <Button 
                   onClick={handleCardPlay}
-                  className="w-full"
+                  className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
+                  size="lg"
                 >
-                  Play {selectedCard.rank} of {selectedCard.suit}
+                  ✓ Play {selectedCard.rank} of {selectedCard.suit}
                 </Button>
+              ) : (
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    👆 Click any card above to select it, then click the play button
+                  </p>
+                </div>
               )}
             </div>
           )}
