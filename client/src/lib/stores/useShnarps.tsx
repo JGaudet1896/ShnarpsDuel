@@ -88,18 +88,18 @@ export const useShnarps = create<ShnarpsState>()(
       const state = get();
       if (state.players.length >= 8 || state.gamePhase !== 'setup') return;
       
-      // NHL Hall of Fame legends
-      const nhlLegends = [
-        'Wayne Gretzky', 'Mario Lemieux', 'Bobby Orr', 'Gordie Howe',
-        'Maurice Richard', 'Jean Beliveau', 'Mark Messier', 'Steve Yzerman',
-        'Patrick Roy', 'Martin Brodeur', 'Ray Bourque', 'Paul Coffey',
-        'Doug Harvey', 'Guy Lafleur', 'Jaromir Jagr', 'Joe Sakic',
-        'Sidney Crosby', 'Brett Hull', 'Phil Esposito', 'Bobby Hull'
+      // Obscure NHL players from the past
+      const nhlPlayers = [
+        'Petr Klima', 'Zarley Zalapski', 'Miroslav Satan', 'Grant Ledyard',
+        'Jody Shelley', 'Brantt Myhres', 'Enrico Ciccone', 'Link Gaetz',
+        'Krzysztof Oliwa', 'Dennis Bonvie', 'Wade Belak', 'Georges Laraque',
+        'Donald Brashear', 'Tie Domi', 'Bob Probert', 'Stu Grimson',
+        'Gino Odjick', 'Tony Twist', 'Joey Kocur', 'Marty McSorley'
       ];
       
       // Pick a random name that hasn't been used
       const usedNames = state.players.map(p => p.name);
-      const availableNames = nhlLegends.filter(name => !usedNames.includes(name));
+      const availableNames = nhlPlayers.filter(name => !usedNames.includes(name));
       const aiName = availableNames.length > 0 
         ? availableNames[Math.floor(Math.random() * availableNames.length)]
         : `AI ${state.players.length + 1}`;
