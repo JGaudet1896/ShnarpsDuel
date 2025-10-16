@@ -9,7 +9,7 @@ export interface Player {
   isAI: boolean;
 }
 
-export type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
+export type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'everyone_sat' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
 
 export interface RoundHistory {
   round: number;

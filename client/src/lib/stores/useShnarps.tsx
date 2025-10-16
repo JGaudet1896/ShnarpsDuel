@@ -12,6 +12,7 @@ interface ShnarpsState extends GameState {
   placeBid: (playerId: string, bid: number) => void;
   chooseTrumpSuit: (suit: string) => void;
   chooseSitOrPlay: (playerId: string, decision: 'sit' | 'play') => void;
+  choosePenalty: (choice: 'self' | 'others') => void;
   playCard: (playerId: string, card: Card) => void;
   nextTrick: () => void;
   resetGame: () => void;
@@ -235,6 +236,95 @@ export const useShnarps = create<ShnarpsState>()(
       }
     },
 
+    choosePenalty: (choice: 'self' | 'others') => {
+      const state = get();
+      if (state.gamePhase !== 'everyone_sat') return;
+      
+      const newScores = new Map(state.scores);
+      
+      if (choice === 'self') {
+        // Reduce bidder's score by 5
+        const currentScore = newScores.get(state.highestBidder!) || 16;
+        newScores.set(state.highestBidder!, currentScore - 5);
+      } else {
+        // Add 5 to all other players' scores
+        state.players.forEach(player => {
+          if (player.id !== state.highestBidder) {
+            const currentScore = newScores.get(player.id) || 16;
+            newScores.set(player.id, currentScore + 5);
+          }
+        });
+      }
+      
+      // Save round history with penalty
+      const scoreChanges = new Map<string, number>();
+      if (choice === 'self') {
+        scoreChanges.set(state.highestBidder!, -5);
+      } else {
+        state.players.forEach(player => {
+          if (player.id !== state.highestBidder) {
+            scoreChanges.set(player.id, 5);
+          }
+        });
+      }
+      
+      const roundHistory: RoundHistory = {
+        round: state.round,
+        bids: new Map(state.bids),
+        trumpSuit: state.trumpSuit,
+        highestBidder: state.highestBidder,
+        playingPlayers: Array.from(state.playingPlayers),
+        tricksWon: new Map(),
+        scoreChanges,
+        finalScores: new Map(newScores)
+      };
+      
+      // Check for eliminated players and winners
+      const activePlayers = state.players.filter(player => {
+        const score = newScores.get(player.id) || 16;
+        return score <= 32 && score > 0;
+      });
+      
+      const hasWinner = Array.from(newScores.values()).some(score => score <= 0);
+      
+      if (activePlayers.length <= 1 || hasWinner) {
+        set({
+          gamePhase: 'game_over',
+          scores: newScores,
+          history: [...state.history, roundHistory]
+        });
+      } else {
+        // Start next round
+        const nextDealerIndex = (state.dealerIndex + 1) % activePlayers.length;
+        const shuffledDeck = shuffleDeck(createDeck());
+        const dealtCards = dealCards(shuffledDeck, activePlayers.length);
+        
+        const updatedPlayers = activePlayers.map((player, index) => ({
+          ...player,
+          hand: dealtCards[index] || [],
+          isActive: true,
+          consecutiveSits: 0
+        }));
+        
+        set({
+          gamePhase: 'bidding',
+          players: updatedPlayers,
+          dealerIndex: nextDealerIndex,
+          currentPlayerIndex: (nextDealerIndex + 1) % updatedPlayers.length,
+          deck: shuffledDeck.slice(updatedPlayers.length * 5),
+          currentTrick: [],
+          completedTricks: [],
+          bids: new Map(),
+          trumpSuit: null,
+          highestBidder: null,
+          playingPlayers: new Set(),
+          scores: newScores,
+          round: state.round + 1,
+          history: [...state.history, roundHistory]
+        });
+      }
+    },
+
     chooseSitOrPlay: (playerId: string, decision: 'sit' | 'play') => {
       const state = get();
       if (state.gamePhase !== 'sit_pass') return;
@@ -262,22 +352,44 @@ export const useShnarps = create<ShnarpsState>()(
       const backToHighestBidder = nextPlayerIndex === highestBidderIndex;
       
       if (backToHighestBidder) {
-        // All players have decided, start hand play phase
-        // First player to lead is to the left of the dealer
-        let firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+        // All players have decided
+        const highestBid = Math.max(0, ...Array.from(state.bids.values()));
         
-        // Make sure the first player is actually playing
-        while (!newPlayingPlayers.has(state.players[firstPlayerIndex].id)) {
-          firstPlayerIndex = (firstPlayerIndex + 1) % state.players.length;
+        // Check if everyone except the bidder sat out
+        const everyoneSatOut = newPlayingPlayers.size === 1 && 
+                                state.highestBidder && 
+                                newPlayingPlayers.has(state.highestBidder);
+        
+        // Check if the bidder can choose penalty (bid >= 2 and trump is not spades)
+        const canChoosePenalty = everyoneSatOut && highestBid >= 2 && state.trumpSuit !== 'spades';
+        
+        if (canChoosePenalty) {
+          // Move to everyone_sat phase where bidder chooses penalty
+          const bidderIndex = state.players.findIndex(p => p.id === state.highestBidder);
+          set({
+            playingPlayers: newPlayingPlayers,
+            players: updatedPlayers,
+            gamePhase: 'everyone_sat',
+            currentPlayerIndex: bidderIndex
+          });
+        } else {
+          // Start hand play phase
+          // First player to lead is to the left of the dealer
+          let firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+          
+          // Make sure the first player is actually playing
+          while (!newPlayingPlayers.has(state.players[firstPlayerIndex].id)) {
+            firstPlayerIndex = (firstPlayerIndex + 1) % state.players.length;
+          }
+          
+          set({
+            playingPlayers: newPlayingPlayers,
+            players: updatedPlayers,
+            gamePhase: 'hand_play',
+            currentPlayerIndex: firstPlayerIndex,
+            currentTrick: []
+          });
         }
-        
-        set({
-          playingPlayers: newPlayingPlayers,
-          players: updatedPlayers,
-          gamePhase: 'hand_play',
-          currentPlayerIndex: firstPlayerIndex,
-          currentTrick: []
-        });
       } else {
         set({
           playingPlayers: newPlayingPlayers,
@@ -348,32 +460,44 @@ export const useShnarps = create<ShnarpsState>()(
           tricksWonByPlayer.set(winnerId, (tricksWonByPlayer.get(winnerId) || 0) + 1);
         }
         
+        // Check for "spading out" - trump is spades and bidder won all 5 tricks
+        const spadingOut = state.trumpSuit === 'spades' && 
+                          state.highestBidder && 
+                          tricksWonByPlayer.get(state.highestBidder) === 5;
+        
         // Track score changes for history
         const scoreChanges = new Map<string, number>();
         
-        // Update scores based on tricks won and bids
-        for (const playerId of state.playingPlayers) {
-          const tricksWon = tricksWonByPlayer.get(playerId) || 0;
-          const bid = state.bids.get(playerId) || 0;
-          const currentScore = newScores.get(playerId) || 16;
-          const isHighestBidder = playerId === state.highestBidder;
-          
-          let scoreChange = 0;
-          
-          // Check for punt conditions
-          if (tricksWon === 0) {
-            // Didn't win any tricks: punt (+5)
-            scoreChange = 5;
-          } else if (isHighestBidder && tricksWon < bid) {
-            // Highest bidder didn't meet their bid: punt (+5)
-            scoreChange = 5;
-          } else {
-            // Normal scoring: -1 per trick won
-            scoreChange = -tricksWon;
+        if (spadingOut) {
+          // Spading out: instant win for the bidder
+          const bidderScore = newScores.get(state.highestBidder!) || 16;
+          newScores.set(state.highestBidder!, 0); // Set to winning score
+          scoreChanges.set(state.highestBidder!, -bidderScore);
+        } else {
+          // Update scores based on tricks won and bids
+          for (const playerId of state.playingPlayers) {
+            const tricksWon = tricksWonByPlayer.get(playerId) || 0;
+            const bid = state.bids.get(playerId) || 0;
+            const currentScore = newScores.get(playerId) || 16;
+            const isHighestBidder = playerId === state.highestBidder;
+            
+            let scoreChange = 0;
+            
+            // Check for punt conditions
+            if (tricksWon === 0) {
+              // Didn't win any tricks: punt (+5)
+              scoreChange = 5;
+            } else if (isHighestBidder && tricksWon < bid) {
+              // Highest bidder didn't meet their bid: punt (+5)
+              scoreChange = 5;
+            } else {
+              // Normal scoring: -1 per trick won
+              scoreChange = -tricksWon;
+            }
+            
+            scoreChanges.set(playerId, scoreChange);
+            newScores.set(playerId, currentScore + scoreChange);
           }
-          
-          scoreChanges.set(playerId, scoreChange);
-          newScores.set(playerId, currentScore + scoreChange);
         }
         
         // Save round history
