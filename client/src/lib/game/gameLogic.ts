@@ -67,26 +67,33 @@ export function calculateScore(
   }
 }
 
-export function calculateMoneyChange(
-  bid: number,
-  oldScore: number,
-  newScore: number
-): number {
-  // Stakes: $0.25 per point, $1 for every punt
-  const scoreChange = newScore - oldScore;
+export function calculateGameEndPayout(
+  players: Player[],
+  scores: Map<string, number>
+): Map<string, number> {
+  // Money changes at game end: losers pay their final points to the winner
+  const moneyChanges = new Map<string, number>();
   
-  if (bid === 0) {
-    // Punt: $1 for successful punt (gained 5 points), lose $1 per trick otherwise
-    if (scoreChange === 5) {
-      return 1.00; // Successful punt wins $1
-    } else {
-      // Failed punt: lose $1 per trick
-      return scoreChange * 0.25; // scoreChange will be negative
+  // Find the winner (score <= 0)
+  const winner = players.find(p => (scores.get(p.id) || 16) <= 0);
+  if (!winner) return moneyChanges;
+  
+  let totalPayout = 0;
+  
+  // Calculate what each loser pays
+  players.forEach(player => {
+    if (player.id !== winner.id) {
+      const finalScore = scores.get(player.id) || 16;
+      // Losers pay their final point value
+      moneyChanges.set(player.id, -finalScore);
+      totalPayout += finalScore;
     }
-  } else {
-    // Regular bid: $0.25 per point
-    return scoreChange * 0.25; // Negative scoreChange means earning money
-  }
+  });
+  
+  // Winner receives total payout
+  moneyChanges.set(winner.id, totalPayout);
+  
+  return moneyChanges;
 }
 
 export function isPlayerEliminated(score: number): boolean {
