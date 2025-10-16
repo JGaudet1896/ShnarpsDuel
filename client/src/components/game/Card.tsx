@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Card as CardType, getSuitColor, getSuitSymbol } from '../../lib/game/cardUtils';
 
 interface CardProps {
@@ -7,6 +8,7 @@ interface CardProps {
   onClick?: () => void;
   className?: string;
   faceDown?: boolean;
+  delay?: number;
 }
 
 export default function Card({ 
@@ -15,31 +17,44 @@ export default function Card({
   isPlayable = true,
   onClick,
   className = '',
-  faceDown = false
+  faceDown = false,
+  delay = 0
 }: CardProps) {
   const suitColor = getSuitColor(card.suit);
   const suitSymbol = getSuitSymbol(card.suit);
   
   if (faceDown) {
     return (
-      <div className={`w-16 h-24 bg-blue-700 border-2 border-blue-900 rounded-lg shadow-lg ${className}`}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.5, rotateY: 180 }}
+        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+        transition={{ duration: 0.3, delay }}
+        className={`w-16 h-24 bg-blue-700 border-2 border-blue-900 rounded-lg shadow-lg ${className}`}
+      >
         <div className="w-full h-full flex items-center justify-center">
           <div className="text-blue-900 text-3xl">🂠</div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <button
+    <motion.button
+      initial={{ opacity: 0, scale: 0.5, y: -50 }}
+      animate={{ 
+        opacity: 1, 
+        scale: 1, 
+        y: isSelected ? -8 : 0 
+      }}
+      whileHover={isPlayable ? { scale: 1.05 } : {}}
+      transition={{ duration: 0.3, delay }}
       onClick={isPlayable ? onClick : undefined}
       disabled={!isPlayable}
       className={`
         w-16 h-24 bg-white border-2 rounded-lg shadow-lg
         flex flex-col relative
-        transition-all duration-200
-        ${isSelected ? 'border-blue-500 -translate-y-2 shadow-xl' : 'border-gray-300'}
-        ${isPlayable ? 'hover:scale-105 cursor-pointer' : 'opacity-60 cursor-not-allowed'}
+        ${isSelected ? 'border-blue-500 shadow-xl' : 'border-gray-300'}
+        ${isPlayable ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'}
         ${className}
       `}
     >

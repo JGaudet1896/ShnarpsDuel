@@ -2,6 +2,7 @@ import { useShnarps } from '../../lib/stores/useShnarps';
 import PlayerHand from './PlayerHand';
 import Card from './Card';
 import { useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function GameBoard() {
   const { 
@@ -56,23 +57,42 @@ export default function GameBoard() {
       )}
 
       {/* Current trick cards in center */}
-      {currentTrick.length > 0 && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="flex gap-2">
-            {currentTrick.map((play, index) => {
-              const player = players.find(p => p.id === play.playerId);
-              return (
-                <div key={`${play.playerId}-${index}`} className="flex flex-col items-center gap-1">
-                  <Card card={play.card} isPlayable={false} />
-                  <p className="text-white text-xs font-medium bg-black bg-opacity-50 px-2 py-1 rounded">
-                    {player?.name}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {currentTrick.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+          >
+            <div className="flex gap-2">
+              {currentTrick.map((play, index) => {
+                const player = players.find(p => p.id === play.playerId);
+                return (
+                  <motion.div 
+                    key={`${play.playerId}-${index}`}
+                    initial={{ opacity: 0, scale: 0.3, x: 0, y: -100 }}
+                    animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+                    transition={{ 
+                      type: "spring",
+                      stiffness: 200,
+                      damping: 20,
+                      delay: index * 0.1
+                    }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <Card card={play.card} isPlayable={false} />
+                    <p className="text-white text-xs font-medium bg-black bg-opacity-50 px-2 py-1 rounded">
+                      {player?.name}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Player hands positioned around the table */}
       {players.map((player, index) => {
