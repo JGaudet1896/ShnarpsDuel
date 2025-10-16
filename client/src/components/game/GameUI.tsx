@@ -383,17 +383,17 @@ export default function GameUI() {
     const moneyChanges = lastRound?.moneyChanges || new Map<string, number>();
     
     // Find the winner (player with score <= 0)
-    const winner = players.find(p => (scores.get(p.id) || 16) <= 0);
+    const winner = players.find(p => (scores.get(p.id) ?? 16) <= 0);
     
     // Sort players: winner first, then by score (lowest to highest)
     const sortedPlayers = players
       .map(player => ({
         ...player,
-        score: scores.get(player.id) || 16,
+        score: scores.get(player.id) ?? 16,
         wallet: player.wallet || 100,
         moneyChange: moneyChanges.get(player.id) || 0,
         punts: player.punts || 0,
-        isEliminated: (scores.get(player.id) || 16) > 32
+        isEliminated: (scores.get(player.id) ?? 16) > 32
       }))
       .sort((a, b) => {
         // Winner (score <= 0) comes first
