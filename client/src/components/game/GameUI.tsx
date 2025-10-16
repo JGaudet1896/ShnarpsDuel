@@ -18,6 +18,7 @@ export default function GameUI() {
     addAIPlayer,
     startGame,
     chooseTrumpSuit,
+    choosePenalty,
     highestBidder,
     resetGame
   } = useShnarps();
@@ -162,6 +163,54 @@ export default function GameUI() {
             ) : (
               <p className="text-center text-sm text-muted-foreground">
                 Waiting for the highest bidder to choose trump...
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Everyone sat out phase
+  if (gamePhase === 'everyone_sat') {
+    const bidder = players.find(p => p.id === highestBidder);
+    const isBidder = highestBidder === players[0]?.id; // Assuming first player is local
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="text-center">Everyone Sat Out!</CardTitle>
+            <p className="text-center text-sm text-muted-foreground">
+              {isBidder ? 'Choose your penalty:' : `Waiting for ${bidder?.name} to choose penalty...`}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isBidder ? (
+              <div className="space-y-3">
+                <p className="text-sm text-center">
+                  Everyone sat out. You can either:
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => choosePenalty('self')}
+                  className="w-full h-auto flex flex-col gap-1 py-4"
+                >
+                  <span className="font-semibold">Take -5 to my score</span>
+                  <span className="text-xs text-muted-foreground">Reduce your score by 5 points</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => choosePenalty('others')}
+                  className="w-full h-auto flex flex-col gap-1 py-4"
+                >
+                  <span className="font-semibold">Give +5 to all others</span>
+                  <span className="text-xs text-muted-foreground">Add 5 points to everyone else's score</span>
+                </Button>
+              </div>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground">
+                {bidder?.name} is deciding the penalty...
               </p>
             )}
           </CardContent>

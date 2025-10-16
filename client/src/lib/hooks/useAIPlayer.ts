@@ -13,10 +13,12 @@ export function useAIPlayer() {
     placeBid,
     chooseTrumpSuit,
     chooseSitOrPlay,
+    choosePenalty,
     playCard,
     trumpSuit,
     currentTrick,
-    playingPlayers
+    playingPlayers,
+    scores
   } = useShnarps();
 
   useEffect(() => {
@@ -37,6 +39,15 @@ export function useAIPlayer() {
       else if (gamePhase === 'trump_selection') {
         const aiTrump = chooseAITrumpSuit(currentPlayer.hand);
         chooseTrumpSuit(aiTrump);
+      }
+
+      // Everyone sat out phase
+      else if (gamePhase === 'everyone_sat') {
+        // AI strategy: Usually better to take -5 yourself (moves toward winning)
+        // But if very close to losing (score >= 28), give +5 to others instead
+        const currentScore = scores.get(currentPlayer.id) || 16;
+        const choice = currentScore >= 28 ? 'others' : 'self';
+        choosePenalty(choice);
       }
 
       // Sit/pass phase
@@ -72,5 +83,5 @@ export function useAIPlayer() {
     }, 800 + Math.random() * 400); // 800-1200ms delay
 
     return () => clearTimeout(aiDelay);
-  }, [gamePhase, currentPlayerIndex, players, bids, trumpSuit, currentTrick, playingPlayers, placeBid, chooseTrumpSuit, chooseSitOrPlay, playCard]);
+  }, [gamePhase, currentPlayerIndex, players, bids, trumpSuit, currentTrick, playingPlayers, scores, placeBid, chooseTrumpSuit, chooseSitOrPlay, choosePenalty, playCard]);
 }
