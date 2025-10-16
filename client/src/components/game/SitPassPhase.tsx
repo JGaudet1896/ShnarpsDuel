@@ -29,25 +29,25 @@ export default function SitPassPhase() {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-96 max-w-lg bg-gray-900 bg-opacity-80">
+      <Card className="w-96 max-w-lg bg-gray-900 bg-opacity-80 text-white">
         <CardHeader>
-          <CardTitle className="text-center">Sit or Play Phase</CardTitle>
-          <p className="text-center text-sm text-muted-foreground">
-            Current turn: <span className="font-semibold">{currentPlayer?.name}</span>
+          <CardTitle className="text-center text-white">Sit or Play Phase</CardTitle>
+          <p className="text-center text-sm text-gray-300">
+            Current turn: <span className="font-semibold text-white">{currentPlayer?.name}</span>
           </p>
-          <p className="text-center text-sm">
-            Trump suit: <span className="font-semibold">{trumpSuit}</span>
+          <p className="text-center text-sm text-gray-300">
+            Trump suit: <span className="font-semibold text-white">{trumpSuit}</span>
           </p>
-          <p className="text-center text-sm">
-            Winning bid: <span className="font-semibold">{highestBid}</span>
+          <p className="text-center text-sm text-gray-300">
+            Winning bid: <span className="font-semibold text-white">{highestBid}</span>
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Show players' decisions */}
           <div className="space-y-2">
-            <h3 className="font-semibold text-sm">Player Status:</h3>
+            <h3 className="font-semibold text-sm text-white">Player Status:</h3>
             {players.map((player) => (
-              <div key={player.id} className="flex justify-between text-sm">
+              <div key={player.id} className="flex justify-between text-sm text-gray-200">
                 <span>{player.name}</span>
                 <span className="font-mono">
                   {player.id === highestBidder ? 'Winner (Playing)' :

@@ -119,10 +119,10 @@ export default function GameUI() {
   if (gamePhase === 'trump_selection') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96 bg-gray-900 bg-opacity-80">
+        <Card className="w-96 bg-gray-900 bg-opacity-80 text-white">
           <CardHeader>
-            <CardTitle className="text-center">Choose Trump Suit</CardTitle>
-            <p className="text-center text-sm text-muted-foreground">
+            <CardTitle className="text-center text-white">Choose Trump Suit</CardTitle>
+            <p className="text-center text-sm text-gray-300">
               You won the bid! Select the trump suit.
             </p>
           </CardHeader>
@@ -131,10 +131,10 @@ export default function GameUI() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { suit: 'hearts', symbol: '♥', color: 'text-red-600' },
-                    { suit: 'diamonds', symbol: '♦', color: 'text-red-600' },
-                    { suit: 'clubs', symbol: '♣', color: 'text-gray-700' },
-                    { suit: 'spades', symbol: '♠', color: 'text-gray-700' }
+                    { suit: 'hearts', symbol: '♥', color: 'text-red-500' },
+                    { suit: 'diamonds', symbol: '♦', color: 'text-red-500' },
+                    { suit: 'clubs', symbol: '♣', color: 'text-white' },
+                    { suit: 'spades', symbol: '♠', color: 'text-white' }
                   ].map(({ suit, symbol, color }) => (
                     <Button
                       key={suit}
@@ -143,7 +143,7 @@ export default function GameUI() {
                       className="h-16 flex flex-col"
                     >
                       <span className={`text-2xl ${color}`}>{symbol}</span>
-                      <span className="text-sm capitalize">{suit}</span>
+                      <span className="text-sm capitalize text-white">{suit}</span>
                     </Button>
                   ))}
                 </div>
@@ -162,7 +162,7 @@ export default function GameUI() {
                 </Button>
               </div>
             ) : (
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-sm text-gray-300">
                 Waiting for the highest bidder to choose trump...
               </p>
             )}
@@ -179,38 +179,38 @@ export default function GameUI() {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96 bg-gray-900 bg-opacity-80">
+        <Card className="w-96 bg-gray-900 bg-opacity-80 text-white">
           <CardHeader>
-            <CardTitle className="text-center">Everyone Sat Out!</CardTitle>
-            <p className="text-center text-sm text-muted-foreground">
+            <CardTitle className="text-center text-white">Everyone Sat Out!</CardTitle>
+            <p className="text-center text-sm text-gray-300">
               {isBidder ? 'Choose your penalty:' : `Waiting for ${bidder?.name} to choose penalty...`}
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             {isBidder ? (
               <div className="space-y-3">
-                <p className="text-sm text-center">
+                <p className="text-sm text-center text-gray-200">
                   Everyone sat out. You can either:
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => choosePenalty('self')}
-                  className="w-full h-auto flex flex-col gap-1 py-4"
+                  className="w-full h-auto flex flex-col gap-1 py-4 text-white border-gray-600 hover:bg-gray-700"
                 >
                   <span className="font-semibold">Take -5 to my score</span>
-                  <span className="text-xs text-muted-foreground">Reduce your score by 5 points</span>
+                  <span className="text-xs text-gray-300">Reduce your score by 5 points</span>
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => choosePenalty('others')}
-                  className="w-full h-auto flex flex-col gap-1 py-4"
+                  className="w-full h-auto flex flex-col gap-1 py-4 text-white border-gray-600 hover:bg-gray-700"
                 >
                   <span className="font-semibold">Give +5 to all others</span>
-                  <span className="text-xs text-muted-foreground">Add 5 points to everyone else's score</span>
+                  <span className="text-xs text-gray-300">Add 5 points to everyone else's score</span>
                 </Button>
               </div>
             ) : (
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-sm text-gray-300">
                 {bidder?.name} is deciding the penalty...
               </p>
             )}
@@ -233,23 +233,23 @@ export default function GameUI() {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96 bg-gray-900 bg-opacity-80">
+        <Card className="w-96 bg-gray-900 bg-opacity-80 text-white">
           <CardHeader>
-            <CardTitle className="text-center">Game Over!</CardTitle>
-            <p className="text-center text-lg font-semibold text-green-600">
+            <CardTitle className="text-center text-white">Game Over!</CardTitle>
+            <p className="text-center text-lg font-semibold text-green-400">
               {winner?.name} Wins!
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <h3 className="font-semibold text-sm">Final Scores:</h3>
+              <h3 className="font-semibold text-sm text-white">Final Scores:</h3>
               {sortedPlayers.map((player, index) => (
-                <div key={player.id} className="flex justify-between text-sm">
+                <div key={player.id} className="flex justify-between text-sm text-gray-200">
                   <span className="flex items-center gap-2">
-                    {index === 0 && <span className="text-yellow-500">👑</span>}
+                    {index === 0 && <span className="text-yellow-400">👑</span>}
                     {player.name}
                   </span>
-                  <span className={`font-mono ${player.score <= 0 ? 'text-green-600' : player.score > 32 ? 'text-red-600' : ''}`}>
+                  <span className={`font-mono ${player.score <= 0 ? 'text-green-400' : player.score > 32 ? 'text-red-400' : 'text-gray-200'}`}>
                     {player.score}
                     {player.score <= 0 && ' (Winner!)'}
                     {player.score > 32 && ' (Eliminated)'}
