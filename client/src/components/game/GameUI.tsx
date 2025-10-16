@@ -9,9 +9,12 @@ import HandPlayPhase from './HandPlayPhase';
 import GameHistory from './GameHistory';
 import MultiplayerSetup from './MultiplayerSetup';
 import AvatarCustomizer, { Avatar, type PlayerAvatar } from './AvatarCustomizer';
-import { useState } from 'react';
+import Tutorial from './Tutorial';
+import AppWalkthrough from './AppWalkthrough';
+import { useState, useEffect } from 'react';
 import { AIDifficulty } from '../../lib/game/gameLogic';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
+import { BookOpen, HelpCircle } from 'lucide-react';
 
 export default function GameUI() {
   const { 
@@ -36,6 +39,8 @@ export default function GameUI() {
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('medium');
   const [gameMode, setGameMode] = useState<'menu' | 'local' | 'online'>('menu');
   const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showWalkthrough, setShowWalkthrough] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<PlayerAvatar>({
     color: '#3B82F6',
     icon: '👤'
@@ -44,31 +49,66 @@ export default function GameUI() {
   const isHighestBidder = highestBidder === localPlayerId;
   const localPlayer = players.find(p => p.id === localPlayerId);
 
+  // Check if first-time user and show walkthrough
+  useEffect(() => {
+    const walkthroughCompleted = localStorage.getItem('shnarps_walkthrough_completed');
+    if (!walkthroughCompleted && gamePhase === 'setup' && players.length === 0) {
+      setShowWalkthrough(true);
+    }
+  }, [gamePhase, players.length]);
+
   // Welcome screen - choose game mode
   if (gameMode === 'menu' && gamePhase === 'setup' && players.length === 0) {
     return (
-      <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
-        <Card className="w-full max-w-md mx-4 shadow-2xl bg-white">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl">Shnarps Card Game</CardTitle>
-            <p className="text-center text-sm text-muted-foreground">
-              Choose your game mode
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button onClick={() => setGameMode('local')} className="w-full" size="lg">
-              🏠 Local Game
-            </Button>
-            <Button onClick={() => setGameMode('online')} className="w-full" variant="outline" size="lg">
-              🌐 Online Multiplayer
-            </Button>
-            <p className="text-xs text-center text-muted-foreground">
-              Local: Play on one device<br/>
-              Online: Play with friends in real-time
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
+          <Card className="w-full max-w-md mx-4 shadow-2xl bg-white">
+            <CardHeader>
+              <CardTitle className="text-center text-2xl">Shnarps Card Game</CardTitle>
+              <p className="text-center text-sm text-muted-foreground">
+                Choose your game mode
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button onClick={() => setGameMode('local')} className="w-full" size="lg">
+                🏠 Local Game
+              </Button>
+              <Button onClick={() => setGameMode('online')} className="w-full" variant="outline" size="lg">
+                🌐 Online Multiplayer
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Local: Play on one device<br/>
+                Online: Play with friends in real-time
+              </p>
+              
+              <div className="pt-4 border-t space-y-2">
+                <Button 
+                  onClick={() => setShowTutorial(true)} 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  size="sm"
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Game Tutorial (Learn How to Play)
+                </Button>
+                <Button 
+                  onClick={() => setShowWalkthrough(true)} 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  size="sm"
+                >
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  App Walkthrough (First Time Here?)
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Tutorial and Walkthrough modals */}
+        <Tutorial open={showTutorial} onClose={() => setShowTutorial(false)} />
+        <AppWalkthrough open={showWalkthrough} onClose={() => setShowWalkthrough(false)} />
+      </>
     );
   }
 
