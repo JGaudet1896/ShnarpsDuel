@@ -132,16 +132,21 @@ export default function GameBoard() {
                     <span className="text-lg" title="Dealer">🃏</span>
                   )}
                   
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {player.name}
-                      {player.isAI && ' 🤖'}
-                    </p>
-                    <p className="text-xs">
-                      Score: {score}
-                      {score > 32 && ' ❌ (Eliminated)'}
-                      {score <= 0 && ' 🏆 (Winner!)'}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">
+                        {player.name}
+                        {player.isAI && ' 🤖'}
+                      </p>
+                    </div>
+                    <div className={`text-2xl font-bold px-2 py-1 rounded ${
+                      score <= 0 ? 'bg-green-600 text-white' : 
+                      score >= 28 ? 'bg-red-600 text-white' : 
+                      score > 16 ? 'bg-orange-500 text-white' : 
+                      'bg-blue-600 text-white'
+                    }`}>
+                      {score}
+                    </div>
                   </div>
                 </div>
                 
