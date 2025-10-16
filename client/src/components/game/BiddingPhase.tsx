@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useShnarps } from '../../lib/stores/useShnarps';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import PlayerHand from './PlayerHand';
 
 export default function BiddingPhase() {
   const { 
@@ -17,6 +18,7 @@ export default function BiddingPhase() {
   
   const currentPlayer = players[currentPlayerIndex];
   const isLocalPlayerTurn = currentPlayer?.id === localPlayerId;
+  const localPlayer = players.find(p => p.id === localPlayerId);
   
   const highestBid = Math.max(0, ...Array.from(bids.values()));
   
@@ -33,8 +35,8 @@ export default function BiddingPhase() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
+      <Card className="w-full max-w-lg bg-gray-900 bg-opacity-95 text-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-center text-white text-lg md:text-xl">Bidding Phase</CardTitle>
           <p className="text-center text-sm text-gray-300">
@@ -45,6 +47,20 @@ export default function BiddingPhase() {
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
+          {/* Your Hand */}
+          {localPlayer && (
+            <div className="space-y-2">
+              <h3 className="font-semibold text-sm text-white text-center">Your Hand:</h3>
+              <div className="flex justify-center bg-green-800 bg-opacity-30 p-3 rounded-lg">
+                <PlayerHand
+                  cards={localPlayer.hand}
+                  isCurrentPlayer={false}
+                  faceUp={true}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Show all players' bids */}
           <div className="space-y-1.5">
             <h3 className="font-semibold text-sm text-white">Current Bids:</h3>
