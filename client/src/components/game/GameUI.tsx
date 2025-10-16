@@ -395,6 +395,16 @@ export default function GameUI() {
       }))
       .sort((a, b) => a.score - b.score);
     
+    // Calculate total pot
+    const totalPot = sortedPlayers.reduce((sum, p) => {
+      if (p.id !== winner?.id) {
+        const pointsCost = p.score * 0.25;
+        const puntsCost = p.punts * 1.0;
+        return sum + pointsCost + puntsCost;
+      }
+      return sum;
+    }, 0);
+    
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
@@ -403,35 +413,66 @@ export default function GameUI() {
             <p className="text-center text-lg md:text-xl font-semibold text-green-400">
               {winner?.name} Wins!
             </p>
+            <p className="text-center text-sm text-yellow-400 font-bold">
+              Total Pot: ${totalPot.toFixed(2)}
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <h3 className="font-semibold text-sm text-white">Final Results:</h3>
-              {sortedPlayers.map((player, index) => (
-                <div key={player.id} className="space-y-0.5">
-                  <div className="flex justify-between text-sm text-gray-200">
-                    <span className="flex items-center gap-2 truncate max-w-[180px]">
-                      {index === 0 && <span className="text-yellow-400">👑</span>}
-                      {player.name}
-                    </span>
-                    <span className={`font-mono text-xs md:text-sm whitespace-nowrap ${player.score <= 0 ? 'text-green-400' : player.score > 32 ? 'text-red-400' : 'text-gray-200'}`}>
-                      {player.score} pts
-                      {player.score <= 0 && ' (Winner!)'}
-                      {player.score > 32 && ' (Eliminated)'}
-                    </span>
+              {sortedPlayers.map((player, index) => {
+                const isWinner = player.id === winner?.id;
+                const pointsCost = player.score * 0.25;
+                const puntsCost = player.punts * 1.0;
+                const totalOwed = pointsCost + puntsCost;
+                
+                return (
+                  <div key={player.id} className="bg-gray-800 bg-opacity-50 rounded p-2 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="flex items-center gap-1 truncate max-w-[160px] font-semibold">
+                        {isWinner && <span className="text-yellow-400">👑</span>}
+                        {player.name}
+                      </span>
+                      <span className={`font-mono text-sm ${player.score <= 0 ? 'text-green-400' : player.score > 32 ? 'text-red-400' : 'text-gray-200'}`}>
+                        {player.score} pts
+                      </span>
+                    </div>
+                    
+                    <div className="text-xs text-gray-300">
+                      <div className="flex justify-between">
+                        <span>Punts: {player.punts}</span>
+                        <span>Wallet: ${player.wallet.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    
+                    {!isWinner && (
+                      <div className="text-xs border-t border-gray-600 pt-1">
+                        <div className="flex justify-between text-gray-400">
+                          <span>{player.score} pts × $0.25</span>
+                          <span>${pointsCost.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-400">
+                          <span>{player.punts} punts × $1.00</span>
+                          <span>${puntsCost.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between font-semibold text-red-400 border-t border-gray-700 pt-1">
+                          <span>Total Owed:</span>
+                          <span>-${totalOwed.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {isWinner && (
+                      <div className="text-xs border-t border-gray-600 pt-1">
+                        <div className="flex justify-between font-semibold text-green-400">
+                          <span>Won:</span>
+                          <span>+${totalPot.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Payout:</span>
-                    <span className={`font-mono ${player.moneyChange > 0 ? 'text-green-400' : player.moneyChange < 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                      {player.moneyChange > 0 ? '+' : ''}${Math.abs(player.moneyChange).toFixed(2)}
-                      {player.moneyChange !== 0 && ` (${player.moneyChange > 0 ? 'won' : 'paid'})`}
-                    </span>
-                  </div>
-                  <div className="flex justify-end text-[10px] text-gray-500">
-                    Wallet: ${player.wallet.toFixed(2)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             
             <Button onClick={resetGame} className="w-full h-12 text-base touch-manipulation">
