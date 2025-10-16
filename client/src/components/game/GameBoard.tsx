@@ -16,7 +16,8 @@ export default function GameBoard() {
     scores,
     bids,
     localPlayerId,
-    highestBidder
+    highestBidder,
+    lastTrickWinner
   } = useShnarps();
 
   // Calculate player positions in a circle, with local player always at bottom
@@ -210,6 +211,19 @@ export default function GameBoard() {
                     FLICKER
                   </p>
                 </div>
+              )}
+
+              {/* Trick winner indicator */}
+              {gamePhase === 'trick_complete' && lastTrickWinner === player.id && (
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="mt-1 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg"
+                >
+                  <p className="text-sm font-bold text-center">
+                    🏆 WON TRICK!
+                  </p>
+                </motion.div>
               )}
 
               {/* Player hand */}

@@ -50,6 +50,7 @@ export interface GameState {
   scores: Map<string, number>;
   round: number;
   history: RoundHistory[];
+  lastTrickWinner: string | null;
 }
 
 export function calculateScore(
