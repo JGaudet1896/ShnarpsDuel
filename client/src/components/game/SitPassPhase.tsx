@@ -28,10 +28,10 @@ export default function SitPassPhase() {
   const canSit = currentPlayer ? canPlayerSit(currentPlayer, highestBid, trumpSuit) : false;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-96 max-w-lg bg-gray-900 bg-opacity-80 text-white">
-        <CardHeader>
-          <CardTitle className="text-center text-white">Sit or Play Phase</CardTitle>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-center text-white text-lg md:text-xl">Sit or Play Phase</CardTitle>
           <p className="text-center text-sm text-gray-300">
             Current turn: <span className="font-semibold text-white">{currentPlayer?.name}</span>
           </p>
@@ -42,14 +42,14 @@ export default function SitPassPhase() {
             Winning bid: <span className="font-semibold text-white">{highestBid}</span>
           </p>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           {/* Show players' decisions */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <h3 className="font-semibold text-sm text-white">Player Status:</h3>
             {players.map((player) => (
-              <div key={player.id} className="flex justify-between text-sm text-gray-200">
-                <span>{player.name}</span>
-                <span className="font-mono">
+              <div key={player.id} className="flex justify-between text-xs md:text-sm text-gray-200">
+                <span className="truncate max-w-[100px]">{player.name}</span>
+                <span className="font-mono text-xs whitespace-nowrap">
                   {player.id === highestBidder ? 'Winner (Playing)' :
                    playingPlayers.has(player.id) ? 'Playing' :
                    player.consecutiveSits >= 2 ? 'Musty (Must Play)' :
@@ -61,9 +61,9 @@ export default function SitPassPhase() {
           
           {/* Decision controls for local player */}
           {isLocalPlayerTurn && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {!canSit && (
-                <p className="text-sm text-orange-600 font-medium">
+                <p className="text-sm text-orange-400 font-medium text-center">
                   You must play this hand
                   {highestBid === 1 ? ' (bid of 1)' : 
                    trumpSuit === 'spades' ? ' (trump is spades)' :
@@ -74,14 +74,14 @@ export default function SitPassPhase() {
               <div className="flex gap-2">
                 <Button
                   onClick={() => handleSitOrPlay('play')}
-                  className="flex-1"
+                  className="flex-1 h-12 text-base touch-manipulation"
                   variant="default"
                 >
                   Play
                 </Button>
                 <Button
                   onClick={() => handleSitOrPlay('sit')}
-                  className="flex-1"
+                  className="flex-1 h-12 text-base touch-manipulation"
                   variant="outline"
                   disabled={!canSit}
                 >
@@ -90,7 +90,7 @@ export default function SitPassPhase() {
               </div>
               
               {canSit && currentPlayer && (
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-gray-400 text-center">
                   Consecutive sits: {currentPlayer.consecutiveSits}/2
                 </p>
               )}
@@ -98,7 +98,7 @@ export default function SitPassPhase() {
           )}
           
           {!isLocalPlayerTurn && (
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-sm text-gray-300">
               Waiting for {currentPlayer?.name} to decide...
             </p>
           )}

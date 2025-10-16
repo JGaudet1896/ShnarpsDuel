@@ -33,10 +33,10 @@ export default function BiddingPhase() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-96 max-w-lg bg-gray-900 bg-opacity-80 text-white">
-        <CardHeader>
-          <CardTitle className="text-center text-white">Bidding Phase</CardTitle>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-center text-white text-lg md:text-xl">Bidding Phase</CardTitle>
           <p className="text-center text-sm text-gray-300">
             Current turn: <span className="font-semibold text-white">{currentPlayer?.name}</span>
           </p>
@@ -44,14 +44,14 @@ export default function BiddingPhase() {
             Highest bid: <span className="font-semibold text-white">{highestBid}</span>
           </p>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           {/* Show all players' bids */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <h3 className="font-semibold text-sm text-white">Current Bids:</h3>
             {players.map((player) => (
-              <div key={player.id} className="flex justify-between text-sm text-gray-200">
-                <span>{player.name}</span>
-                <span className="font-mono">
+              <div key={player.id} className="flex justify-between text-xs md:text-sm text-gray-200">
+                <span className="truncate max-w-[120px]">{player.name}</span>
+                <span className="font-mono text-xs whitespace-nowrap">
                   Score: {scores.get(player.id) || 16} | 
                   Bid: {bids.has(player.id) ? 
                     (bids.get(player.id) === 0 ? 'Pass' : bids.get(player.id)) : 
@@ -63,12 +63,13 @@ export default function BiddingPhase() {
           
           {/* Bidding controls for local player */}
           {isLocalPlayerTurn && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2 justify-center">
                 <Button
                   variant={selectedBid === 0 ? "default" : "outline"}
-                  size="sm"
+                  size="lg"
                   onClick={() => setSelectedBid(0)}
+                  className="min-w-[60px] h-11 touch-manipulation"
                 >
                   Pass
                 </Button>
@@ -76,9 +77,10 @@ export default function BiddingPhase() {
                   <Button
                     key={bid}
                     variant={selectedBid === bid ? "default" : "outline"}
-                    size="sm"
+                    size="lg"
                     onClick={() => setSelectedBid(bid)}
                     disabled={!canBid(bid)}
+                    className="min-w-[50px] h-11 touch-manipulation"
                   >
                     {bid}
                   </Button>
@@ -87,7 +89,7 @@ export default function BiddingPhase() {
               
               <Button 
                 onClick={handleBid}
-                className="w-full"
+                className="w-full h-12 text-base touch-manipulation"
                 disabled={selectedBid < 0}
               >
                 {selectedBid === 0 ? 'Pass' : `Bid ${selectedBid}`}
@@ -96,7 +98,7 @@ export default function BiddingPhase() {
           )}
           
           {!isLocalPlayerTurn && (
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-sm text-gray-300">
               Waiting for {currentPlayer?.name} to bid...
             </p>
           )}

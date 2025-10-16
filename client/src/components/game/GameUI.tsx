@@ -118,18 +118,18 @@ export default function GameUI() {
   // Trump selection phase
   if (gamePhase === 'trump_selection') {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96 bg-gray-900 bg-opacity-80 text-white">
-          <CardHeader>
-            <CardTitle className="text-center text-white">Choose Trump Suit</CardTitle>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-center text-white text-lg md:text-xl">Choose Trump Suit</CardTitle>
             <p className="text-center text-sm text-gray-300">
               You won the bid! Select the trump suit.
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {isHighestBidder ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   {[
                     { suit: 'hearts', symbol: '♥', color: 'text-red-500' },
                     { suit: 'diamonds', symbol: '♦', color: 'text-red-500' },
@@ -140,9 +140,9 @@ export default function GameUI() {
                       key={suit}
                       variant={trumpSuit === suit ? "default" : "outline"}
                       onClick={() => setTrumpSuit(suit)}
-                      className="h-16 flex flex-col"
+                      className="h-20 flex flex-col touch-manipulation"
                     >
-                      <span className={`text-2xl ${color}`}>{symbol}</span>
+                      <span className={`text-3xl ${color}`}>{symbol}</span>
                       <span className="text-sm capitalize text-white">{suit}</span>
                     </Button>
                   ))}
@@ -156,7 +156,7 @@ export default function GameUI() {
                     }
                   }}
                   disabled={!trumpSuit}
-                  className="w-full"
+                  className="w-full h-12 text-base touch-manipulation"
                 >
                   Choose {trumpSuit}
                 </Button>
@@ -178,15 +178,15 @@ export default function GameUI() {
     const isBidder = highestBidder === localPlayerId;
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96 bg-gray-900 bg-opacity-80 text-white">
-          <CardHeader>
-            <CardTitle className="text-center text-white">Everyone Sat Out!</CardTitle>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-center text-white text-lg md:text-xl">Everyone Sat Out!</CardTitle>
             <p className="text-center text-sm text-gray-300">
               {isBidder ? 'Choose your penalty:' : `Waiting for ${bidder?.name} to choose penalty...`}
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {isBidder ? (
               <div className="space-y-3">
                 <p className="text-sm text-center text-gray-200">
@@ -195,17 +195,17 @@ export default function GameUI() {
                 <Button
                   variant="outline"
                   onClick={() => choosePenalty('self')}
-                  className="w-full h-auto flex flex-col gap-1 py-4 text-white border-gray-600 hover:bg-gray-700"
+                  className="w-full h-auto flex flex-col gap-1 py-4 text-white border-gray-600 hover:bg-gray-700 touch-manipulation"
                 >
-                  <span className="font-semibold">Take -5 to my score</span>
+                  <span className="font-semibold text-base">Take -5 to my score</span>
                   <span className="text-xs text-gray-300">Reduce your score by 5 points</span>
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => choosePenalty('others')}
-                  className="w-full h-auto flex flex-col gap-1 py-4 text-white border-gray-600 hover:bg-gray-700"
+                  className="w-full h-auto flex flex-col gap-1 py-4 text-white border-gray-600 hover:bg-gray-700 touch-manipulation"
                 >
-                  <span className="font-semibold">Give +5 to all others</span>
+                  <span className="font-semibold text-base">Give +5 to all others</span>
                   <span className="text-xs text-gray-300">Add 5 points to everyone else's score</span>
                 </Button>
               </div>
@@ -232,24 +232,24 @@ export default function GameUI() {
     const winner = sortedPlayers[0];
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-96 bg-gray-900 bg-opacity-80 text-white">
-          <CardHeader>
-            <CardTitle className="text-center text-white">Game Over!</CardTitle>
-            <p className="text-center text-lg font-semibold text-green-400">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-center text-white text-xl md:text-2xl">Game Over!</CardTitle>
+            <p className="text-center text-lg md:text-xl font-semibold text-green-400">
               {winner?.name} Wins!
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+          <CardContent className="space-y-3">
+            <div className="space-y-1.5">
               <h3 className="font-semibold text-sm text-white">Final Scores:</h3>
               {sortedPlayers.map((player, index) => (
                 <div key={player.id} className="flex justify-between text-sm text-gray-200">
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 truncate max-w-[180px]">
                     {index === 0 && <span className="text-yellow-400">👑</span>}
                     {player.name}
                   </span>
-                  <span className={`font-mono ${player.score <= 0 ? 'text-green-400' : player.score > 32 ? 'text-red-400' : 'text-gray-200'}`}>
+                  <span className={`font-mono text-xs md:text-sm whitespace-nowrap ${player.score <= 0 ? 'text-green-400' : player.score > 32 ? 'text-red-400' : 'text-gray-200'}`}>
                     {player.score}
                     {player.score <= 0 && ' (Winner!)'}
                     {player.score > 32 && ' (Eliminated)'}
@@ -258,7 +258,7 @@ export default function GameUI() {
               ))}
             </div>
             
-            <Button onClick={resetGame} className="w-full">
+            <Button onClick={resetGame} className="w-full h-12 text-base touch-manipulation">
               Play Again
             </Button>
           </CardContent>
