@@ -277,8 +277,8 @@ export default function GameUI() {
     );
   }
 
-  // Trump selection phase
-  if (gamePhase === 'trump_selection') {
+  // Trump selection phase - only show UI if you won the bid
+  if (gamePhase === 'trump_selection' && isHighestBidder) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
@@ -289,45 +289,39 @@ export default function GameUI() {
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
-            {isHighestBidder ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { suit: 'hearts', symbol: '♥', color: 'text-red-500' },
-                    { suit: 'diamonds', symbol: '♦', color: 'text-red-500' },
-                    { suit: 'clubs', symbol: '♣', color: 'text-white' },
-                    { suit: 'spades', symbol: '♠', color: 'text-white' }
-                  ].map(({ suit, symbol, color }) => (
-                    <Button
-                      key={suit}
-                      variant={trumpSuit === suit ? "default" : "outline"}
-                      onClick={() => setTrumpSuit(suit)}
-                      className="h-20 flex flex-col touch-manipulation"
-                    >
-                      <span className={`text-3xl ${color}`}>{symbol}</span>
-                      <span className="text-sm capitalize text-white">{suit}</span>
-                    </Button>
-                  ))}
-                </div>
-                
-                <Button 
-                  onClick={() => {
-                    if (trumpSuit) {
-                      chooseTrumpSuit(trumpSuit);
-                      setTrumpSuit('');
-                    }
-                  }}
-                  disabled={!trumpSuit}
-                  className="w-full h-12 text-base touch-manipulation"
-                >
-                  Choose {trumpSuit}
-                </Button>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { suit: 'hearts', symbol: '♥', color: 'text-red-500' },
+                  { suit: 'diamonds', symbol: '♦', color: 'text-red-500' },
+                  { suit: 'clubs', symbol: '♣', color: 'text-white' },
+                  { suit: 'spades', symbol: '♠', color: 'text-white' }
+                ].map(({ suit, symbol, color }) => (
+                  <Button
+                    key={suit}
+                    variant={trumpSuit === suit ? "default" : "outline"}
+                    onClick={() => setTrumpSuit(suit)}
+                    className="h-20 flex flex-col touch-manipulation"
+                  >
+                    <span className={`text-3xl ${color}`}>{symbol}</span>
+                    <span className="text-sm capitalize text-white">{suit}</span>
+                  </Button>
+                ))}
               </div>
-            ) : (
-              <p className="text-center text-sm text-gray-300">
-                Waiting for the highest bidder to choose trump...
-              </p>
-            )}
+              
+              <Button 
+                onClick={() => {
+                  if (trumpSuit) {
+                    chooseTrumpSuit(trumpSuit);
+                    setTrumpSuit('');
+                  }
+                }}
+                disabled={!trumpSuit}
+                className="w-full h-12 text-base touch-manipulation"
+              >
+                Choose {trumpSuit}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
