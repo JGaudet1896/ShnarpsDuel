@@ -234,10 +234,13 @@ export const useShnarps = create<ShnarpsState>()(
       const state = get();
       if (state.gamePhase !== 'trump_selection') return;
       
-      // Highest bidder always plays
+      // Highest bidder always plays (if they're still active)
       const playingPlayers = new Set<string>();
       if (state.highestBidder) {
-        playingPlayers.add(state.highestBidder);
+        const bidder = state.players.find(p => p.id === state.highestBidder);
+        if (bidder && bidder.isActive) {
+          playingPlayers.add(state.highestBidder);
+        }
       }
       
       // Check if everyone must play (bid of 1 or spades trump)
@@ -245,8 +248,12 @@ export const useShnarps = create<ShnarpsState>()(
       const everyoneMustPlay = highestBid === 1 || suit === 'spades';
       
       if (everyoneMustPlay) {
-        // Everyone plays, skip sit/pass phase
-        state.players.forEach(player => playingPlayers.add(player.id));
+        // Everyone who is active plays, skip sit/pass phase
+        state.players.forEach(player => {
+          if (player.isActive) {
+            playingPlayers.add(player.id);
+          }
+        });
         
         // Reset sit counters for all players
         const updatedPlayers = state.players.map(player => ({
@@ -254,11 +261,19 @@ export const useShnarps = create<ShnarpsState>()(
           consecutiveSits: 0
         }));
         
+        // First player to lead is to the left of the dealer
+        let firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+        
+        // Make sure the first player is actually playing
+        while (!playingPlayers.has(state.players[firstPlayerIndex].id)) {
+          firstPlayerIndex = (firstPlayerIndex + 1) % state.players.length;
+        }
+        
         set({
           trumpSuit: suit,
           gamePhase: 'hand_play',
           players: updatedPlayers,
-          currentPlayerIndex: (state.dealerIndex + 1) % state.players.length,
+          currentPlayerIndex: firstPlayerIndex,
           playingPlayers,
           currentTrick: []
         });
