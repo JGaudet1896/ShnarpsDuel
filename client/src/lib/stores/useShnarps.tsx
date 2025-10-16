@@ -88,18 +88,18 @@ export const useShnarps = create<ShnarpsState>()(
       const state = get();
       if (state.players.length >= 8 || state.gamePhase !== 'setup') return;
       
-      // Obscure NHL players from the past
-      const nhlPlayers = [
-        'Petr Klima', 'Zarley Zalapski', 'Miroslav Satan', 'Grant Ledyard',
-        'Jody Shelley', 'Brantt Myhres', 'Enrico Ciccone', 'Link Gaetz',
-        'Krzysztof Oliwa', 'Dennis Bonvie', 'Wade Belak', 'Georges Laraque',
-        'Donald Brashear', 'Tie Domi', 'Bob Probert', 'Stu Grimson',
-        'Gino Odjick', 'Tony Twist', 'Joey Kocur', 'Marty McSorley'
+      // ECHL all-time penalty minutes leaders
+      const echlPlayers = [
+        'Dennis Bonvie', 'Matt Carkner', 'Garrett Burnett', 'Brad Wingfield',
+        'Steve MacIntyre', 'Darren Schwartz', 'Chris Ferraro', 'Riley Cote',
+        'David-Alexandre Beauregard', 'Kip Brennan', 'Bryan Helmer', 'Brent Cullaton',
+        'Trevor Gallant', 'Tyler Mosienko', 'Zac Rinaldo', 'Cam Janssen',
+        'Jesse Schultz', 'Chris Durno', 'Joe Fallon', 'Jared Staal'
       ];
       
       // Pick a random name that hasn't been used
       const usedNames = state.players.map(p => p.name);
-      const availableNames = nhlPlayers.filter(name => !usedNames.includes(name));
+      const availableNames = echlPlayers.filter(name => !usedNames.includes(name));
       const aiName = availableNames.length > 0 
         ? availableNames[Math.floor(Math.random() * availableNames.length)]
         : `AI ${state.players.length + 1}`;
