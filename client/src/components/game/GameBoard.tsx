@@ -9,6 +9,7 @@ export default function GameBoard() {
     currentTrick, 
     gamePhase, 
     currentPlayerIndex,
+    dealerIndex,
     trumpSuit,
     playingPlayers,
     scores
@@ -93,14 +94,43 @@ export default function GameBoard() {
             <div className="flex flex-col items-center gap-2">
               {/* Player info */}
               <div className={`
-                px-4 py-2 rounded-lg shadow-md
+                px-4 py-2 rounded-lg shadow-md relative
                 ${isCurrentPlayer ? 'bg-yellow-400 text-gray-900' : 'bg-gray-800 text-white'}
               `}>
-                <p className="text-sm font-semibold">{player.name}</p>
-                <p className="text-xs">
-                  Score: {score}
-                  {!isPlaying && gamePhase === 'hand_play' ? ' (Sitting)' : ''}
-                </p>
+                <div className="flex items-center gap-2">
+                  {/* Dealer indicator */}
+                  {index === dealerIndex && (
+                    <span className="text-lg" title="Dealer">🃏</span>
+                  )}
+                  
+                  <div>
+                    <p className="text-sm font-semibold">{player.name}</p>
+                    <p className="text-xs">
+                      Score: {score}
+                      {score > 32 && ' ❌ (Eliminated)'}
+                      {score <= 0 && ' 🏆 (Winner!)'}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Status badges */}
+                <div className="flex gap-1 mt-1">
+                  {isCurrentPlayer && (
+                    <span className="text-xs bg-white bg-opacity-20 px-2 py-0.5 rounded">
+                      Current Turn
+                    </span>
+                  )}
+                  {!isPlaying && gamePhase === 'hand_play' && (
+                    <span className="text-xs bg-gray-600 px-2 py-0.5 rounded">
+                      Sitting Out
+                    </span>
+                  )}
+                  {player.consecutiveSits >= 2 && gamePhase !== 'hand_play' && (
+                    <span className="text-xs bg-red-600 px-2 py-0.5 rounded">
+                      Musty - Must Play
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Player hand */}
