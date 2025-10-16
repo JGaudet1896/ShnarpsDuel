@@ -15,7 +15,7 @@ export default function BiddingPhase() {
   const [selectedBid, setSelectedBid] = useState<number>(0);
   
   const currentPlayer = players[currentPlayerIndex];
-  const isLocalPlayerTurn = currentPlayerIndex === 0; // Assuming first player is local
+  const isLocalPlayerTurn = currentPlayer && !currentPlayer.isAI;
   
   const highestBid = Math.max(0, ...Array.from(bids.values()));
   
