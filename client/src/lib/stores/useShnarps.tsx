@@ -302,8 +302,8 @@ export const useShnarps = create<ShnarpsState>()(
         const updatedPlayers = activePlayers.map((player, index) => ({
           ...player,
           hand: dealtCards[index] || [],
-          isActive: true,
-          consecutiveSits: 0
+          isActive: true
+          // Keep consecutiveSits from previous round - only reset when player chooses to play
         }));
         
         set({
