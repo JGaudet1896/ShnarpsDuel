@@ -2,11 +2,13 @@ import { useShnarps } from '../../lib/stores/useShnarps';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import BiddingPhase from './BiddingPhase';
 import SitPassPhase from './SitPassPhase';
 import HandPlayPhase from './HandPlayPhase';
 import GameHistory from './GameHistory';
 import { useState } from 'react';
+import { AIDifficulty } from '../../lib/game/gameLogic';
 
 export default function GameUI() {
   const { 
@@ -26,6 +28,7 @@ export default function GameUI() {
   
   const [playerName, setPlayerName] = useState('');
   const [trumpSuit, setTrumpSuit] = useState<string>('');
+  const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('medium');
   
   const isHighestBidder = highestBidder === localPlayerId;
 
@@ -49,7 +52,7 @@ export default function GameUI() {
                   <div key={player.id} className="text-sm flex justify-between">
                     <span>
                       {player.name}
-                      {player.isAI && ' 🤖'}
+                      {player.isAI && ` 🤖 (${player.aiDifficulty || 'medium'})`}
                     </span>
                     <span className="text-muted-foreground">
                       Score: {scores.get(player.id) || 16}
@@ -73,26 +76,40 @@ export default function GameUI() {
                     }
                   }}
                 />
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => {
-                      if (playerName.trim()) {
-                        joinGame(playerName.trim());
-                        setPlayerName('');
-                      }
-                    }}
-                    disabled={!playerName.trim()}
-                    className="flex-1"
-                  >
-                    Join Game
-                  </Button>
-                  <Button 
-                    onClick={addAIPlayer}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    🤖 Add AI
-                  </Button>
+                <Button 
+                  onClick={() => {
+                    if (playerName.trim()) {
+                      joinGame(playerName.trim());
+                      setPlayerName('');
+                    }
+                  }}
+                  disabled={!playerName.trim()}
+                  className="w-full"
+                >
+                  Join Game
+                </Button>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Add AI Player:</label>
+                  <div className="flex gap-2">
+                    <Select value={aiDifficulty} onValueChange={(value) => setAiDifficulty(value as AIDifficulty)}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Difficulty" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="easy">Easy</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      onClick={() => addAIPlayer(aiDifficulty)}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      🤖 Add AI
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
