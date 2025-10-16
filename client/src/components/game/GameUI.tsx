@@ -271,17 +271,17 @@ export default function GameUI() {
   return (
     <div>
       {/* Game info overlay */}
-      <div className="fixed top-4 left-4 z-30">
-        <Card className="w-64">
-          <CardContent className="pt-4">
-            <div className="space-y-2 text-sm">
+      <div className="fixed top-2 left-2 sm:top-4 sm:left-4 z-30">
+        <Card className="w-40 sm:w-64 bg-white/95">
+          <CardContent className="pt-3 sm:pt-4 p-2 sm:p-4">
+            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
               <div className="flex justify-between">
                 <span>Round:</span>
                 <span className="font-mono">{round}</span>
               </div>
               <div className="flex justify-between">
                 <span>Phase:</span>
-                <span className="capitalize font-mono">{gamePhase.replace('_', ' ')}</span>
+                <span className="capitalize font-mono text-xs sm:text-sm">{gamePhase.replace('_', ' ')}</span>
               </div>
             </div>
           </CardContent>
@@ -289,17 +289,17 @@ export default function GameUI() {
       </div>
 
       {/* Scores overlay */}
-      <div className="fixed top-4 right-4 z-30">
-        <Card className="w-48">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Scores</CardTitle>
+      <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-30">
+        <Card className="w-36 sm:w-48 bg-white/95">
+          <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm">Scores</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1">
+          <CardContent className="space-y-0.5 sm:space-y-1 p-2 sm:p-4 pt-0">
             {players.map((player) => {
               const score = scores.get(player.id) || 16;
               return (
-                <div key={player.id} className="flex justify-between text-sm">
-                  <span className="truncate">{player.name}</span>
+                <div key={player.id} className="flex justify-between text-xs sm:text-sm">
+                  <span className="truncate max-w-[60px] sm:max-w-none">{player.name}</span>
                   <span className={`font-mono ${score <= 0 ? 'text-green-600' : score > 32 ? 'text-red-600' : ''}`}>
                     {score}
                   </span>
