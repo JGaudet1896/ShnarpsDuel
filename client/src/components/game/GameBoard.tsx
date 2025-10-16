@@ -112,7 +112,9 @@ export default function GameBoard() {
         return (
           <div
             key={player.id}
-            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
+              !isPlaying && gamePhase === 'hand_play' ? 'opacity-30' : 'opacity-100'
+            }`}
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
