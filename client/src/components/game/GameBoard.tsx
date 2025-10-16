@@ -177,6 +177,15 @@ export default function GameBoard() {
                 </div>
               )}
 
+              {/* Flicker banner for players at 28+ score */}
+              {score >= 28 && (
+                <div className="mt-1 bg-red-600 text-white px-3 py-1 rounded-lg shadow-md animate-pulse">
+                  <p className="text-xs font-bold text-center">
+                    FLICKER
+                  </p>
+                </div>
+              )}
+
               {/* Player hand */}
               <PlayerHand
                 cards={player.hand}
