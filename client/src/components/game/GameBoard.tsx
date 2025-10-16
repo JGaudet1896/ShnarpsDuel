@@ -57,49 +57,48 @@ export default function GameBoard() {
         </div>
       )}
 
-      {/* Current trick cards in center */}
-      <AnimatePresence mode="wait">
-        {currentTrick.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.3 }}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-          >
-            <div className="flex gap-2">
-              {currentTrick.map((play, index) => {
-                const player = players.find(p => p.id === play.playerId);
-                const playerIndex = players.findIndex(p => p.id === play.playerId);
-                const playerPos = playerPositions[playerIndex];
-                
-                // Calculate initial position relative to center (50%, 50%)
-                const startX = playerPos ? (playerPos.x - 50) * 8 : 0;
-                const startY = playerPos ? (playerPos.y - 50) * 8 : -100;
-                
-                return (
-                  <motion.div 
-                    key={`${play.playerId}-${index}`}
-                    initial={{ opacity: 0, scale: 0.5, x: startX, y: startY }}
-                    animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-                    transition={{ 
-                      type: "spring",
-                      stiffness: 150,
-                      damping: 18,
-                      delay: index * 0.15
-                    }}
-                    className="flex flex-col items-center gap-1"
-                  >
-                    <Card card={play.card} isPlayable={false} />
-                    <p className="text-white text-xs font-semibold bg-black bg-opacity-70 px-2 py-1 rounded shadow-lg">
-                      {player?.name}
-                    </p>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
+      {/* Current trick cards positioned in front of each player */}
+      <AnimatePresence>
+        {currentTrick.map((play, index) => {
+          const player = players.find(p => p.id === play.playerId);
+          const playerIndex = players.findIndex(p => p.id === play.playerId);
+          const playerPos = playerPositions[playerIndex];
+          
+          if (!playerPos) return null;
+          
+          // Position card slightly towards center from player position
+          const angle = (playerIndex / players.length) * Math.PI * 2 - Math.PI / 2;
+          const cardRadius = 25; // Closer to center than player
+          const cardX = 50 + Math.cos(angle) * cardRadius;
+          const cardY = 50 + Math.sin(angle) * cardRadius;
+          
+          return (
+            <motion.div 
+              key={`${play.playerId}-${index}`}
+              initial={{ 
+                opacity: 0, 
+                scale: 0.5,
+                left: `${playerPos.x}%`,
+                top: `${playerPos.y}%`,
+              }}
+              animate={{ 
+                opacity: 1, 
+                scale: 1,
+                left: `${cardX}%`,
+                top: `${cardY}%`,
+              }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ 
+                duration: 0.6,
+                ease: "easeOut",
+                delay: index * 0.2
+              }}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20"
+            >
+              <Card card={play.card} isPlayable={false} />
+            </motion.div>
+          );
+        })}
       </AnimatePresence>
 
       {/* Player hands positioned around the table */}
