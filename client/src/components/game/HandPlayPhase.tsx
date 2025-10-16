@@ -18,8 +18,8 @@ export default function HandPlayPhase() {
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   
   const currentPlayer = players[currentPlayerIndex];
-  const isLocalPlayerTurn = currentPlayerIndex === 0 && playingPlayers.has(players[0]?.id); // Assuming first player is local
-  const localPlayer = players[0];
+  const localPlayer = players.find(p => !p.isAI);
+  const isLocalPlayerTurn = currentPlayer && !currentPlayer.isAI && playingPlayers.has(currentPlayer.id);
   
   const handleCardPlay = () => {
     if (selectedCard && currentPlayer) {
