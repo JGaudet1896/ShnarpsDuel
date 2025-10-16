@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { Card, GamePhase, Player, GameState, RoundHistory, AIDifficulty } from "../game/gameLogic";
+import { Card, GamePhase, Player, GameState, RoundHistory, AIDifficulty, calculateMoneyChange } from "../game/gameLogic";
 import { createDeck, shuffleDeck, dealCards, determineTrickWinner } from "../game/cardUtils";
 
 interface ShnarpsState extends GameState {
@@ -78,7 +78,8 @@ export const useShnarps = create<ShnarpsState>()(
         isActive: true,
         consecutiveSits: 0,
         isAI: false,
-        avatar
+        avatar,
+        wallet: 100.00 // Starting money
       };
       
       const newScores = new Map(state.scores);
@@ -127,7 +128,8 @@ export const useShnarps = create<ShnarpsState>()(
         consecutiveSits: 0,
         isAI: true,
         aiDifficulty: difficulty,
-        avatar: randomAvatar
+        avatar: randomAvatar,
+        wallet: 100.00 // Starting money
       };
       
       const newScores = new Map(state.scores);
@@ -536,16 +538,28 @@ export const useShnarps = create<ShnarpsState>()(
                           state.highestBidder && 
                           tricksWonByPlayer.get(state.highestBidder) === 5;
         
-        // Track score changes for history
+        // Track score changes and money changes for history
         const scoreChanges = new Map<string, number>();
+        const moneyChanges = new Map<string, number>();
+        const newWallets = new Map<string, number>();
+        
+        // Initialize wallets from current players
+        for (const player of state.players) {
+          newWallets.set(player.id, player.wallet || 100);
+        }
         
         if (spadingOut) {
           // Spading out: instant win for the bidder
           const bidderScore = newScores.get(state.highestBidder!) || 16;
           newScores.set(state.highestBidder!, 0); // Set to winning score
           scoreChanges.set(state.highestBidder!, -bidderScore);
+          
+          // Spading out money: pay full pot based on score reduction
+          const moneyEarned = bidderScore * 0.25;
+          moneyChanges.set(state.highestBidder!, moneyEarned);
+          newWallets.set(state.highestBidder!, (newWallets.get(state.highestBidder!) || 100) + moneyEarned);
         } else {
-          // Update scores based on tricks won and bids
+          // Update scores and money based on tricks won and bids
           for (const playerId of state.playingPlayers) {
             const tricksWon = tricksWonByPlayer.get(playerId) || 0;
             const bid = state.bids.get(playerId) || 0;
@@ -567,9 +581,21 @@ export const useShnarps = create<ShnarpsState>()(
             }
             
             scoreChanges.set(playerId, scoreChange);
-            newScores.set(playerId, currentScore + scoreChange);
+            const newScore = currentScore + scoreChange;
+            newScores.set(playerId, newScore);
+            
+            // Calculate money change
+            const moneyChange = calculateMoneyChange(bid, currentScore, newScore);
+            moneyChanges.set(playerId, moneyChange);
+            newWallets.set(playerId, (newWallets.get(playerId) || 100) + moneyChange);
           }
         }
+        
+        // Update player wallets
+        const updatedPlayersWithWallets = state.players.map(player => ({
+          ...player,
+          wallet: newWallets.get(player.id) || player.wallet || 100
+        }));
         
         // Save round history
         const roundHistory: RoundHistory = {
@@ -580,7 +606,9 @@ export const useShnarps = create<ShnarpsState>()(
           playingPlayers: Array.from(state.playingPlayers),
           tricksWon: tricksWonByPlayer,
           scoreChanges,
-          finalScores: new Map(newScores)
+          finalScores: new Map(newScores),
+          moneyChanges,
+          finalWallets: new Map(newWallets)
         };
         
         // Check for eliminated players (score > 32) and winners (score <= 0)
@@ -595,6 +623,7 @@ export const useShnarps = create<ShnarpsState>()(
         if (activePlayers.length <= 1 || hasWinner) {
           set({
             gamePhase: 'game_over',
+            players: updatedPlayersWithWallets,
             scores: newScores,
             history: [...state.history, roundHistory]
           });
@@ -607,7 +636,8 @@ export const useShnarps = create<ShnarpsState>()(
           const updatedPlayers = activePlayers.map((player, index) => ({
             ...player,
             hand: dealtCards[index] || [],
-            isActive: true
+            isActive: true,
+            wallet: newWallets.get(player.id) || player.wallet || 100
           }));
           
           set({
