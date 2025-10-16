@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { Card, GamePhase, Player, GameState } from "../game/gameLogic";
-import { createDeck, shuffleDeck, dealCards } from "../game/cardUtils";
+import { createDeck, shuffleDeck, dealCards, determineTrickWinner } from "../game/cardUtils";
 
 interface ShnarpsState extends GameState {
   // Actions
@@ -164,12 +164,46 @@ export const useShnarps = create<ShnarpsState>()(
       const state = get();
       if (state.gamePhase !== 'trump_selection') return;
       
-      set({
-        trumpSuit: suit,
-        gamePhase: 'sit_pass',
-        currentPlayerIndex: (state.currentPlayerIndex + 1) % state.players.length,
-        playingPlayers: new Set()
-      });
+      // Highest bidder always plays
+      const playingPlayers = new Set<string>();
+      if (state.highestBidder) {
+        playingPlayers.add(state.highestBidder);
+      }
+      
+      // Check if everyone must play (bid of 1 or spades trump)
+      const highestBid = Math.max(0, ...Array.from(state.bids.values()));
+      const everyoneMustPlay = highestBid === 1 || suit === 'spades';
+      
+      if (everyoneMustPlay) {
+        // Everyone plays, skip sit/pass phase
+        state.players.forEach(player => playingPlayers.add(player.id));
+        
+        // Reset sit counters for all players
+        const updatedPlayers = state.players.map(player => ({
+          ...player,
+          consecutiveSits: 0
+        }));
+        
+        set({
+          trumpSuit: suit,
+          gamePhase: 'hand_play',
+          players: updatedPlayers,
+          currentPlayerIndex: (state.dealerIndex + 1) % state.players.length,
+          playingPlayers,
+          currentTrick: []
+        });
+      } else {
+        // Move to sit/pass phase, starting with player after highest bidder
+        const highestBidderIndex = state.players.findIndex(p => p.id === state.highestBidder);
+        const nextPlayerIndex = (highestBidderIndex + 1) % state.players.length;
+        
+        set({
+          trumpSuit: suit,
+          gamePhase: 'sit_pass',
+          currentPlayerIndex: nextPlayerIndex,
+          playingPlayers
+        });
+      }
     },
 
     chooseSitOrPlay: (playerId: string, decision: 'sit' | 'play') => {
@@ -180,42 +214,44 @@ export const useShnarps = create<ShnarpsState>()(
       if (currentPlayer.id !== playerId) return;
       
       const newPlayingPlayers = new Set(state.playingPlayers);
-      const newMustyPlayers = new Set(state.mustyPlayers);
       const updatedPlayers = [...state.players];
       
       const playerIndex = state.players.findIndex(p => p.id === playerId);
+      const highestBidderIndex = state.players.findIndex(p => p.id === state.highestBidder);
       
       if (decision === 'play') {
         newPlayingPlayers.add(playerId);
         updatedPlayers[playerIndex].consecutiveSits = 0;
       } else {
         updatedPlayers[playerIndex].consecutiveSits += 1;
-        if (updatedPlayers[playerIndex].consecutiveSits >= 2) {
-          newMustyPlayers.add(playerId);
-        }
       }
       
-      // Check if all players have decided
+      // Move to next player
       let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-      const allPlayersDecided = state.players.every(player => 
-        newPlayingPlayers.has(player.id) || 
-        (!newPlayingPlayers.has(player.id) && player.id !== playerId)
-      );
       
-      if (allPlayersDecided || nextPlayerIndex === ((state.currentPlayerIndex + 1) % state.players.length)) {
-        // Start hand play phase
+      // Check if we've gone around to the highest bidder (they were first, so we're done)
+      const backToHighestBidder = nextPlayerIndex === highestBidderIndex;
+      
+      if (backToHighestBidder) {
+        // All players have decided, start hand play phase
+        // First player to lead is to the left of the dealer
+        let firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+        
+        // Make sure the first player is actually playing
+        while (!newPlayingPlayers.has(state.players[firstPlayerIndex].id)) {
+          firstPlayerIndex = (firstPlayerIndex + 1) % state.players.length;
+        }
+        
         set({
           playingPlayers: newPlayingPlayers,
-          mustyPlayers: newMustyPlayers,
           players: updatedPlayers,
           gamePhase: 'hand_play',
-          currentPlayerIndex: (state.dealerIndex + 1) % state.players.length,
+          currentPlayerIndex: firstPlayerIndex,
           currentTrick: []
         });
       } else {
         set({
           playingPlayers: newPlayingPlayers,
-          mustyPlayers: newMustyPlayers,
           players: updatedPlayers,
           currentPlayerIndex: nextPlayerIndex
         });
@@ -265,29 +301,46 @@ export const useShnarps = create<ShnarpsState>()(
     nextTrick: () => {
       const state = get();
       
+      // Determine winner of current trick if it's complete
+      let trickWinnerId = null;
+      if (state.currentTrick.length > 0) {
+        trickWinnerId = determineTrickWinner(state.currentTrick, state.trumpSuit);
+      }
+      
       // Check if hand is complete (all 5 tricks played)
       if (state.completedTricks.length === 5) {
         // Calculate scores and move to next round or end game
         const newScores = new Map(state.scores);
         
+        // Count tricks won by each player
+        const tricksWonByPlayer = new Map<string, number>();
+        for (const trick of state.completedTricks) {
+          const winnerId = determineTrickWinner(trick, state.trumpSuit);
+          tricksWonByPlayer.set(winnerId, (tricksWonByPlayer.get(winnerId) || 0) + 1);
+        }
+        
         // Update scores based on tricks won and bids
         for (const playerId of state.playingPlayers) {
-          const tricksWon = state.completedTricks.filter(trick => {
-            // Determine winner of each trick (simplified logic)
-            return trick[0]?.playerId === playerId; // Placeholder logic
-          }).length;
-          
+          const tricksWon = tricksWonByPlayer.get(playerId) || 0;
           const bid = state.bids.get(playerId) || 0;
           const currentScore = newScores.get(playerId) || 16;
+          const isHighestBidder = playerId === state.highestBidder;
           
-          if (bid === 0) {
-            // Punt: +5 points if no tricks taken, -1 per trick if any taken
-            const scoreChange = tricksWon === 0 ? 5 : -tricksWon;
-            newScores.set(playerId, currentScore + scoreChange);
+          let scoreChange = 0;
+          
+          // Check for punt conditions
+          if (tricksWon === 0) {
+            // Didn't win any tricks: punt (+5)
+            scoreChange = 5;
+          } else if (isHighestBidder && tricksWon < bid) {
+            // Highest bidder didn't meet their bid: punt (+5)
+            scoreChange = 5;
           } else {
-            // Regular bid: -1 per trick won
-            newScores.set(playerId, currentScore - tricksWon);
+            // Normal scoring: -1 per trick won
+            scoreChange = -tricksWon;
           }
+          
+          newScores.set(playerId, currentScore + scoreChange);
         }
         
         // Check for eliminated players (score > 32) and winners (score <= 0)
@@ -296,7 +349,10 @@ export const useShnarps = create<ShnarpsState>()(
           return score <= 32 && score > 0;
         });
         
-        if (activePlayers.length <= 1) {
+        // Check if game is over
+        const hasWinner = Array.from(newScores.values()).some(score => score <= 0);
+        
+        if (activePlayers.length <= 1 || hasWinner) {
           set({
             gamePhase: 'game_over',
             scores: newScores
@@ -330,10 +386,20 @@ export const useShnarps = create<ShnarpsState>()(
           });
         }
       } else {
-        // Continue with next trick
+        // Continue with next trick - winner of this trick leads the next
+        const winnerIndex = trickWinnerId 
+          ? state.players.findIndex(p => p.id === trickWinnerId)
+          : (state.dealerIndex + 1) % state.players.length;
+        
+        // Make sure the next player to play is actually playing
+        let nextPlayerIndex = winnerIndex;
+        while (!state.playingPlayers.has(state.players[nextPlayerIndex].id)) {
+          nextPlayerIndex = (nextPlayerIndex + 1) % state.players.length;
+        }
+        
         set({
           currentTrick: [],
-          currentPlayerIndex: (state.dealerIndex + 1) % state.players.length
+          currentPlayerIndex: nextPlayerIndex
         });
       }
     },
