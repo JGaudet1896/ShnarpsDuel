@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+### iOS App Deployment Setup (October 2024)
+- **Capacitor Integration:** Added Capacitor to wrap the web app as a native iOS app for App Store deployment
+- **iOS Platform:** Configured iOS project in `ios/` folder with proper build pipeline
+- **App Configuration:** Set up app ID (com.shnarps.cardgame) and app name (Shnarps Card Game)
+- **Build Scripts:** Configured web-to-native build and sync process
+- **Documentation:** Created comprehensive deployment guides (IOS_DEPLOYMENT_GUIDE.md, IOS_QUICK_START.md)
+
 ### Player Customization (December 2024)
 - **Avatars:** Players can customize their avatars with 8 colors and 24 icon options. Avatars appear throughout the UI (player lists, scores). AI players get random avatars automatically.
 
@@ -187,3 +194,12 @@ Preferred communication style: Simple, everyday language.
 - Separate client and server builds
 - Static asset serving in production
 - Environment-based configuration (NODE_ENV)
+
+**iOS Deployment (Capacitor)**
+- Capacitor 7.4+ for native iOS app wrapping
+- iOS project in `ios/` folder (Xcode project)
+- Web app builds to `dist/public` and syncs to iOS
+- App ID: com.shnarps.cardgame
+- Supports all native iOS features and App Store deployment
+- Build process: `vite build` → `npx cap sync ios` → Open in Xcode
+- Requires Mac with Xcode and Apple Developer account for App Store submission
