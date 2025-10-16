@@ -1,5 +1,7 @@
 import { Card } from './cardUtils';
 
+export type AIDifficulty = 'easy' | 'medium' | 'hard';
+
 export interface Player {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ export interface Player {
   isActive: boolean;
   consecutiveSits: number;
   isAI: boolean;
+  aiDifficulty?: AIDifficulty;
 }
 
 export type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'everyone_sat' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
