@@ -8,6 +8,15 @@ Shnarps is a multiplayer card game application built with a modern web stack. Th
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Updates
+
+### Player Customization (December 2024)
+- **Avatars:** Players can customize their avatars with 8 colors and 24 icon options. Avatars appear throughout the UI (player lists, scores). AI players get random avatars automatically.
+
+### Tutorial & Onboarding (December 2024)
+- **Game Tutorial:** Comprehensive 10-step tutorial explaining Shnarps rules, phases, scoring, and strategy. Accessible from main menu.
+- **App Walkthrough:** First-time user onboarding (9 steps) covering game modes, multiplayer setup, avatar customization, and UI navigation. Automatically shown to new users (tracked via localStorage).
+
 ## System Architecture
 
 ### Frontend Architecture
