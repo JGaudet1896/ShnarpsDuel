@@ -44,6 +44,7 @@ export const useShnarps = create<ShnarpsState>()(
     scores: new Map(),
     round: 1,
     history: [],
+    lastTrickWinner: null as string | null,
     
     initializeGame: () => {
       const deck = shuffleDeck(createDeck());
@@ -64,6 +65,7 @@ export const useShnarps = create<ShnarpsState>()(
         scores: new Map(),
         round: 1,
         history: [],
+        lastTrickWinner: null,
       });
     },
 
@@ -473,29 +475,35 @@ export const useShnarps = create<ShnarpsState>()(
             players: updatedPlayers,
             currentTrick: newTrick,
             completedTricks: newCompletedTricks,
-            gamePhase: 'trick_complete'
+            gamePhase: 'trick_complete',
+            lastTrickWinner: trickWinnerId
           });
           
           // Auto-trigger scoring after a delay
           setTimeout(() => {
             get().nextTrick();
-          }, 1500);
+          }, 2000);
         } else {
           // More tricks to play - winner leads next trick
           const winnerIndex = state.players.findIndex(p => p.id === trickWinnerId);
           
           set({
             players: updatedPlayers,
-            currentTrick: [],
+            currentTrick: newTrick, // Keep the trick visible
             completedTricks: newCompletedTricks,
             currentPlayerIndex: winnerIndex,
-            gamePhase: 'trick_complete'
+            gamePhase: 'trick_complete',
+            lastTrickWinner: trickWinnerId
           });
           
           // Auto-transition back to hand_play after showing the trick winner
           setTimeout(() => {
-            set({ gamePhase: 'hand_play' });
-          }, 1000);
+            set({ 
+              gamePhase: 'hand_play',
+              currentTrick: [], // Clear trick when starting new one
+              lastTrickWinner: null
+            });
+          }, 1500);
         }
       } else {
         // Move to next playing player
