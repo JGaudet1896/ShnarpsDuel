@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { Card, GamePhase, Player, GameState, RoundHistory } from "../game/gameLogic";
+import { Card, GamePhase, Player, GameState, RoundHistory, AIDifficulty } from "../game/gameLogic";
 import { createDeck, shuffleDeck, dealCards, determineTrickWinner } from "../game/cardUtils";
 
 interface ShnarpsState extends GameState {
@@ -8,7 +8,7 @@ interface ShnarpsState extends GameState {
   // Actions
   initializeGame: () => void;
   joinGame: (playerName: string) => void;
-  addAIPlayer: () => void;
+  addAIPlayer: (difficulty?: AIDifficulty) => void;
   startGame: () => void;
   placeBid: (playerId: string, bid: number) => void;
   chooseTrumpSuit: (suit: string) => void;
@@ -84,7 +84,7 @@ export const useShnarps = create<ShnarpsState>()(
       });
     },
 
-    addAIPlayer: () => {
+    addAIPlayer: (difficulty: AIDifficulty = 'medium') => {
       const state = get();
       if (state.players.length >= 8 || state.gamePhase !== 'setup') return;
       
@@ -110,7 +110,8 @@ export const useShnarps = create<ShnarpsState>()(
         hand: [],
         isActive: true,
         consecutiveSits: 0,
-        isAI: true
+        isAI: true,
+        aiDifficulty: difficulty
       };
       
       const newScores = new Map(state.scores);
