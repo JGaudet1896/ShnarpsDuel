@@ -29,10 +29,10 @@ export default function Card({
         initial={{ opacity: 0, scale: 0.5, rotateY: 180 }}
         animate={{ opacity: 1, scale: 1, rotateY: 0 }}
         transition={{ duration: 0.3, delay }}
-        className={`w-20 h-28 sm:w-16 sm:h-24 bg-blue-700 border-2 border-blue-900 rounded-lg shadow-lg ${className}`}
+        className={`w-10 h-14 bg-blue-700 border border-blue-900 rounded shadow-md ${className}`}
       >
         <div className="w-full h-full flex items-center justify-center">
-          <div className="text-blue-900 text-3xl sm:text-2xl">🂠</div>
+          <div className="text-blue-900 text-lg">🂠</div>
         </div>
       </motion.div>
     );

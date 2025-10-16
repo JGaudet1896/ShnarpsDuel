@@ -92,13 +92,13 @@ export default function GameBoard() {
     <div className="relative w-full h-full">
       {/* Game table center */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-96 h-96 rounded-full bg-green-700 border-8 border-green-600 shadow-2xl" />
+        <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-green-700 border-4 sm:border-8 border-green-600 shadow-2xl" />
       </div>
 
       {/* Trump suit indicator - persistent during hand play */}
       {trumpSuit && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-full w-16 h-16 flex items-center justify-center shadow-lg border-2 border-gray-300">
-          <p className={`text-3xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-600' : 'text-gray-800'}`}>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shadow-lg border border-gray-300">
+          <p className={`text-2xl sm:text-3xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-600' : 'text-gray-800'}`}>
             {trumpSuit === 'hearts' ? '♥' : 
              trumpSuit === 'diamonds' ? '♦' : 
              trumpSuit === 'clubs' ? '♣' : '♠'}
@@ -174,26 +174,26 @@ export default function GameBoard() {
               top: `${pos.y}%`,
             }}
           >
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
               {/* Player info */}
               <div className={`
-                px-4 py-2 rounded-lg shadow-md relative
+                px-2 py-1 rounded-lg shadow-md relative
                 ${isCurrentPlayer ? 'bg-yellow-400 text-gray-900' : 'bg-gray-800 text-white'}
               `}>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   {/* Dealer indicator */}
                   {index === dealerIndex && (
-                    <span className="text-lg" title="Dealer">🃏</span>
+                    <span className="text-sm" title="Dealer">🃏</span>
                   )}
                   
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div>
-                      <p className="text-sm font-semibold">
-                        {player.name}
+                      <p className="text-xs font-semibold whitespace-nowrap">
+                        {player.name.length > 12 ? player.name.substring(0, 12) + '...' : player.name}
                         {player.isAI && ' 🤖'}
                       </p>
                     </div>
-                    <div className={`text-2xl font-bold px-2 py-1 rounded ${
+                    <div className={`text-lg font-bold px-1.5 py-0.5 rounded ${
                       score <= 0 ? 'bg-green-600 text-white' : 
                       score >= 28 ? 'bg-red-600 text-white' : 
                       score > 16 ? 'bg-orange-500 text-white' : 
@@ -204,30 +204,23 @@ export default function GameBoard() {
                   </div>
                 </div>
                 
-                {/* Status badges */}
-                <div className="flex gap-1 mt-1">
-                  {isCurrentPlayer && (
-                    <span className="text-xs bg-white bg-opacity-20 px-2 py-0.5 rounded">
-                      Current Turn
-                    </span>
-                  )}
-                  {!isPlaying && gamePhase === 'hand_play' && (
-                    <span className="text-xs bg-gray-600 px-2 py-0.5 rounded">
-                      Sitting Out
-                    </span>
-                  )}
-                  {player.consecutiveSits >= 2 && gamePhase !== 'hand_play' && (
-                    <span className="text-xs bg-red-600 px-2 py-0.5 rounded">
-                      Musty - Must Play
-                    </span>
-                  )}
-                </div>
+                {/* Status badges - compact */}
+                {!isPlaying && gamePhase === 'hand_play' && (
+                  <div className="text-[10px] bg-gray-600 px-1 py-0.5 rounded mt-0.5">
+                    Sitting
+                  </div>
+                )}
+                {player.consecutiveSits >= 2 && gamePhase !== 'hand_play' && (
+                  <div className="text-[10px] bg-red-600 px-1 py-0.5 rounded mt-0.5">
+                    Musty
+                  </div>
+                )}
               </div>
 
               {/* Bid display during bidding phase */}
               {gamePhase === 'bidding' && (
-                <div className="mt-1 bg-yellow-400 text-gray-900 px-3 py-1 rounded-lg shadow-md">
-                  <p className="text-xs font-bold text-center">
+                <div className="bg-yellow-400 text-gray-900 px-2 py-0.5 rounded shadow-sm">
+                  <p className="text-[10px] font-bold text-center">
                     {bids.has(player.id) ? 
                       (bids.get(player.id) === 0 ? 'Pass' : `Bid: ${bids.get(player.id)}`) : 
                       '...'}
@@ -237,8 +230,8 @@ export default function GameBoard() {
 
               {/* Bidder indicator */}
               {highestBidder === player.id && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
-                <div className="mt-1 bg-purple-600 text-white px-3 py-1 rounded-lg shadow-md">
-                  <p className="text-xs font-bold text-center">
+                <div className="bg-purple-600 text-white px-2 py-0.5 rounded shadow-sm">
+                  <p className="text-[10px] font-bold text-center">
                     Bid: {bids.get(player.id) || 0}
                   </p>
                 </div>
@@ -246,8 +239,8 @@ export default function GameBoard() {
 
               {/* Flicker banner for players at 28+ score */}
               {score >= 28 && (
-                <div className="mt-1 bg-red-600 text-white px-3 py-1 rounded-lg shadow-md animate-pulse">
-                  <p className="text-xs font-bold text-center">
+                <div className="bg-red-600 text-white px-2 py-0.5 rounded shadow-sm animate-pulse">
+                  <p className="text-[10px] font-bold text-center">
                     FLICKER
                   </p>
                 </div>
@@ -255,8 +248,8 @@ export default function GameBoard() {
 
               {/* Tricks won counter during hand play */}
               {(gamePhase === 'hand_play' || gamePhase === 'trick_complete') && isPlaying && (
-                <div className="mt-1 bg-blue-600 text-white px-3 py-1 rounded-lg shadow-md">
-                  <p className="text-xs font-bold text-center">
+                <div className="bg-blue-600 text-white px-2 py-0.5 rounded shadow-sm">
+                  <p className="text-[10px] font-bold text-center">
                     Tricks: {tricksWon.get(player.id) || 0}
                   </p>
                 </div>
