@@ -22,6 +22,7 @@ export default function GameUI() {
     players, 
     scores,
     round,
+    history,
     joinGame,
     addAIPlayer,
     startGame,
@@ -378,12 +379,16 @@ export default function GameUI() {
 
   // Game over phase
   if (gamePhase === 'game_over') {
+    // Get the last round history to see money changes
+    const lastRound = history[history.length - 1];
+    const moneyChanges = lastRound?.moneyChanges || new Map<string, number>();
+    
     const sortedPlayers = players
       .map(player => ({
         ...player,
         score: scores.get(player.id) || 16,
         wallet: player.wallet || 100,
-        moneyChange: (player.wallet || 100) - 100
+        moneyChange: moneyChanges.get(player.id) || 0
       }))
       .sort((a, b) => a.score - b.score);
     
@@ -400,7 +405,7 @@ export default function GameUI() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1.5">
-              <h3 className="font-semibold text-sm text-white">Final Scores:</h3>
+              <h3 className="font-semibold text-sm text-white">Final Results:</h3>
               {sortedPlayers.map((player, index) => (
                 <div key={player.id} className="space-y-0.5">
                   <div className="flex justify-between text-sm text-gray-200">
@@ -409,17 +414,20 @@ export default function GameUI() {
                       {player.name}
                     </span>
                     <span className={`font-mono text-xs md:text-sm whitespace-nowrap ${player.score <= 0 ? 'text-green-400' : player.score > 32 ? 'text-red-400' : 'text-gray-200'}`}>
-                      {player.score}
+                      {player.score} pts
                       {player.score <= 0 && ' (Winner!)'}
                       {player.score > 32 && ' (Eliminated)'}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Wallet:</span>
+                    <span className="text-gray-400">Payout:</span>
                     <span className={`font-mono ${player.moneyChange > 0 ? 'text-green-400' : player.moneyChange < 0 ? 'text-red-400' : 'text-gray-400'}`}>
-                      ${player.wallet.toFixed(2)}
-                      {player.moneyChange !== 0 && ` (${player.moneyChange > 0 ? '+' : ''}$${player.moneyChange.toFixed(2)})`}
+                      {player.moneyChange > 0 ? '+' : ''}${Math.abs(player.moneyChange).toFixed(2)}
+                      {player.moneyChange !== 0 && ` (${player.moneyChange > 0 ? 'won' : 'paid'})`}
                     </span>
+                  </div>
+                  <div className="flex justify-end text-[10px] text-gray-500">
+                    Wallet: ${player.wallet.toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -457,26 +465,20 @@ export default function GameUI() {
 
       {/* Scores overlay */}
       <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-30">
-        <Card className="w-40 sm:w-64 bg-white/95">
+        <Card className="w-40 sm:w-56 bg-white/95">
           <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-4">
-            <CardTitle className="text-xs sm:text-sm">Scores & Money</CardTitle>
+            <CardTitle className="text-xs sm:text-sm">Scores</CardTitle>
           </CardHeader>
           <CardContent className="space-y-0.5 sm:space-y-1 p-2 sm:p-4 pt-0">
             {players.map((player) => {
               const score = scores.get(player.id) || 16;
-              const wallet = player.wallet || 100;
               return (
-                <div key={player.id} className="text-xs sm:text-sm">
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    {player.avatar && <Avatar avatar={player.avatar} size="sm" showBorder={false} />}
-                    <span className="truncate flex-1">{player.name}</span>
-                    <span className={`font-mono ${score <= 0 ? 'text-green-600' : score > 32 ? 'text-red-600' : ''}`}>
-                      {score}
-                    </span>
-                  </div>
-                  <div className="flex justify-end text-[10px] sm:text-xs text-green-600 font-mono">
-                    ${wallet.toFixed(2)}
-                  </div>
+                <div key={player.id} className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                  {player.avatar && <Avatar avatar={player.avatar} size="sm" showBorder={false} />}
+                  <span className="truncate flex-1">{player.name}</span>
+                  <span className={`font-mono ${score <= 0 ? 'text-green-600' : score > 32 ? 'text-red-600' : ''}`}>
+                    {score}
+                  </span>
                 </div>
               );
             })}
