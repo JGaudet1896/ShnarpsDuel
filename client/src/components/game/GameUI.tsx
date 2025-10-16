@@ -20,15 +20,14 @@ export default function GameUI() {
     chooseTrumpSuit,
     choosePenalty,
     highestBidder,
-    resetGame
+    resetGame,
+    localPlayerId
   } = useShnarps();
   
   const [playerName, setPlayerName] = useState('');
   const [trumpSuit, setTrumpSuit] = useState<string>('');
   
-  // Find the local (non-AI) player
-  const localPlayer = players.find(p => !p.isAI);
-  const isHighestBidder = highestBidder === localPlayer?.id;
+  const isHighestBidder = highestBidder === localPlayerId;
 
   // Setup phase
   if (gamePhase === 'setup') {

@@ -9,13 +9,14 @@ export default function BiddingPhase() {
     currentPlayerIndex, 
     bids, 
     placeBid,
-    scores
+    scores,
+    localPlayerId
   } = useShnarps();
   
   const [selectedBid, setSelectedBid] = useState<number>(0);
   
   const currentPlayer = players[currentPlayerIndex];
-  const isLocalPlayerTurn = currentPlayer && !currentPlayer.isAI;
+  const isLocalPlayerTurn = currentPlayer?.id === localPlayerId;
   
   const highestBid = Math.max(0, ...Array.from(bids.values()));
   

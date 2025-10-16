@@ -12,14 +12,15 @@ export default function HandPlayPhase() {
     playCard,
     playingPlayers,
     trumpSuit,
-    nextTrick
+    nextTrick,
+    localPlayerId
   } = useShnarps();
   
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   
   const currentPlayer = players[currentPlayerIndex];
-  const localPlayer = players.find(p => !p.isAI);
-  const isLocalPlayerTurn = currentPlayer && !currentPlayer.isAI && playingPlayers.has(currentPlayer.id);
+  const localPlayer = players.find(p => p.id === localPlayerId);
+  const isLocalPlayerTurn = currentPlayer?.id === localPlayerId && playingPlayers.has(currentPlayer.id);
   
   const handleCardPlay = () => {
     if (selectedCard && currentPlayer) {

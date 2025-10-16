@@ -4,6 +4,7 @@ import { Card, GamePhase, Player, GameState, RoundHistory } from "../game/gameLo
 import { createDeck, shuffleDeck, dealCards, determineTrickWinner } from "../game/cardUtils";
 
 interface ShnarpsState extends GameState {
+  localPlayerId: string | null;
   // Actions
   initializeGame: () => void;
   joinGame: (playerName: string) => void;
@@ -22,6 +23,7 @@ export const useShnarps = create<ShnarpsState>()(
   subscribeWithSelector((set, get) => ({
     // Initial game state
     gamePhase: 'setup' as GamePhase,
+    localPlayerId: null,
     players: [],
     currentPlayerIndex: 0,
     dealerIndex: 0,
@@ -41,6 +43,7 @@ export const useShnarps = create<ShnarpsState>()(
       const deck = shuffleDeck(createDeck());
       set({
         gamePhase: 'setup',
+        localPlayerId: null,
         players: [],
         currentPlayerIndex: 0,
         dealerIndex: 0,
@@ -76,7 +79,8 @@ export const useShnarps = create<ShnarpsState>()(
       
       set({
         players: [...state.players, newPlayer],
-        scores: newScores
+        scores: newScores,
+        localPlayerId: newPlayer.id // Store the local player's ID
       });
     },
 
