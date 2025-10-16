@@ -2,7 +2,7 @@
 
 ## Overview
 
-Shnarps is a multiplayer card game application built with a modern web stack. The game features a bidding phase, trump suit selection, and trick-taking gameplay with support for both human and AI players. The application uses a React-based frontend with Three.js for 3D rendering, an Express backend, and PostgreSQL database for persistence.
+Shnarps is a multiplayer card game application built with a modern web stack. The game features a bidding phase, trump suit selection, and trick-taking gameplay with support for both human and AI players. The application supports both local (same device) and real-time online multiplayer using WebSockets. The frontend uses React with Three.js for 3D rendering, Express backend with WebSocket server, and PostgreSQL database for persistence.
 
 ## User Preferences
 
@@ -113,6 +113,17 @@ Preferred communication style: Simple, everyday language.
 - Sit/pass decision logic considering score and hand quality
 - Card play using valid move filtering and heuristics
 - Automated AI turns via useAIPlayer hook with natural delays
+- Three difficulty levels: Easy (makes mistakes), Medium (occasional errors), Hard (optimal play)
+- Uses ECHL penalty leaders for AI player names (Dennis Bonvie, Matt Carkner, etc.)
+
+**Multiplayer System**
+- WebSocket-based real-time communication (/ws endpoint)
+- Room-based architecture with 6-character alphanumeric room codes
+- Support for both local (same-device) and online multiplayer
+- Host controls: Add AI bots, start game
+- Real-time state synchronization across all connected players
+- Automatic handling of player joins/leaves
+- Works with AI bots in multiplayer rooms
 
 **Scoring Rules**
 - Punt (bid 0): +5 if no tricks taken, -1 per trick otherwise

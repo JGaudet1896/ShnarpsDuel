@@ -7,8 +7,10 @@ import BiddingPhase from './BiddingPhase';
 import SitPassPhase from './SitPassPhase';
 import HandPlayPhase from './HandPlayPhase';
 import GameHistory from './GameHistory';
+import MultiplayerSetup from './MultiplayerSetup';
 import { useState } from 'react';
 import { AIDifficulty } from '../../lib/game/gameLogic';
+import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
 
 export default function GameUI() {
   const { 
@@ -26,22 +28,67 @@ export default function GameUI() {
     localPlayerId
   } = useShnarps();
   
+  const { mode, roomCode, isHost, addAIPlayer: addMultiplayerAI, startGame: startMultiplayerGame } = useMultiplayer();
+  
   const [playerName, setPlayerName] = useState('');
   const [trumpSuit, setTrumpSuit] = useState<string>('');
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('medium');
+  const [gameMode, setGameMode] = useState<'menu' | 'local' | 'online'>('menu');
   
   const isHighestBidder = highestBidder === localPlayerId;
 
+  // Welcome screen - choose game mode
+  if (gameMode === 'menu' && gamePhase === 'setup' && players.length === 0) {
+    return (
+      <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
+        <Card className="w-full max-w-md mx-4 shadow-2xl bg-white">
+          <CardHeader>
+            <CardTitle className="text-center text-2xl">Shnarps Card Game</CardTitle>
+            <p className="text-center text-sm text-muted-foreground">
+              Choose your game mode
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button onClick={() => setGameMode('local')} className="w-full" size="lg">
+              🏠 Local Game
+            </Button>
+            <Button onClick={() => setGameMode('online')} className="w-full" variant="outline" size="lg">
+              🌐 Online Multiplayer
+            </Button>
+            <p className="text-xs text-center text-muted-foreground">
+              Local: Play on one device<br/>
+              Online: Play with friends in real-time
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Multiplayer setup
+  if (gameMode === 'online' && mode === 'local') {
+    return <MultiplayerSetup onBack={() => setGameMode('menu')} />;
+  }
+
   // Setup phase
   if (gamePhase === 'setup') {
+    // Show room code for online games
+    const isOnline = mode === 'online';
+    
     return (
       <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
         <Card className="w-full max-w-md mx-4 shadow-2xl bg-white">
           <CardHeader>
             <CardTitle className="text-center">Shnarps Card Game</CardTitle>
             <p className="text-center text-sm text-muted-foreground">
-              {players.length}/8 players joined
+              {isOnline ? `🌐 Online Room` : '🏠 Local Game'} • {players.length}/8 players
             </p>
+            {isOnline && roomCode && (
+              <div className="mt-2 p-3 bg-blue-50 rounded-lg text-center">
+                <p className="text-xs text-blue-600 font-medium mb-1">Share this code with friends:</p>
+                <p className="text-2xl font-bold text-blue-700 tracking-wider">{roomCode}</p>
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Current players */}
@@ -62,8 +109,8 @@ export default function GameUI() {
               </div>
             )}
             
-            {/* Join game */}
-            {players.length < 8 && (
+            {/* Join game - only for local mode */}
+            {!isOnline && players.length < 8 && (
               <div className="space-y-2">
                 <Input
                   placeholder="Enter your name"
@@ -88,35 +135,67 @@ export default function GameUI() {
                 >
                   Join Game
                 </Button>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Add AI Player:</label>
-                  <div className="flex gap-2">
-                    <Select value={aiDifficulty} onValueChange={(value) => setAiDifficulty(value as AIDifficulty)}>
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Difficulty" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="easy">Easy</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="hard">Hard</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button 
-                      onClick={() => addAIPlayer(aiDifficulty)}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      🤖 Add AI
-                    </Button>
-                  </div>
+              </div>
+            )}
+            
+            {/* Add AI - for local or if host in online */}
+            {players.length < 8 && (!isOnline || isHost) && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Add AI Player:</label>
+                <div className="flex gap-2">
+                  <Select value={aiDifficulty} onValueChange={(value) => setAiDifficulty(value as AIDifficulty)}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Difficulty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="hard">Hard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={() => {
+                      if (isOnline && isHost) {
+                        // Get random ECHL player name
+                        const echlPlayers = [
+                          'Dennis Bonvie', 'Matt Carkner', 'Garrett Burnett', 'Brad Wingfield',
+                          'Steve MacIntyre', 'Darren Schwartz', 'Chris Ferraro', 'Riley Cote',
+                          'David-Alexandre Beauregard', 'Kip Brennan', 'Bryan Helmer', 'Brent Cullaton',
+                          'Trevor Gallant', 'Tyler Mosienko', 'Zac Rinaldo', 'Cam Janssen',
+                          'Jesse Schultz', 'Chris Durno', 'Joe Fallon', 'Jared Staal'
+                        ];
+                        const usedNames = players.map(p => p.name);
+                        const availableNames = echlPlayers.filter(name => !usedNames.includes(name));
+                        const aiName = availableNames.length > 0 
+                          ? availableNames[Math.floor(Math.random() * availableNames.length)]
+                          : `AI ${players.length + 1}`;
+                        addMultiplayerAI(aiName, aiDifficulty);
+                      } else {
+                        addAIPlayer(aiDifficulty);
+                      }
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    🤖 Add AI
+                  </Button>
                 </div>
               </div>
             )}
             
             {/* Start game */}
-            {players.length >= 4 && (
-              <Button onClick={startGame} className="w-full" variant="default">
+            {players.length >= 4 && (!isOnline || isHost) && (
+              <Button 
+                onClick={() => {
+                  if (isOnline && isHost) {
+                    startMultiplayerGame();
+                  } else {
+                    startGame();
+                  }
+                }} 
+                className="w-full" 
+                variant="default"
+              >
                 Start Game ({players.length} players)
               </Button>
             )}
