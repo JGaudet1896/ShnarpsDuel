@@ -385,15 +385,23 @@ export default function GameUI() {
     // Find the winner (player with score <= 0)
     const winner = players.find(p => (scores.get(p.id) || 16) <= 0);
     
+    // Sort players: winner first, then by score (lowest to highest)
     const sortedPlayers = players
       .map(player => ({
         ...player,
         score: scores.get(player.id) || 16,
         wallet: player.wallet || 100,
         moneyChange: moneyChanges.get(player.id) || 0,
-        punts: player.punts || 0
+        punts: player.punts || 0,
+        isEliminated: (scores.get(player.id) || 16) > 32
       }))
-      .sort((a, b) => a.score - b.score);
+      .sort((a, b) => {
+        // Winner (score <= 0) comes first
+        if (a.id === winner?.id) return -1;
+        if (b.id === winner?.id) return 1;
+        // Then sort by score
+        return a.score - b.score;
+      });
     
     // Calculate total pot
     const totalPot = sortedPlayers.reduce((sum, p) => {
@@ -427,11 +435,12 @@ export default function GameUI() {
                 const totalOwed = pointsCost + puntsCost;
                 
                 return (
-                  <div key={player.id} className="bg-gray-800 bg-opacity-50 rounded p-2 space-y-1">
+                  <div key={player.id} className={`bg-gray-800 bg-opacity-50 rounded p-2 space-y-1 ${player.isEliminated ? 'opacity-75' : ''}`}>
                     <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-1 truncate max-w-[160px] font-semibold">
+                      <span className="flex items-center gap-1 truncate max-w-[140px] font-semibold">
                         {isWinner && <span className="text-yellow-400">👑</span>}
                         {player.name}
+                        {player.isEliminated && <span className="text-red-400 text-xs ml-1">(Elim)</span>}
                       </span>
                       <span className={`font-mono text-sm ${player.score <= 0 ? 'text-green-400' : player.score > 32 ? 'text-red-400' : 'text-gray-200'}`}>
                         {player.score} pts
@@ -467,6 +476,9 @@ export default function GameUI() {
                         <div className="flex justify-between font-semibold text-green-400">
                           <span>Won:</span>
                           <span>+${totalPot.toFixed(2)}</span>
+                        </div>
+                        <div className="text-[10px] text-gray-400 mt-1">
+                          Owes: $0.00
                         </div>
                       </div>
                     )}
