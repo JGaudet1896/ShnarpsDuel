@@ -262,8 +262,8 @@ export default function GameBoard() {
                 </div>
               )}
 
-              {/* Player hand - hidden when sitting out */}
-              {isPlaying && (
+              {/* Player hand - hidden only during gameplay when sitting out */}
+              {(isPlaying || (isLocalPlayer && (gamePhase === 'bidding' || gamePhase === 'sit_pass'))) && (
                 <PlayerHand
                   cards={player.hand}
                   isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && isPlaying}
