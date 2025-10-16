@@ -16,7 +16,8 @@ export interface Player {
   isAI: boolean;
   aiDifficulty?: AIDifficulty;
   avatar?: PlayerAvatar;
-  wallet?: number; // Hypothetical money balance
+  wallet?: number;
+  punts?: number; // Track total punts across game
 }
 
 export type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'everyone_sat' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
@@ -30,6 +31,7 @@ export interface RoundHistory {
   tricksWon: Map<string, number>;
   scoreChanges: Map<string, number>;
   finalScores: Map<string, number>;
+  punts?: Map<string, number>; // Track who punted this round
   moneyChanges?: Map<string, number>;
   finalWallets?: Map<string, number>;
 }
@@ -72,7 +74,7 @@ export function calculateGameEndPayout(
   players: Player[],
   scores: Map<string, number>
 ): Map<string, number> {
-  // Money changes at game end: losers pay their final points to the winner
+  // Money changes at game end: 25¢ per point + $1 per punt
   const moneyChanges = new Map<string, number>();
   
   // Find the winner (score <= 0)
@@ -81,13 +83,14 @@ export function calculateGameEndPayout(
   
   let totalPayout = 0;
   
-  // Calculate what each loser pays
+  // Calculate what each loser pays: 25¢ per point + $1 per punt
   players.forEach(player => {
     if (player.id !== winner.id) {
       const finalScore = scores.get(player.id) || 16;
-      // Losers pay their final point value
-      moneyChanges.set(player.id, -finalScore);
-      totalPayout += finalScore;
+      const punts = player.punts || 0;
+      const amountOwed = (finalScore * 0.25) + (punts * 1.0);
+      moneyChanges.set(player.id, -amountOwed);
+      totalPayout += amountOwed;
     }
   });
   
