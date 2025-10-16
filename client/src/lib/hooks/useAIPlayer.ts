@@ -31,7 +31,7 @@ export function useAIPlayer() {
       if (gamePhase === 'bidding') {
         const currentHighestBid = Math.max(0, ...Array.from(bids.values()));
         const isDealer = currentPlayerIndex === useShnarps.getState().dealerIndex;
-        const aiBid = makeAIBid(currentPlayer.hand, currentHighestBid, isDealer);
+        const aiBid = makeAIBid(currentPlayer.hand, currentHighestBid, isDealer, players.length);
         placeBid(currentPlayer.id, aiBid);
       }
 

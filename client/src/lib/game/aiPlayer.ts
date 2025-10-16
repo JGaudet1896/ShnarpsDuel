@@ -27,7 +27,8 @@ export function evaluateHandStrength(hand: Card[], trumpSuit: string | null): nu
 export function makeAIBid(
   hand: Card[], 
   currentHighestBid: number,
-  isDealer: boolean
+  isDealer: boolean,
+  playerCount: number
 ): number {
   // Evaluate hand without knowing trump yet
   const avgStrength = (
@@ -37,15 +38,26 @@ export function makeAIBid(
     evaluateHandStrength(hand, 'spades')
   ) / 4;
   
-  const bid = Math.floor(avgStrength);
+  // Adjust conservativeness based on player count
+  // More players = harder to win tricks = bid lower
+  let conservativenessAdjustment = 0;
+  if (playerCount >= 7) {
+    conservativenessAdjustment = 2; // Very conservative with 7-8 players
+  } else if (playerCount >= 5) {
+    conservativenessAdjustment = 1; // Moderately conservative with 5-6 players
+  }
+  // 4 players: no adjustment (be aggressive)
+  
+  const adjustedBid = Math.max(0, Math.floor(avgStrength) - conservativenessAdjustment);
   
   // Only bid if we can beat current highest or if we're confident
-  if (bid > currentHighestBid || (isDealer && bid === currentHighestBid + 1)) {
-    return bid;
+  if (adjustedBid > currentHighestBid || (isDealer && adjustedBid === currentHighestBid + 1)) {
+    return adjustedBid;
   }
   
-  // Small chance to bluff
-  if (Math.random() < 0.15 && currentHighestBid < 3) {
+  // Small chance to bluff (reduced with more players)
+  const bluffChance = playerCount <= 4 ? 0.15 : 0.08;
+  if (Math.random() < bluffChance && currentHighestBid < 3) {
     return currentHighestBid + 1;
   }
   
