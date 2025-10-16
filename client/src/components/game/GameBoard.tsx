@@ -13,7 +13,8 @@ export default function GameBoard() {
     dealerIndex,
     trumpSuit,
     playingPlayers,
-    scores
+    scores,
+    bids
   } = useShnarps();
 
   // Calculate player positions in a circle
@@ -164,6 +165,17 @@ export default function GameBoard() {
                   )}
                 </div>
               </div>
+
+              {/* Bid display during bidding phase */}
+              {gamePhase === 'bidding' && (
+                <div className="mt-1 bg-yellow-400 text-gray-900 px-3 py-1 rounded-lg shadow-md">
+                  <p className="text-xs font-bold text-center">
+                    {bids.has(player.id) ? 
+                      (bids.get(player.id) === 0 ? 'Pass' : `Bid: ${bids.get(player.id)}`) : 
+                      '...'}
+                  </p>
+                </div>
+              )}
 
               {/* Player hand */}
               <PlayerHand
