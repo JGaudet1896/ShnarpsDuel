@@ -17,6 +17,12 @@ interface ShnarpsState extends GameState {
   playCard: (playerId: string, card: Card) => void;
   nextTrick: () => void;
   resetGame: () => void;
+  // Multiplayer actions
+  setMultiplayerState: (players: Player[], gameState: any, localPlayerId: string) => void;
+  addRemotePlayer: (player: Player) => void;
+  removePlayer: (playerId: string) => void;
+  applyGameAction: (action: string, payload: any) => void;
+  syncGameState: (gameState: any) => void;
 }
 
 export const useShnarps = create<ShnarpsState>()(
@@ -632,6 +638,75 @@ export const useShnarps = create<ShnarpsState>()(
 
     resetGame: () => {
       get().initializeGame();
+    },
+
+    // Multiplayer methods
+    setMultiplayerState: (players: Player[], gameState: any, localPlayerId: string) => {
+      set({
+        players,
+        gamePhase: gameState.gamePhase,
+        currentPlayerIndex: gameState.currentPlayerIndex,
+        dealerIndex: gameState.dealerIndex,
+        bids: new Map(Object.entries(gameState.bids || {})),
+        trumpSuit: gameState.trumpSuit,
+        highestBidder: gameState.highestBidder,
+        playingPlayers: new Set(gameState.playingPlayers || []),
+        mustyPlayers: new Set(gameState.mustyPlayers || []),
+        scores: new Map(Object.entries(gameState.scores || {})),
+        round: gameState.round,
+        localPlayerId
+      });
+    },
+
+    addRemotePlayer: (player: Player) => {
+      const state = get();
+      set({
+        players: [...state.players, player],
+        scores: new Map(state.scores).set(player.id, 16)
+      });
+    },
+
+    removePlayer: (playerId: string) => {
+      const state = get();
+      const newScores = new Map(state.scores);
+      newScores.delete(playerId);
+      set({
+        players: state.players.filter(p => p.id !== playerId),
+        scores: newScores
+      });
+    },
+
+    applyGameAction: (action: string, payload: any) => {
+      // Apply game actions from server
+      switch (action) {
+        case 'bid':
+          get().placeBid(payload.playerId, payload.bid);
+          break;
+        case 'trump':
+          get().chooseTrumpSuit(payload.suit);
+          break;
+        case 'sitpass':
+          get().chooseSitOrPlay(payload.playerId, payload.decision);
+          break;
+        case 'playcard':
+          get().playCard(payload.playerId, payload.card);
+          break;
+      }
+    },
+
+    syncGameState: (gameState: any) => {
+      set({
+        gamePhase: gameState.gamePhase,
+        currentPlayerIndex: gameState.currentPlayerIndex,
+        dealerIndex: gameState.dealerIndex,
+        bids: new Map(Object.entries(gameState.bids || {})),
+        trumpSuit: gameState.trumpSuit,
+        highestBidder: gameState.highestBidder,
+        playingPlayers: new Set(gameState.playingPlayers || []),
+        mustyPlayers: new Set(gameState.mustyPlayers || []),
+        scores: new Map(Object.entries(gameState.scores || {})),
+        round: gameState.round
+      });
     }
   }))
 );
