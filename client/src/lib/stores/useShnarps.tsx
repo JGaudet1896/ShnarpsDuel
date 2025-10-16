@@ -7,6 +7,7 @@ interface ShnarpsState extends GameState {
   // Actions
   initializeGame: () => void;
   joinGame: (playerName: string) => void;
+  addAIPlayer: () => void;
   startGame: () => void;
   placeBid: (playerId: string, bid: number) => void;
   chooseTrumpSuit: (suit: string) => void;
@@ -65,11 +66,37 @@ export const useShnarps = create<ShnarpsState>()(
         name: playerName,
         hand: [],
         isActive: true,
-        consecutiveSits: 0
+        consecutiveSits: 0,
+        isAI: false
       };
       
       const newScores = new Map(state.scores);
       newScores.set(newPlayer.id, 16); // Starting points
+      
+      set({
+        players: [...state.players, newPlayer],
+        scores: newScores
+      });
+    },
+
+    addAIPlayer: () => {
+      const state = get();
+      if (state.players.length >= 8 || state.gamePhase !== 'setup') return;
+      
+      const aiNames = ['AI Bot', 'Computer', 'AI Player', 'Bot', 'AI Alice', 'AI Bob', 'AI Charlie', 'AI Dana'];
+      const aiName = aiNames[state.players.length] || `AI ${state.players.length + 1}`;
+      
+      const newPlayer: Player = {
+        id: `ai_${Date.now()}_${Math.random()}`,
+        name: aiName,
+        hand: [],
+        isActive: true,
+        consecutiveSits: 0,
+        isAI: true
+      };
+      
+      const newScores = new Map(state.scores);
+      newScores.set(newPlayer.id, 16);
       
       set({
         players: [...state.players, newPlayer],

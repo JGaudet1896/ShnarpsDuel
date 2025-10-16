@@ -15,6 +15,7 @@ export default function GameUI() {
     scores,
     round,
     joinGame,
+    addAIPlayer,
     startGame,
     chooseTrumpSuit,
     highestBidder,
@@ -44,7 +45,10 @@ export default function GameUI() {
                 <h3 className="font-semibold text-sm">Players:</h3>
                 {players.map((player, index) => (
                   <div key={player.id} className="text-sm flex justify-between">
-                    <span>{player.name}</span>
+                    <span>
+                      {player.name}
+                      {player.isAI && ' 🤖'}
+                    </span>
                     <span className="text-muted-foreground">
                       Score: {scores.get(player.id) || 16}
                     </span>
@@ -67,18 +71,27 @@ export default function GameUI() {
                     }
                   }}
                 />
-                <Button 
-                  onClick={() => {
-                    if (playerName.trim()) {
-                      joinGame(playerName.trim());
-                      setPlayerName('');
-                    }
-                  }}
-                  disabled={!playerName.trim()}
-                  className="w-full"
-                >
-                  Join Game
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => {
+                      if (playerName.trim()) {
+                        joinGame(playerName.trim());
+                        setPlayerName('');
+                      }
+                    }}
+                    disabled={!playerName.trim()}
+                    className="flex-1"
+                  >
+                    Join Game
+                  </Button>
+                  <Button 
+                    onClick={addAIPlayer}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    🤖 Add AI
+                  </Button>
+                </div>
               </div>
             )}
             

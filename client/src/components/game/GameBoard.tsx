@@ -124,7 +124,10 @@ export default function GameBoard() {
                   )}
                   
                   <div>
-                    <p className="text-sm font-semibold">{player.name}</p>
+                    <p className="text-sm font-semibold">
+                      {player.name}
+                      {player.isAI && ' 🤖'}
+                    </p>
                     <p className="text-xs">
                       Score: {score}
                       {score > 32 && ' ❌ (Eliminated)'}

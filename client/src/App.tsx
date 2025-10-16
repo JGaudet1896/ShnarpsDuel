@@ -6,11 +6,13 @@ import "./index.css";
 import GameBoard from "./components/game/GameBoard";
 import GameUI from "./components/game/GameUI";
 import { useShnarps } from "./lib/stores/useShnarps";
+import { useAIPlayer } from "./lib/hooks/useAIPlayer";
 
 const queryClient = new QueryClient();
 
 function App() {
   const { initializeGame } = useShnarps();
+  useAIPlayer(); // Enable AI player automation
 
   useEffect(() => {
     initializeGame();

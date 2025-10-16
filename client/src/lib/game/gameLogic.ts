@@ -6,6 +6,7 @@ export interface Player {
   hand: Card[];
   isActive: boolean;
   consecutiveSits: number;
+  isAI: boolean;
 }
 
 export type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
