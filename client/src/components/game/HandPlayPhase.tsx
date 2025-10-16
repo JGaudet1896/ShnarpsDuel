@@ -3,6 +3,7 @@ import { useShnarps } from '../../lib/stores/useShnarps';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Card as CardType, isValidPlay } from '../../lib/game/cardUtils';
+import CardComponent from './Card';
 
 export default function HandPlayPhase() {
   const { 
@@ -52,14 +53,15 @@ export default function HandPlayPhase() {
           {currentTrick.length > 0 && (
             <div className="space-y-2">
               <h3 className="font-semibold text-sm text-white">Current Trick:</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3 justify-center">
                 {currentTrick.map((play, index) => {
-                  const player = players.find(p => p.id === play.playerId);
                   return (
-                    <div key={index} className="text-xs bg-gray-800 p-2 rounded text-white">
-                      <div className="font-medium">{player?.name}</div>
-                      <div>{play.card.rank} of {play.card.suit}</div>
-                    </div>
+                    <CardComponent
+                      key={index}
+                      card={play.card}
+                      isPlayable={false}
+                      delay={index * 0.1}
+                    />
                   );
                 })}
               </div>
