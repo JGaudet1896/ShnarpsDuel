@@ -406,7 +406,7 @@ export default function GameUI() {
 
       {/* Scores overlay */}
       <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-30">
-        <Card className="w-36 sm:w-48 bg-white/95">
+        <Card className="w-40 sm:w-56 bg-white/95">
           <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-4">
             <CardTitle className="text-xs sm:text-sm">Scores</CardTitle>
           </CardHeader>
@@ -414,8 +414,9 @@ export default function GameUI() {
             {players.map((player) => {
               const score = scores.get(player.id) || 16;
               return (
-                <div key={player.id} className="flex justify-between text-xs sm:text-sm">
-                  <span className="truncate max-w-[60px] sm:max-w-none">{player.name}</span>
+                <div key={player.id} className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                  {player.avatar && <Avatar avatar={player.avatar} size="sm" showBorder={false} />}
+                  <span className="truncate flex-1">{player.name}</span>
                   <span className={`font-mono ${score <= 0 ? 'text-green-600' : score > 32 ? 'text-red-600' : ''}`}>
                     {score}
                   </span>
