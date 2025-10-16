@@ -43,17 +43,14 @@ export default function GameBoard() {
         <div className="w-96 h-96 rounded-full bg-green-700 border-8 border-green-600 shadow-2xl" />
       </div>
 
-      {/* Trump suit indicator */}
-      {trumpSuit && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-white rounded-lg px-6 py-3 shadow-lg">
-          <div className="text-center">
-            <p className="text-sm font-semibold text-gray-700">Trump Suit</p>
-            <p className={`text-4xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-600' : 'text-gray-800'}`}>
-              {trumpSuit === 'hearts' ? '♥' : 
-               trumpSuit === 'diamonds' ? '♦' : 
-               trumpSuit === 'clubs' ? '♣' : '♠'}
-            </p>
-          </div>
+      {/* Trump suit indicator - persistent during hand play */}
+      {trumpSuit && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-full w-16 h-16 flex items-center justify-center shadow-lg border-2 border-gray-300">
+          <p className={`text-3xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-600' : 'text-gray-800'}`}>
+            {trumpSuit === 'hearts' ? '♥' : 
+             trumpSuit === 'diamonds' ? '♦' : 
+             trumpSuit === 'clubs' ? '♣' : '♠'}
+          </p>
         </div>
       )}
 
