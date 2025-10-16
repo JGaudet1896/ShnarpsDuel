@@ -76,6 +76,8 @@ export default function HandPlayPhase() {
                 {localPlayer.hand.map((card, index) => {
                   const isPlayable = isCardPlayable(card);
                   const isSelected = selectedCard?.suit === card.suit && selectedCard?.rank === card.rank;
+                  const isRed = card.suit === 'hearts' || card.suit === 'diamonds';
+                  const cardColor = isRed ? 'text-red-600' : 'text-black';
                   
                   return (
                     <Button
@@ -88,19 +90,19 @@ export default function HandPlayPhase() {
                         }
                       }}
                       disabled={!isPlayable}
-                      className={`flex flex-col h-auto p-3 min-w-[80px] transition-all bg-white text-black border-gray-600 touch-manipulation ${
+                      className={`flex flex-col h-auto p-3 min-w-[80px] transition-all bg-white border-gray-600 touch-manipulation ${
                         isSelected ? 'ring-2 ring-blue-400 scale-105' : ''
                       } ${
                         isPlayable ? 'hover:scale-105 cursor-pointer' : 'opacity-40'
                       }`}
                     >
-                      <span className="text-sm font-bold">{card.rank}</span>
-                      <span className="text-2xl">
+                      <span className={`text-sm font-bold ${cardColor}`}>{card.rank}</span>
+                      <span className={`text-2xl ${cardColor}`}>
                         {card.suit === 'hearts' ? '♥' : 
                          card.suit === 'diamonds' ? '♦' : 
                          card.suit === 'clubs' ? '♣' : '♠'}
                       </span>
-                      <span className="text-xs capitalize">{card.suit}</span>
+                      <span className={`text-xs capitalize ${cardColor}`}>{card.suit}</span>
                     </Button>
                   );
                 })}
