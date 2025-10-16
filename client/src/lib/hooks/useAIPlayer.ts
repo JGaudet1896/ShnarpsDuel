@@ -80,7 +80,7 @@ export function useAIPlayer() {
           playCard(currentPlayer.id, cardToPlay);
         }
       }
-    }, 800 + Math.random() * 400); // 800-1200ms delay
+    }, 300 + Math.random() * 200); // 300-500ms delay
 
     return () => clearTimeout(aiDelay);
   }, [gamePhase, currentPlayerIndex, players, bids, trumpSuit, currentTrick, playingPlayers, scores, placeBid, chooseTrumpSuit, chooseSitOrPlay, choosePenalty, playCard]);
