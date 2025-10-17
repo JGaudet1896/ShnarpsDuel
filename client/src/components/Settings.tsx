@@ -19,7 +19,6 @@ export function Settings({ open, onClose }: SettingsProps) {
   
   const [moneyPerPoint, setMoneyPerPoint] = useState(settings.moneyPerPoint);
   const [moneyPerPunt, setMoneyPerPunt] = useState(settings.moneyPerPunt);
-  const [startingWallet, setStartingWallet] = useState(settings.startingWallet);
   const [startingScore, setStartingScore] = useState(settings.startingScore);
   const [winningScore, setWinningScore] = useState(settings.winningScore);
   const [eliminationScore, setEliminationScore] = useState(settings.eliminationScore);
@@ -31,7 +30,6 @@ export function Settings({ open, onClose }: SettingsProps) {
     settings.updateSettings({
       moneyPerPoint,
       moneyPerPunt,
-      startingWallet,
       startingScore,
       winningScore,
       eliminationScore,
@@ -46,7 +44,6 @@ export function Settings({ open, onClose }: SettingsProps) {
     settings.resetToDefaults();
     setMoneyPerPoint(0.25);
     setMoneyPerPunt(1.00);
-    setStartingWallet(100);
     setStartingScore(16);
     setWinningScore(0);
     setEliminationScore(32);
@@ -119,25 +116,6 @@ export function Settings({ open, onClose }: SettingsProps) {
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Amount losers pay per successful punt to the winner
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="startingWallet" className="text-base text-gray-900">Starting Wallet</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">$</span>
-                  <Input
-                    id="startingWallet"
-                    type="number"
-                    step="10"
-                    min="0"
-                    value={startingWallet}
-                    onChange={(e) => setStartingWallet(parseFloat(e.target.value) || 0)}
-                    className="max-w-[150px]"
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Amount of money each player starts with
                 </p>
               </div>
             </div>
