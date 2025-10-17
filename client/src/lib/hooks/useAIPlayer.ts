@@ -27,6 +27,18 @@ export function useAIPlayer() {
 
     const difficulty = currentPlayer.aiDifficulty || 'medium';
 
+    // Check if any human players are in the game
+    const hasHumanInGame = players.some(p => !p.isAI);
+    
+    // During hand_play, check if any human is actually playing (not sitting)
+    const hasHumanPlaying = gamePhase === 'hand_play' 
+      ? players.some(p => !p.isAI && playingPlayers.has(p.id))
+      : hasHumanInGame;
+    
+    // Speed up game when only bots are playing (100-200ms), normal speed with humans (300-500ms)
+    const baseDelay = hasHumanPlaying ? 300 : 100;
+    const randomDelay = hasHumanPlaying ? 200 : 100;
+
     // Add delay to make AI decisions feel more natural
     const aiDelay = setTimeout(() => {
       // Bidding phase
@@ -97,7 +109,7 @@ export function useAIPlayer() {
           playCard(currentPlayer.id, cardToPlay);
         }
       }
-    }, 300 + Math.random() * 200); // 300-500ms delay
+    }, baseDelay + Math.random() * randomDelay);
 
     return () => clearTimeout(aiDelay);
   }, [gamePhase, currentPlayerIndex, players, bids, trumpSuit, currentTrick, playingPlayers, scores, placeBid, chooseTrumpSuit, chooseSitOrPlay, choosePenalty, playCard]);
