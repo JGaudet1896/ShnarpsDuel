@@ -87,19 +87,24 @@ export default function GameUI() {
                 Choose your game mode
               </p>
               <div 
-                className="mt-3 p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+                className="mt-3 p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors border-2 border-green-200"
                 onClick={() => setShowHistory(true)}
               >
-                <div className="flex items-center justify-center gap-2">
-                  <Wallet className="h-5 w-5 text-green-600" />
-                  <span className="text-lg font-bold text-green-700">
-                    ${balance.toFixed(2)}
-                  </span>
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-5 w-5 text-green-600" />
+                    <span className="text-lg font-bold text-green-700">
+                      {balance.toFixed(2)} coins
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-green-500 font-medium mt-0.5">
+                    (play money - not real!)
+                  </p>
+                  <p className="text-xs text-center text-green-600 mt-2 flex items-center justify-center gap-1">
+                    <History className="h-3 w-3" />
+                    View history • First 100 coins free!
+                  </p>
                 </div>
-                <p className="text-xs text-center text-green-600 mt-1 flex items-center justify-center gap-1">
-                  <History className="h-3 w-3" />
-                  Click to view transaction history
-                </p>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -213,7 +218,7 @@ export default function GameUI() {
                         </div>
                         {!player.isAI && (
                           <div className="text-xs text-green-600 font-medium">
-                            Wallet: ${(player.wallet || 100).toFixed(2)}
+                            🪙 {(player.wallet || 100).toFixed(2)} coins
                           </div>
                         )}
                       </div>
@@ -534,23 +539,23 @@ export default function GameUI() {
                     <div className="text-xs text-gray-300">
                       <div className="flex justify-between">
                         <span>Punts: {player.punts}</span>
-                        <span>Wallet: ${player.wallet.toFixed(2)}</span>
+                        <span>🪙 {player.wallet.toFixed(2)} coins</span>
                       </div>
                     </div>
                     
                     {!isWinner && (
                       <div className="text-xs border-t border-gray-600 pt-1">
                         <div className="flex justify-between text-gray-400">
-                          <span>{player.score} pts × $0.25</span>
-                          <span>${pointsCost.toFixed(2)}</span>
+                          <span>{player.score} pts × 🪙0.25</span>
+                          <span>🪙{pointsCost.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-gray-400">
-                          <span>{player.punts} punts × $1.00</span>
-                          <span>${puntsCost.toFixed(2)}</span>
+                          <span>{player.punts} punts × 🪙1.00</span>
+                          <span>🪙{puntsCost.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between font-semibold text-red-400 border-t border-gray-700 pt-1">
                           <span>Total Owed:</span>
-                          <span>-${totalOwed.toFixed(2)}</span>
+                          <span>-🪙{totalOwed.toFixed(2)}</span>
                         </div>
                       </div>
                     )}
@@ -559,10 +564,10 @@ export default function GameUI() {
                       <div className="text-xs border-t border-gray-600 pt-1">
                         <div className="flex justify-between font-semibold text-green-400">
                           <span>Won:</span>
-                          <span>+${totalPot.toFixed(2)}</span>
+                          <span>+🪙{totalPot.toFixed(2)}</span>
                         </div>
                         <div className="text-[10px] text-gray-400 mt-1">
-                          Owes: $0.00
+                          Owes: 🪙0.00
                         </div>
                       </div>
                     )}
