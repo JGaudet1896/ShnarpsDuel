@@ -336,18 +336,25 @@ export const useShnarps = create<ShnarpsState>()(
         finalScores: new Map(newScores)
       };
       
-      // Mark eliminated players as inactive but keep them
-      const playersWithStatus = state.players.map(player => {
+      // Separate eliminated players (score > 32) from active players
+      const newlyEliminatedPlayers: Player[] = [];
+      const remainingPlayers: Player[] = [];
+      
+      state.players.forEach(player => {
         const score = newScores.get(player.id) || 16;
         if (score > 32) {
-          return { ...player, isActive: false };
+          newlyEliminatedPlayers.push({ ...player, isActive: false });
+        } else {
+          remainingPlayers.push(player);
         }
-        return player;
       });
       
-      const activePlayers = playersWithStatus.filter(player => {
+      // Combine with previously eliminated players
+      const allEliminatedPlayers = [...state.eliminatedPlayers, ...newlyEliminatedPlayers];
+      
+      const activePlayers = remainingPlayers.filter(player => {
         const score = newScores.get(player.id) || 16;
-        return score <= 32 && score > 0 && player.isActive;
+        return score > 0 && player.isActive;
       });
       
       const hasWinner = Array.from(newScores.values()).some(score => score <= 0);
@@ -355,30 +362,26 @@ export const useShnarps = create<ShnarpsState>()(
       if (activePlayers.length <= 1 || hasWinner) {
         set({
           gamePhase: 'game_over',
-          players: playersWithStatus,
+          players: remainingPlayers,
+          eliminatedPlayers: allEliminatedPlayers,
           scores: newScores,
           history: [...state.history, roundHistory]
         });
       } else {
-        // Start next round - keep all players but only deal to active ones
+        // Start next round - eliminated players are completely removed
         const nextDealerIndex = (state.dealerIndex + 1) % activePlayers.length;
         const shuffledDeck = shuffleDeck(createDeck());
         const dealtCards = dealCards(shuffledDeck, activePlayers.length);
         
-        let activeIndex = 0;
-        const updatedPlayers = playersWithStatus.map(player => {
-          if (player.isActive && activePlayers.includes(player)) {
-            const hand = dealtCards[activeIndex] || [];
-            activeIndex++;
-            return { ...player, hand };
-          } else {
-            return { ...player, hand: [] };
-          }
-        });
+        const updatedPlayers = activePlayers.map((player, index) => ({
+          ...player,
+          hand: dealtCards[index] || []
+        }));
         
         set({
           gamePhase: 'bidding',
           players: updatedPlayers,
+          eliminatedPlayers: allEliminatedPlayers,
           dealerIndex: nextDealerIndex,
           currentPlayerIndex: (nextDealerIndex + 1) % activePlayers.length,
           deck: shuffledDeck.slice(activePlayers.length * 5),
@@ -644,18 +647,25 @@ export const useShnarps = create<ShnarpsState>()(
           punts: puntsThisRound
         };
         
-        // Mark eliminated players (score > 32) as inactive, but keep them in the game
-        const playersWithEliminationStatus = updatedPlayersAfterScoring.map(player => {
+        // Separate eliminated players (score > 32) from active players
+        const newlyEliminatedPlayers: Player[] = [];
+        const remainingPlayers: Player[] = [];
+        
+        updatedPlayersAfterScoring.forEach(player => {
           const score = newScores.get(player.id) || 16;
           if (score > 32) {
-            return { ...player, isActive: false };
+            newlyEliminatedPlayers.push({ ...player, isActive: false });
+          } else {
+            remainingPlayers.push(player);
           }
-          return player;
         });
         
-        const activePlayers = playersWithEliminationStatus.filter(player => {
+        // Combine with previously eliminated players
+        const allEliminatedPlayers = [...state.eliminatedPlayers, ...newlyEliminatedPlayers];
+        
+        const activePlayers = remainingPlayers.filter(player => {
           const score = newScores.get(player.id) || 16;
-          return score <= 32 && score > 0 && player.isActive;
+          return score > 0 && player.isActive;
         });
         
         // Check if game is over
@@ -663,10 +673,16 @@ export const useShnarps = create<ShnarpsState>()(
         
         if (activePlayers.length <= 1 || hasWinner) {
           // Calculate money payout at game end using ALL players (including eliminated)
-          const moneyChanges = calculateGameEndPayout(playersWithEliminationStatus, newScores);
+          const allPlayers = [...remainingPlayers, ...allEliminatedPlayers];
+          const moneyChanges = calculateGameEndPayout(allPlayers, newScores);
           
           // Update player wallets with game-end payout for ALL players
-          const updatedPlayersWithPayout = playersWithEliminationStatus.map(player => ({
+          const updatedRemainingPlayers = remainingPlayers.map(player => ({
+            ...player,
+            wallet: (player.wallet || 100) + (moneyChanges.get(player.id) || 0)
+          }));
+          
+          const updatedEliminatedPlayers = allEliminatedPlayers.map(player => ({
             ...player,
             wallet: (player.wallet || 100) + (moneyChanges.get(player.id) || 0)
           }));
@@ -674,46 +690,34 @@ export const useShnarps = create<ShnarpsState>()(
           // Add money changes to the final round history
           roundHistory.moneyChanges = moneyChanges;
           roundHistory.finalWallets = new Map(
-            updatedPlayersWithPayout.map(p => [p.id, p.wallet || 100])
+            [...updatedRemainingPlayers, ...updatedEliminatedPlayers].map(p => [p.id, p.wallet || 100])
           );
           
           set({
             gamePhase: 'game_over',
-            players: updatedPlayersWithPayout,
+            players: updatedRemainingPlayers,
+            eliminatedPlayers: updatedEliminatedPlayers,
             scores: newScores,
             history: [...state.history, roundHistory]
           });
         } else {
           // Start next round (no wallet changes between rounds)
-          // Keep ALL players but only deal cards to active players
+          // Only deal cards to active players, eliminated players are completely removed
           const nextDealerIndex = (state.dealerIndex + 1) % activePlayers.length;
           const shuffledDeck = shuffleDeck(createDeck());
           const dealtCards = dealCards(shuffledDeck, activePlayers.length);
           
-          // Map all players, giving hands only to active players
-          let activePlayerIndex = 0;
-          const updatedPlayers = playersWithEliminationStatus.map(player => {
-            if (player.isActive && activePlayers.includes(player)) {
-              const hand = dealtCards[activePlayerIndex] || [];
-              activePlayerIndex++;
-              return {
-                ...player,
-                hand,
-                punts: player.punts || 0
-              };
-            } else {
-              // Eliminated players keep empty hands
-              return {
-                ...player,
-                hand: [],
-                punts: player.punts || 0
-              };
-            }
-          });
+          // Give hands to active players
+          const updatedPlayers = activePlayers.map((player, index) => ({
+            ...player,
+            hand: dealtCards[index] || [],
+            punts: player.punts || 0
+          }));
           
           set({
             gamePhase: 'bidding',
             players: updatedPlayers,
+            eliminatedPlayers: allEliminatedPlayers,
             dealerIndex: nextDealerIndex,
             currentPlayerIndex: (nextDealerIndex + 1) % activePlayers.length,
             deck: shuffledDeck.slice(activePlayers.length * 5),
