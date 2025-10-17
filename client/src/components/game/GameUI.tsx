@@ -62,15 +62,8 @@ export default function GameUI() {
     }
   }, [gamePhase, players.length]);
 
-  // Auto-close multiplayer setup when connected
-  useEffect(() => {
-    if (gameMode === 'online' && mode === 'online') {
-      setGameMode('menu');
-    }
-  }, [gameMode, mode]);
-
   // Welcome screen - choose game mode
-  if (gameMode === 'menu' && gamePhase === 'setup' && players.length === 0) {
+  if (gameMode === 'menu' && gamePhase === 'setup' && players.length === 0 && mode === 'local') {
     return (
       <>
         <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
@@ -129,11 +122,11 @@ export default function GameUI() {
     return <MultiplayerSetup onBack={() => setGameMode('menu')} />;
   }
 
-  // Setup phase
+  // Setup phase (works for both local and online games)
   if (gamePhase === 'setup') {
     // Show room code for online games
     const isOnline = mode === 'online';
-    console.log('Setup phase - mode:', mode, 'roomCode:', roomCode, 'isOnline:', isOnline);
+    console.log('Setup phase - mode:', mode, 'roomCode:', roomCode, 'isOnline:', isOnline, 'players:', players.length);
     
     return (
       <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
