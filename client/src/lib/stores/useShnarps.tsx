@@ -203,6 +203,16 @@ export const useShnarps = create<ShnarpsState>()(
       
       const currentPlayer = state.players[state.currentPlayerIndex];
       if (currentPlayer.id !== playerId) return;
+
+      // In online multiplayer, send action to server
+      if (state.multiplayerMode === 'online' && state.websocket) {
+        state.websocket.send(JSON.stringify({
+          type: 'GAME_ACTION',
+          action: 'bid',
+          payload: { playerId, bid }
+        }));
+        return; // Server will broadcast the state update
+      }
       
       const newBids = new Map(state.bids);
       newBids.set(playerId, bid);
@@ -261,6 +271,16 @@ export const useShnarps = create<ShnarpsState>()(
     chooseTrumpSuit: (suit: string) => {
       const state = get();
       if (state.gamePhase !== 'trump_selection') return;
+
+      // In online multiplayer, send action to server
+      if (state.multiplayerMode === 'online' && state.websocket) {
+        state.websocket.send(JSON.stringify({
+          type: 'GAME_ACTION',
+          action: 'trump',
+          payload: { suit }
+        }));
+        return; // Server will broadcast the state update
+      }
       
       // Highest bidder always plays (if they're still active)
       const playingPlayers = new Set<string>();
@@ -432,6 +452,16 @@ export const useShnarps = create<ShnarpsState>()(
       
       const currentPlayer = state.players[state.currentPlayerIndex];
       if (currentPlayer.id !== playerId) return;
+
+      // In online multiplayer, send action to server
+      if (state.multiplayerMode === 'online' && state.websocket) {
+        state.websocket.send(JSON.stringify({
+          type: 'GAME_ACTION',
+          action: 'sitpass',
+          payload: { playerId, decision }
+        }));
+        return; // Server will broadcast the state update
+      }
       
       const newPlayingPlayers = new Set(state.playingPlayers);
       const updatedPlayers = [...state.players];
@@ -514,6 +544,16 @@ export const useShnarps = create<ShnarpsState>()(
       
       const currentPlayer = state.players[state.currentPlayerIndex];
       if (currentPlayer.id !== playerId || !state.playingPlayers.has(playerId)) return;
+
+      // In online multiplayer, send action to server
+      if (state.multiplayerMode === 'online' && state.websocket) {
+        state.websocket.send(JSON.stringify({
+          type: 'GAME_ACTION',
+          action: 'playcard',
+          payload: { playerId, card }
+        }));
+        return; // Server will broadcast the state update
+      }
       
       // Remove card from player's hand
       const updatedPlayers = state.players.map(player => 
