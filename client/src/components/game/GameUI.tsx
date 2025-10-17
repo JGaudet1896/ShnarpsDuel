@@ -222,16 +222,16 @@ export default function GameUI() {
                   <Button 
                     onClick={() => {
                       if (isOnline && isHost) {
-                        // Get random ECHL player name
-                        const echlPlayers = [
-                          'Dennis Bonvie', 'Matt Carkner', 'Garrett Burnett', 'Brad Wingfield',
-                          'Steve MacIntyre', 'Darren Schwartz', 'Chris Ferraro', 'Riley Cote',
-                          'David-Alexandre Beauregard', 'Kip Brennan', 'Bryan Helmer', 'Brent Cullaton',
-                          'Trevor Gallant', 'Tyler Mosienko', 'Zac Rinaldo', 'Cam Janssen',
-                          'Jesse Schultz', 'Chris Durno', 'Joe Fallon', 'Jared Staal'
+                        // Get random manly name for AI
+                        const aiPlayerNames = [
+                          'Jack', 'Luke', 'Cole', 'Ryan',
+                          'Jake', 'Tyler', 'Chase', 'Dylan',
+                          'Blake', 'Hunter', 'Mason', 'Logan',
+                          'Austin', 'Carter', 'Wyatt', 'Cody',
+                          'Trevor', 'Connor', 'Brett', 'Shane'
                         ];
                         const usedNames = players.map(p => p.name);
-                        const availableNames = echlPlayers.filter(name => !usedNames.includes(name));
+                        const availableNames = aiPlayerNames.filter(name => !usedNames.includes(name));
                         const aiName = availableNames.length > 0 
                           ? availableNames[Math.floor(Math.random() * availableNames.length)]
                           : `AI ${players.length + 1}`;
