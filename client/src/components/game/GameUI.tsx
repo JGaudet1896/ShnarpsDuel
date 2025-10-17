@@ -62,8 +62,9 @@ export default function GameUI() {
     }
   }, [gamePhase, players.length]);
 
-  // Welcome screen - choose game mode
+  // Welcome screen - choose game mode (only show if NOT in online mode)
   if (gameMode === 'menu' && gamePhase === 'setup' && players.length === 0 && mode === 'local') {
+    console.log('Showing welcome menu - gameMode:', gameMode, 'mode:', mode, 'players:', players.length);
     return (
       <>
         <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
@@ -119,6 +120,7 @@ export default function GameUI() {
 
   // Multiplayer setup - only show if not connected yet
   if (gameMode === 'online' && mode === 'local') {
+    console.log('Showing multiplayer setup');
     return <MultiplayerSetup onBack={() => setGameMode('menu')} />;
   }
 
