@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { GamePhase, Player, GameState, RoundHistory, AIDifficulty, calculateGameEndPayout } from "../game/gameLogic";
-import { Card, createDeck, shuffleDeck, dealCards, determineTrickWinner } from "../game/cardUtils";
+import { Card, createDeck, shuffleDeck, dealCards, determineTrickWinner, sortHandBySuit } from "../game/cardUtils";
 
 interface ShnarpsState extends GameState {
   localPlayerId: string | null;
@@ -849,8 +849,14 @@ export const useShnarps = create<ShnarpsState>()(
 
     // Multiplayer methods
     setMultiplayerState: (players: Player[], gameState: any, localPlayerId: string) => {
+      // Sort each player's hand by suit
+      const sortedPlayers = players.map(player => ({
+        ...player,
+        hand: player.hand.length > 0 ? sortHandBySuit(player.hand) : player.hand
+      }));
+
       set({
-        players,
+        players: sortedPlayers,
         gamePhase: gameState.gamePhase,
         currentPlayerIndex: gameState.currentPlayerIndex,
         dealerIndex: gameState.dealerIndex,
