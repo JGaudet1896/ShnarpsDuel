@@ -5,6 +5,7 @@ import { Card, createDeck, shuffleDeck, dealCards, determineTrickWinner } from "
 
 interface ShnarpsState extends GameState {
   localPlayerId: string | null;
+  isSimulating: boolean;
   // Actions
   initializeGame: () => void;
   joinGame: (playerName: string, avatar?: { color: string; icon: string }) => void;
@@ -17,6 +18,7 @@ interface ShnarpsState extends GameState {
   playCard: (playerId: string, card: Card) => void;
   nextTrick: () => void;
   resetGame: () => void;
+  setSimulating: (simulating: boolean) => void;
   // Multiplayer actions
   setMultiplayerState: (players: Player[], gameState: any, localPlayerId: string) => void;
   addRemotePlayer: (player: Player) => void;
@@ -30,6 +32,7 @@ export const useShnarps = create<ShnarpsState>()(
     // Initial game state
     gamePhase: 'setup' as GamePhase,
     localPlayerId: null,
+    isSimulating: false,
     players: [],
     eliminatedPlayers: [],
     currentPlayerIndex: 0,
@@ -811,6 +814,10 @@ export const useShnarps = create<ShnarpsState>()(
         round: 1,
         history: []
       });
+    },
+
+    setSimulating: (simulating: boolean) => {
+      set({ isSimulating: simulating });
     },
 
     // Multiplayer methods
