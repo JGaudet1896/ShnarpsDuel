@@ -15,7 +15,8 @@ import { Settings as SettingsDialog } from '../Settings';
 import { useState, useEffect } from 'react';
 import { AIDifficulty } from '../../lib/game/gameLogic';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
-import { BookOpen, HelpCircle, Settings, X } from 'lucide-react';
+import { useWallet } from '../../lib/stores/useWallet';
+import { BookOpen, HelpCircle, Settings, X, Wallet } from 'lucide-react';
 
 export default function GameUI() {
   const { 
@@ -58,6 +59,7 @@ export default function GameUI() {
   
   const isHighestBidder = highestBidder === localPlayerId;
   const localPlayer = players.find(p => p.id === localPlayerId);
+  const { balance } = useWallet();
 
   // DEBUG: Log all state values
   console.log('🔍 GameUI Render - gameMode:', gameMode, 'mode:', mode, 'gamePhase:', gamePhase, 'players:', players.length, 'roomCode:', roomCode);
@@ -82,6 +84,15 @@ export default function GameUI() {
               <p className="text-center text-sm text-muted-foreground">
                 Choose your game mode
               </p>
+              <div className="mt-3 p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center justify-center gap-2">
+                  <Wallet className="h-5 w-5 text-green-600" />
+                  <span className="text-lg font-bold text-green-700">
+                    ${balance.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-xs text-center text-green-600 mt-1">Your Bank Balance</p>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button onClick={() => setGameMode('local')} className="w-full" size="lg">
