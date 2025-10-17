@@ -118,7 +118,7 @@ export default function GameUI() {
     );
   }
 
-  // Multiplayer setup - only show if not connected yet
+  // Multiplayer setup - only show if trying to connect AND not yet connected
   if (gameMode === 'online' && mode === 'local') {
     console.log('Showing multiplayer setup');
     return <MultiplayerSetup onBack={() => setGameMode('menu')} />;
@@ -128,7 +128,8 @@ export default function GameUI() {
   if (gamePhase === 'setup') {
     // Show room code for online games
     const isOnline = mode === 'online';
-    console.log('Setup phase - mode:', mode, 'roomCode:', roomCode, 'isOnline:', isOnline, 'players:', players.length);
+    console.log('=== SETUP PHASE ===');
+    console.log('gameMode:', gameMode, 'mode:', mode, 'roomCode:', roomCode, 'players:', players.length);
     
     return (
       <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
