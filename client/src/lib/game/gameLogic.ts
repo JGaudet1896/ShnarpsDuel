@@ -73,9 +73,11 @@ export function calculateScore(
 
 export function calculateGameEndPayout(
   players: Player[],
-  scores: Map<string, number>
+  scores: Map<string, number>,
+  moneyPerPoint: number = 0.25,
+  moneyPerPunt: number = 1.0
 ): Map<string, number> {
-  // Money changes at game end: 25¢ per point + $1 per punt
+  // Money changes at game end: configurable per point + per punt
   const moneyChanges = new Map<string, number>();
   
   // Find the winner (score <= 0)
@@ -84,12 +86,12 @@ export function calculateGameEndPayout(
   
   let totalPayout = 0;
   
-  // Calculate what each loser pays: 25¢ per point + $1 per punt
+  // Calculate what each loser pays
   players.forEach(player => {
     if (player.id !== winner.id) {
       const finalScore = scores.get(player.id) || 16;
       const punts = player.punts || 0;
-      const amountOwed = (finalScore * 0.25) + (punts * 1.0);
+      const amountOwed = (finalScore * moneyPerPoint) + (punts * moneyPerPunt);
       moneyChanges.set(player.id, -amountOwed);
       totalPayout += amountOwed;
     }
@@ -101,12 +103,12 @@ export function calculateGameEndPayout(
   return moneyChanges;
 }
 
-export function isPlayerEliminated(score: number): boolean {
-  return score > 32;
+export function isPlayerEliminated(score: number, eliminationScore: number = 32): boolean {
+  return score > eliminationScore;
 }
 
-export function hasPlayerWon(score: number): boolean {
-  return score <= 0;
+export function hasPlayerWon(score: number, winningScore: number = 0): boolean {
+  return score <= winningScore;
 }
 
 export function getNextActivePlayer(

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { GamePhase, Player, GameState, RoundHistory, AIDifficulty, calculateGameEndPayout } from "../game/gameLogic";
 import { Card, createDeck, shuffleDeck, dealCards, determineTrickWinner, sortHandBySuit } from "../game/cardUtils";
+import { useSettings } from "./useSettings";
 
 interface ShnarpsState extends GameState {
   localPlayerId: string | null;
@@ -101,6 +102,8 @@ export const useShnarps = create<ShnarpsState>()(
       const state = get();
       if (state.players.length >= 8 || state.gamePhase !== 'setup') return;
       
+      const settings = useSettings.getState();
+      
       const newPlayer: Player = {
         id: `player_${Date.now()}_${Math.random()}`,
         name: playerName,
@@ -109,12 +112,12 @@ export const useShnarps = create<ShnarpsState>()(
         consecutiveSits: 0,
         isAI: false,
         avatar,
-        wallet: 100.00,
+        wallet: settings.startingWallet,
         punts: 0
       };
       
       const newScores = new Map(state.scores);
-      newScores.set(newPlayer.id, 16); // Starting points
+      newScores.set(newPlayer.id, settings.startingScore);
       
       set({
         players: [...state.players, newPlayer],
@@ -123,9 +126,12 @@ export const useShnarps = create<ShnarpsState>()(
       });
     },
 
-    addAIPlayer: (difficulty: AIDifficulty = 'medium') => {
+    addAIPlayer: (difficulty?: AIDifficulty) => {
       const state = get();
       if (state.players.length >= 8 || state.gamePhase !== 'setup') return;
+      
+      const settings = useSettings.getState();
+      const aiDifficulty = difficulty || settings.defaultAIDifficulty;
       
       // Random manly names for AI players
       const aiPlayerNames = [
@@ -158,14 +164,14 @@ export const useShnarps = create<ShnarpsState>()(
         isActive: true,
         consecutiveSits: 0,
         isAI: true,
-        aiDifficulty: difficulty,
+        aiDifficulty: aiDifficulty,
         avatar: randomAvatar,
-        wallet: 100.00,
+        wallet: settings.startingWallet,
         punts: 0
       };
       
       const newScores = new Map(state.scores);
-      newScores.set(newPlayer.id, 16);
+      newScores.set(newPlayer.id, settings.startingScore);
       
       set({
         players: [...state.players, newPlayer],
@@ -382,13 +388,14 @@ export const useShnarps = create<ShnarpsState>()(
         finalScores: new Map(newScores)
       };
       
-      // Separate eliminated players (score > 32) from active players
+      // Separate eliminated players using settings
+      const settings = useSettings.getState();
       const newlyEliminatedPlayers: Player[] = [];
       const remainingPlayers: Player[] = [];
       
       state.players.forEach(player => {
-        const score = newScores.get(player.id) || 16;
-        if (score > 32) {
+        const score = newScores.get(player.id) || settings.startingScore;
+        if (score > settings.eliminationScore) {
           newlyEliminatedPlayers.push({ ...player, isActive: false });
         } else {
           remainingPlayers.push(player);
@@ -399,11 +406,11 @@ export const useShnarps = create<ShnarpsState>()(
       const allEliminatedPlayers = [...state.eliminatedPlayers, ...newlyEliminatedPlayers];
       
       const activePlayers = remainingPlayers.filter(player => {
-        const score = newScores.get(player.id) || 16;
-        return score > 0 && player.isActive;
+        const score = newScores.get(player.id) || settings.startingScore;
+        return score > settings.winningScore && player.isActive;
       });
       
-      const hasWinner = Array.from(newScores.values()).some(score => score <= 0);
+      const hasWinner = Array.from(newScores.values()).some(score => score <= settings.winningScore);
       
       if (activePlayers.length <= 1 || hasWinner) {
         set({
@@ -715,13 +722,14 @@ export const useShnarps = create<ShnarpsState>()(
           punts: puntsThisRound
         };
         
-        // Separate eliminated players (score > 32) from active players
+        // Separate eliminated players using settings
+        const settings = useSettings.getState();
         const newlyEliminatedPlayers: Player[] = [];
         const remainingPlayers: Player[] = [];
         
         updatedPlayersAfterScoring.forEach(player => {
-          const score = newScores.get(player.id) || 16;
-          if (score > 32) {
+          const score = newScores.get(player.id) || settings.startingScore;
+          if (score > settings.eliminationScore) {
             newlyEliminatedPlayers.push({ ...player, isActive: false });
           } else {
             remainingPlayers.push(player);
@@ -732,33 +740,38 @@ export const useShnarps = create<ShnarpsState>()(
         const allEliminatedPlayers = [...state.eliminatedPlayers, ...newlyEliminatedPlayers];
         
         const activePlayers = remainingPlayers.filter(player => {
-          const score = newScores.get(player.id) || 16;
-          return score > 0 && player.isActive;
+          const score = newScores.get(player.id) || settings.startingScore;
+          return score > settings.winningScore && player.isActive;
         });
         
         // Check if game is over
-        const hasWinner = Array.from(newScores.values()).some(score => score <= 0);
+        const hasWinner = Array.from(newScores.values()).some(score => score <= settings.winningScore);
         
         if (activePlayers.length <= 1 || hasWinner) {
           // Calculate money payout at game end using ALL players (including eliminated)
           const allPlayers = [...remainingPlayers, ...allEliminatedPlayers];
-          const moneyChanges = calculateGameEndPayout(allPlayers, newScores);
+          const moneyChanges = calculateGameEndPayout(
+            allPlayers, 
+            newScores,
+            settings.moneyPerPoint,
+            settings.moneyPerPunt
+          );
           
           // Update player wallets with game-end payout for ALL players
           const updatedRemainingPlayers = remainingPlayers.map(player => ({
             ...player,
-            wallet: (player.wallet || 100) + (moneyChanges.get(player.id) || 0)
+            wallet: (player.wallet || settings.startingWallet) + (moneyChanges.get(player.id) || 0)
           }));
           
           const updatedEliminatedPlayers = allEliminatedPlayers.map(player => ({
             ...player,
-            wallet: (player.wallet || 100) + (moneyChanges.get(player.id) || 0)
+            wallet: (player.wallet || settings.startingWallet) + (moneyChanges.get(player.id) || 0)
           }));
           
           // Add money changes to the final round history
           roundHistory.moneyChanges = moneyChanges;
           roundHistory.finalWallets = new Map(
-            [...updatedRemainingPlayers, ...updatedEliminatedPlayers].map(p => [p.id, p.wallet || 100])
+            [...updatedRemainingPlayers, ...updatedEliminatedPlayers].map(p => [p.id, p.wallet || settings.startingWallet])
           );
           
           set({
