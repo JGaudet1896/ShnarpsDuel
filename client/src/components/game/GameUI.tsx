@@ -264,6 +264,7 @@ export default function GameUI() {
                   </Select>
                   <Button 
                     onClick={() => {
+                      console.log('🤖 Add AI clicked - isOnline:', isOnline, 'isHost:', isHost);
                       if (isOnline && isHost) {
                         // Get random manly name for AI
                         const aiPlayerNames = [
@@ -278,8 +279,10 @@ export default function GameUI() {
                         const aiName = availableNames.length > 0 
                           ? availableNames[Math.floor(Math.random() * availableNames.length)]
                           : `AI ${players.length + 1}`;
+                        console.log('Adding multiplayer AI:', aiName, aiDifficulty);
                         addMultiplayerAI(aiName, aiDifficulty);
                       } else {
+                        console.log('Adding local AI:', aiDifficulty);
                         addAIPlayer(aiDifficulty);
                       }
                     }}

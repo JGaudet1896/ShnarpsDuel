@@ -122,12 +122,16 @@ export function useMultiplayer() {
   };
 
   const addAIPlayer = (aiName: string, difficulty: 'easy' | 'medium' | 'hard') => {
+    console.log('addAIPlayer called:', { aiName, difficulty, hasWs: !!wsRef.current, wsState: wsRef.current?.readyState, isHost });
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && isHost) {
+      console.log('Sending ADD_AI message to server');
       wsRef.current.send(JSON.stringify({
         type: 'ADD_AI',
         aiName,
         difficulty
       }));
+    } else {
+      console.log('Cannot send ADD_AI - conditions not met');
     }
   };
 
