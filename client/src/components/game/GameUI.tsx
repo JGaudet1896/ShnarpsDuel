@@ -142,31 +142,33 @@ export default function GameUI() {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Current players */}
+            {/* Current players - scrollable list */}
             {players.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm">Players:</h3>
-                {players.map((player) => (
-                  <div key={player.id} className="flex items-center gap-3 py-1">
-                    {player.avatar && <Avatar avatar={player.avatar} size="sm" />}
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          {player.name}
-                          {player.isAI && ` 🤖 (${player.aiDifficulty || 'medium'})`}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          Score: {scores.get(player.id) || 16}
-                        </span>
-                      </div>
-                      {!player.isAI && (
-                        <div className="text-xs text-green-600 font-medium">
-                          Wallet: ${(player.wallet || 100).toFixed(2)}
+                <div className="max-h-48 overflow-y-auto pr-2 space-y-1">
+                  {players.map((player) => (
+                    <div key={player.id} className="flex items-center gap-3 py-1">
+                      {player.avatar && <Avatar avatar={player.avatar} size="sm" />}
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            {player.name}
+                            {player.isAI && ` 🤖 (${player.aiDifficulty || 'medium'})`}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Score: {scores.get(player.id) || 16}
+                          </span>
                         </div>
-                      )}
+                        {!player.isAI && (
+                          <div className="text-xs text-green-600 font-medium">
+                            Wallet: ${(player.wallet || 100).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
             
