@@ -252,12 +252,16 @@ export function chooseAICardToPlay(
       const nonTrumpAce = nonTrumpCards.find(c => c.value === 14);
       if (nonTrumpAce) return nonTrumpAce;
       
-      // Strategy 3: If you have multiple high trump cards (Q, K, or A), you can lead the lowest high one
-      const highTrumps = trumpCards.filter(c => c.value >= 12); // Q, K, A
-      if (highTrumps.length >= 2) {
-        return highTrumps.reduce((lowest, card) => 
-          card.value < lowest.value ? card : lowest
-        );
+      // Strategy 3: If you have K or Q of trump AND the Ace, you can lead the K or Q
+      const hasAceOfTrump = trumpCards.some(c => c.value === 14);
+      if (hasAceOfTrump) {
+        const protectedHighTrumps = trumpCards.filter(c => c.value === 12 || c.value === 13); // K or Q
+        if (protectedHighTrumps.length > 0) {
+          // Lead the highest protected card (K before Q)
+          return protectedHighTrumps.reduce((highest, card) => 
+            card.value > highest.value ? card : highest
+          );
+        }
       }
       
       // Strategy 4: If you have trump, lead low trump to draw out higher cards
@@ -282,8 +286,8 @@ export function chooseAICardToPlay(
     } else if (difficulty === 'medium') {
       // MEDIUM: Decent strategy with occasional mistakes
       
-      // 70% of time, use good strategy
-      if (Math.random() > 0.3) {
+      // 80% of time, use good strategy
+      if (Math.random() > 0.2) {
         // Lead Ace of trump if you have it
         const trumpAce = trumpCards.find(c => c.value === 14);
         if (trumpAce) return trumpAce;
@@ -291,6 +295,17 @@ export function chooseAICardToPlay(
         // Lead Ace of non-trump if you have it
         const nonTrumpAce = nonTrumpCards.find(c => c.value === 14);
         if (nonTrumpAce) return nonTrumpAce;
+        
+        // Lead K or Q of trump only if you have the Ace
+        const hasAceOfTrump = trumpCards.some(c => c.value === 14);
+        if (hasAceOfTrump) {
+          const protectedHighTrumps = trumpCards.filter(c => c.value === 12 || c.value === 13);
+          if (protectedHighTrumps.length > 0) {
+            return protectedHighTrumps.reduce((highest, card) => 
+              card.value > highest.value ? card : highest
+            );
+          }
+        }
         
         // If you have trump, lead low trump
         if (trumpCards.length > 0) {
@@ -305,12 +320,7 @@ export function chooseAICardToPlay(
         );
       }
       
-      // 30% of time, make a mistake (play random or highest)
-      if (Math.random() > 0.5) {
-        return playableCards.reduce((highest, card) => 
-          card.value > highest.value ? card : highest
-        );
-      }
+      // 20% of time, make a mistake (play random)
       return playableCards[Math.floor(Math.random() * playableCards.length)];
     }
     
