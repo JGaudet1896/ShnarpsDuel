@@ -930,6 +930,13 @@ export const useShnarps = create<ShnarpsState>()(
     },
 
     applyGameAction: (action: string, payload: any) => {
+      // Temporarily disable multiplayer mode to prevent WebSocket loop
+      const state = get();
+      const wasOnline = state.multiplayerMode === 'online';
+      if (wasOnline) {
+        set({ multiplayerMode: 'local' });
+      }
+
       // Apply game actions from server
       switch (action) {
         case 'bid':
@@ -944,6 +951,11 @@ export const useShnarps = create<ShnarpsState>()(
         case 'playcard':
           get().playCard(payload.playerId, payload.card);
           break;
+      }
+
+      // Restore multiplayer mode
+      if (wasOnline) {
+        set({ multiplayerMode: 'online' });
       }
     },
 
