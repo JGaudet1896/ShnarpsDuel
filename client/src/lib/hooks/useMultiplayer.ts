@@ -4,15 +4,16 @@ import { useShnarps } from '../stores/useShnarps';
 export type MultiplayerMode = 'local' | 'online';
 
 export function useMultiplayer() {
-  const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   
-  // Get mode, roomCode, and isHost from Zustand store instead of local state
+  // Get mode, roomCode, isHost, and websocket from Zustand store
   const { 
     multiplayerMode: mode, 
     multiplayerRoomCode: roomCode, 
     isMultiplayerHost: isHost,
-    setMultiplayerMode 
+    websocket,
+    setMultiplayerMode,
+    setWebSocket 
   } = useShnarps();
 
   const connectToRoom = (playerName: string, existingRoomCode?: string) => {
@@ -60,7 +61,7 @@ export function useMultiplayer() {
       setIsConnected(false);
     };
 
-    wsRef.current = ws;
+    setWebSocket(ws);
     // Note: Don't set mode to 'online' here - wait for ROOM_CREATED/JOINED_ROOM message
   };
 
@@ -112,8 +113,8 @@ export function useMultiplayer() {
   };
 
   const sendAction = (action: string, payload: any) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      websocket.send(JSON.stringify({
         type: 'GAME_ACTION',
         action,
         payload
@@ -122,10 +123,10 @@ export function useMultiplayer() {
   };
 
   const addAIPlayer = (aiName: string, difficulty: 'easy' | 'medium' | 'hard') => {
-    console.log('addAIPlayer called:', { aiName, difficulty, hasWs: !!wsRef.current, wsState: wsRef.current?.readyState, isHost });
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && isHost) {
+    console.log('addAIPlayer called:', { aiName, difficulty, hasWs: !!websocket, wsState: websocket?.readyState, isHost });
+    if (websocket && websocket.readyState === WebSocket.OPEN && isHost) {
       console.log('Sending ADD_AI message to server');
-      wsRef.current.send(JSON.stringify({
+      websocket.send(JSON.stringify({
         type: 'ADD_AI',
         aiName,
         difficulty
@@ -136,16 +137,16 @@ export function useMultiplayer() {
   };
 
   const startGame = () => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && isHost) {
-      wsRef.current.send(JSON.stringify({
+    if (websocket && websocket.readyState === WebSocket.OPEN && isHost) {
+      websocket.send(JSON.stringify({
         type: 'START_GAME'
       }));
     }
   };
 
   const removePlayer = (playerId: string) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && isHost) {
-      wsRef.current.send(JSON.stringify({
+    if (websocket && websocket.readyState === WebSocket.OPEN && isHost) {
+      websocket.send(JSON.stringify({
         type: 'REMOVE_PLAYER',
         playerId
       }));
@@ -153,9 +154,9 @@ export function useMultiplayer() {
   };
 
   const disconnect = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    if (websocket) {
+      websocket.close();
+      setWebSocket(null);
     }
     setIsConnected(false);
     setMultiplayerMode('local', null, false);
