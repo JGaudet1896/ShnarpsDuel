@@ -358,9 +358,14 @@ export function setupWebSocket(server: Server) {
             room.gameState.trumpSuit = null;
             room.gameState.highestBidder = null;
             
-            broadcastToRoom(room.id, {
-              type: 'GAME_STARTED',
-              gameState: serializeGameState(room, currentPlayerId).gameState
+            // Send personalized game state to each player (with their own hand)
+            room.players.forEach((player, playerId) => {
+              if (player.ws && player.ws.readyState === WebSocket.OPEN) {
+                player.ws.send(JSON.stringify({
+                  type: 'GAME_STARTED',
+                  ...serializeGameState(room, playerId)
+                }));
+              }
             });
 
             break;

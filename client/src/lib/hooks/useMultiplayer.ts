@@ -99,7 +99,8 @@ export function useMultiplayer() {
 
       case 'GAME_STARTED':
         console.log('Game started');
-        store.syncGameState(message.gameState);
+        // Update both players (with hands) and game state
+        store.setMultiplayerState(message.players, message.gameState, message.localPlayerId || store.localPlayerId);
         break;
 
       case 'ERROR':
