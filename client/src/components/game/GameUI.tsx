@@ -99,7 +99,7 @@ export default function GameUI() {
                   </div>
                   <p className="text-xs text-center text-green-600 mt-2 flex items-center justify-center gap-1">
                     <History className="h-3 w-3" />
-                    View transaction history
+                    View game statistics
                   </p>
                 </div>
               </div>

@@ -34,7 +34,7 @@ export function TransactionHistory({ open, onClose }: TransactionHistoryProps) {
         <DialogHeader>
           <DialogTitle className="text-2xl text-gray-900 flex items-center gap-2">
             <Wallet className="h-6 w-6" />
-            Transaction History
+            Game Statistics
           </DialogTitle>
         </DialogHeader>
 
