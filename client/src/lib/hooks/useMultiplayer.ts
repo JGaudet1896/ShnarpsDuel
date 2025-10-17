@@ -12,20 +12,24 @@ export function useMultiplayer() {
 
   const connectToRoom = (playerName: string, existingRoomCode?: string) => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    console.log('Connecting to WebSocket:', wsUrl);
+    
+    const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
+      console.log('WebSocket connected');
       setIsConnected(true);
       
       if (existingRoomCode) {
-        // Join existing room
+        console.log('Joining room:', existingRoomCode);
         ws.send(JSON.stringify({
           type: 'JOIN_ROOM',
           roomId: existingRoomCode,
           playerName
         }));
       } else {
-        // Create new room
+        console.log('Creating new room');
         ws.send(JSON.stringify({
           type: 'CREATE_ROOM',
           playerName
@@ -35,11 +39,13 @@ export function useMultiplayer() {
     };
 
     ws.onmessage = (event) => {
+      console.log('WebSocket message received:', event.data);
       const message = JSON.parse(event.data);
       handleServerMessage(message);
     };
 
     ws.onclose = () => {
+      console.log('WebSocket closed');
       setIsConnected(false);
       setMode('local');
       setRoomCode(null);
@@ -56,31 +62,38 @@ export function useMultiplayer() {
 
   const handleServerMessage = (message: any) => {
     const store = useShnarps.getState();
+    console.log('Handling server message:', message.type);
 
     switch (message.type) {
       case 'ROOM_CREATED':
+        console.log('Room created:', message.roomId);
         setRoomCode(message.roomId);
         store.setMultiplayerState(message.players, message.gameState, message.localPlayerId);
         break;
 
       case 'JOINED_ROOM':
+        console.log('Joined room:', message.roomId);
         setRoomCode(message.roomId);
         store.setMultiplayerState(message.players, message.gameState, message.localPlayerId);
         break;
 
       case 'PLAYER_JOINED':
+        console.log('Player joined:', message.player.name);
         store.addRemotePlayer(message.player);
         break;
 
       case 'PLAYER_LEFT':
+        console.log('Player left:', message.playerId);
         store.removePlayer(message.playerId);
         break;
 
       case 'GAME_STATE_UPDATE':
+        console.log('Game state update:', message.action);
         store.applyGameAction(message.action, message.payload);
         break;
 
       case 'GAME_STARTED':
+        console.log('Game started');
         store.syncGameState(message.gameState);
         break;
 
@@ -88,6 +101,9 @@ export function useMultiplayer() {
         console.error('Server error:', message.message);
         alert(message.message);
         break;
+        
+      default:
+        console.warn('Unknown message type:', message.type);
     }
   };
 
