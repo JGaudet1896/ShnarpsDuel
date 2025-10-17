@@ -258,6 +258,25 @@ export function setupWebSocket(server: Server) {
             break;
           }
 
+          case 'REMOVE_PLAYER': {
+            if (!currentRoomId || !currentPlayerId) break;
+            const room = rooms.get(currentRoomId);
+            if (!room || room.host !== currentPlayerId || room.gameState.gamePhase !== 'setup') break;
+
+            const playerToRemove = message.playerId;
+            if (playerToRemove === currentPlayerId) break; // Can't remove yourself
+
+            room.players.delete(playerToRemove);
+            room.gameState.scores.delete(playerToRemove);
+
+            broadcastToRoom(room.id, {
+              type: 'PLAYER_LEFT',
+              playerId: playerToRemove
+            });
+
+            break;
+          }
+
           case 'START_GAME': {
             if (!currentRoomId || !currentPlayerId) break;
             const room = rooms.get(currentRoomId);

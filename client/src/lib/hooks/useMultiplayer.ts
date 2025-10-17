@@ -119,6 +119,15 @@ export function useMultiplayer() {
     }
   };
 
+  const removePlayer = (playerId: string) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && isHost) {
+      wsRef.current.send(JSON.stringify({
+        type: 'REMOVE_PLAYER',
+        playerId
+      }));
+    }
+  };
+
   const disconnect = () => {
     if (wsRef.current) {
       wsRef.current.close();
@@ -146,6 +155,7 @@ export function useMultiplayer() {
     connectToRoom,
     sendAction,
     addAIPlayer,
+    removePlayer,
     startGame,
     disconnect
   };

@@ -14,7 +14,7 @@ import AppWalkthrough from './AppWalkthrough';
 import { useState, useEffect } from 'react';
 import { AIDifficulty } from '../../lib/game/gameLogic';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
-import { BookOpen, HelpCircle } from 'lucide-react';
+import { BookOpen, HelpCircle, X } from 'lucide-react';
 
 export default function GameUI() {
   const { 
@@ -33,10 +33,11 @@ export default function GameUI() {
     resetGame,
     localPlayerId,
     isSimulating,
-    setSimulating
+    setSimulating,
+    removePlayer
   } = useShnarps();
   
-  const { mode, roomCode, isHost, addAIPlayer: addMultiplayerAI, startGame: startMultiplayerGame } = useMultiplayer();
+  const { mode, roomCode, isHost, addAIPlayer: addMultiplayerAI, removePlayer: removeMultiplayerPlayer, startGame: startMultiplayerGame } = useMultiplayer();
   
   const [playerName, setPlayerName] = useState('');
   const [trumpSuit, setTrumpSuit] = useState<string>('');
@@ -166,6 +167,23 @@ export default function GameUI() {
                           </div>
                         )}
                       </div>
+                      {/* Remove button - only show if not local player and (in local mode OR host in online mode) */}
+                      {player.id !== localPlayerId && (!isOnline || isHost) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (isOnline && isHost) {
+                              removeMultiplayerPlayer(player.id);
+                            } else {
+                              removePlayer(player.id);
+                            }
+                          }}
+                          className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
