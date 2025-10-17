@@ -11,10 +11,11 @@ import MultiplayerSetup from './MultiplayerSetup';
 import AvatarCustomizer, { Avatar, type PlayerAvatar } from './AvatarCustomizer';
 import Tutorial from './Tutorial';
 import AppWalkthrough from './AppWalkthrough';
+import { Settings as SettingsDialog } from '../Settings';
 import { useState, useEffect } from 'react';
 import { AIDifficulty } from '../../lib/game/gameLogic';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
-import { BookOpen, HelpCircle, X } from 'lucide-react';
+import { BookOpen, HelpCircle, Settings, X } from 'lucide-react';
 
 export default function GameUI() {
   const { 
@@ -49,6 +50,7 @@ export default function GameUI() {
   const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<PlayerAvatar>({
     color: '#3B82F6',
     icon: '👤'
@@ -95,6 +97,15 @@ export default function GameUI() {
               
               <div className="pt-4 border-t space-y-2">
                 <Button 
+                  onClick={() => setShowSettings(true)} 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  size="sm"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings (Stakes & Rules)
+                </Button>
+                <Button 
                   onClick={() => setShowTutorial(true)} 
                   variant="ghost" 
                   className="w-full justify-start"
@@ -117,7 +128,8 @@ export default function GameUI() {
           </Card>
         </div>
         
-        {/* Tutorial and Walkthrough modals */}
+        {/* Settings, Tutorial and Walkthrough modals */}
+        <SettingsDialog open={showSettings} onClose={() => setShowSettings(false)} />
         <Tutorial open={showTutorial} onClose={() => setShowTutorial(false)} />
         <AppWalkthrough open={showWalkthrough} onClose={() => setShowWalkthrough(false)} />
       </>
