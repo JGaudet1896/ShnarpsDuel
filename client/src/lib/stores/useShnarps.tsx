@@ -55,6 +55,7 @@ export const useShnarps = create<ShnarpsState>()(
       set({
         gamePhase: 'setup',
         localPlayerId: null,
+        isSimulating: false,
         players: [],
         eliminatedPlayers: [],
         currentPlayerIndex: 0,
@@ -368,7 +369,8 @@ export const useShnarps = create<ShnarpsState>()(
           players: remainingPlayers,
           eliminatedPlayers: allEliminatedPlayers,
           scores: newScores,
-          history: [...state.history, roundHistory]
+          history: [...state.history, roundHistory],
+          isSimulating: false
         });
       } else {
         // Start next round - eliminated players are completely removed
@@ -701,7 +703,8 @@ export const useShnarps = create<ShnarpsState>()(
             players: updatedRemainingPlayers,
             eliminatedPlayers: updatedEliminatedPlayers,
             scores: newScores,
-            history: [...state.history, roundHistory]
+            history: [...state.history, roundHistory],
+            isSimulating: false
           });
         } else {
           // Start next round (no wallet changes between rounds)
