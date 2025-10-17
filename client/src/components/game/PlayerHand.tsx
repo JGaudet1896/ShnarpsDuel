@@ -19,17 +19,20 @@ export default function PlayerHand({
 
   if (!faceUp) {
     return (
-      <div className="flex overflow-x-auto pb-1 touch-pan-x scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
-        {cards.map((card, index) => (
+      <div className="flex justify-center items-center">
+        {cards.slice(0, 3).map((card, index) => (
           <div key={`${card.suit}-${card.rank}-${index}`} 
-               className={index > 0 ? '-ml-2' : ''}>
+               className={index > 0 ? '-ml-4' : ''}>
             <Card
               card={card}
               faceDown={true}
-              delay={index * 0.1}
+              delay={index * 0.05}
             />
           </div>
         ))}
+        {cards.length > 3 && (
+          <span className="ml-1 text-xs text-gray-400">+{cards.length - 3}</span>
+        )}
       </div>
     );
   }
