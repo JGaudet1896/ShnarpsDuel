@@ -380,7 +380,8 @@ export const useShnarps = create<ShnarpsState>()(
         
         const updatedPlayers = activePlayers.map((player, index) => ({
           ...player,
-          hand: dealtCards[index] || []
+          hand: dealtCards[index] || [],
+          consecutiveSits: 0
         }));
         
         set({
@@ -717,7 +718,8 @@ export const useShnarps = create<ShnarpsState>()(
           const updatedPlayers = activePlayers.map((player, index) => ({
             ...player,
             hand: dealtCards[index] || [],
-            punts: player.punts || 0
+            punts: player.punts || 0,
+            consecutiveSits: 0
           }));
           
           set({
