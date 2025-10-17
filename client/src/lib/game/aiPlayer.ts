@@ -83,7 +83,7 @@ export function makeAIBid(
 // AI trump suit selection
 export function chooseAITrumpSuit(hand: Card[], difficulty: AIDifficulty = 'medium'): string {
   const suits = ['hearts', 'diamonds', 'clubs', 'spades'] as const;
-  let bestSuit = suits[0];
+  let bestSuit: typeof suits[number] = suits[0];
   let bestStrength = 0;
   
   for (const suit of suits) {
