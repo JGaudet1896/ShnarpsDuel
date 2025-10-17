@@ -3,6 +3,8 @@ import PlayerHand from './PlayerHand';
 import Card from './Card';
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Card as CardType, isValidPlay } from '../../lib/game/cardUtils';
+import { useGameBoardStore } from '../../lib/stores/useGameBoardStore';
 
 export default function GameBoard() {
   const { 
@@ -20,6 +22,20 @@ export default function GameBoard() {
     lastTrickWinner,
     completedTricks
   } = useShnarps();
+
+  const { selectedCard, setSelectedCard } = useGameBoardStore();
+  
+  const currentPlayer = players[currentPlayerIndex];
+  const localPlayer = players.find(p => p.id === localPlayerId);
+  const isLocalPlayerTurn = currentPlayer?.id === localPlayerId && playingPlayers.has(currentPlayer.id);
+  
+  const handleCardSelect = (card: CardType) => {
+    if (!localPlayer) return;
+    const isValid = isValidPlay(card, localPlayer.hand, currentTrick, trumpSuit);
+    if (isValid) {
+      setSelectedCard(card);
+    }
+  };
 
   // Calculate tricks won by each player in current hand
   const tricksWon = useMemo(() => {
@@ -257,12 +273,14 @@ export default function GameBoard() {
                 </div>
               )}
 
-              {/* Player hand - hidden only during gameplay when sitting out */}
+              {/* Player hand - always visible for local player */}
               {(isPlaying || (isLocalPlayer && (gamePhase === 'bidding' || gamePhase === 'sit_pass'))) && (
                 <PlayerHand
                   cards={player.hand}
                   isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && isPlaying}
-                  faceUp={isLocalPlayer && gamePhase !== 'hand_play'}
+                  faceUp={isLocalPlayer}
+                  selectedCard={isLocalPlayerTurn && gamePhase === 'hand_play' ? (selectedCard || undefined) : undefined}
+                  onCardClick={isLocalPlayerTurn && gamePhase === 'hand_play' ? handleCardSelect : undefined}
                 />
               )}
             </div>
