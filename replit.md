@@ -130,7 +130,8 @@ Preferred communication style: Simple, everyday language.
 - Card play using valid move filtering and heuristics
 - Automated AI turns via useAIPlayer hook with natural delays
 - Three difficulty levels: Easy (makes mistakes), Medium (occasional errors), Hard (optimal play)
-- Uses ECHL penalty leaders for AI player names (Dennis Bonvie, Matt Carkner, etc.)
+- Uses random manly names for AI players (Jack, Luke, Cole, Ryan, Jake, Tyler, etc.)
+- Advanced strategies: Collusion (gang up on leaders), Defensive bidding (block leaders from calling trump)
 
 **Multiplayer System**
 - WebSocket-based real-time communication (/ws endpoint)

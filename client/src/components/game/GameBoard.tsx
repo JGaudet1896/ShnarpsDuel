@@ -89,7 +89,7 @@ export default function GameBoard() {
       
       // Start at bottom and go counter-clockwise
       const angle = (positionIndex / players.length) * Math.PI * 2 + Math.PI / 2;
-      const radius = 35; // percentage
+      const radius = 38; // percentage - slightly larger for better spacing
       const x = 50 + Math.cos(angle) * radius;
       const y = 50 + Math.sin(angle) * radius;
       return { x, y, angle };
@@ -190,28 +190,28 @@ export default function GameBoard() {
               top: `${pos.y}%`,
             }}
           >
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-0.5">
               {/* Player info */}
               <div className={`
-                px-2 py-1 rounded-lg shadow-md relative
+                px-2 py-0.5 sm:py-1 rounded-lg shadow-md relative
                 ${isCurrentPlayer ? 'bg-yellow-400 text-gray-900' : 'bg-gray-800 text-white'}
               `}>
                 <div className="flex items-center gap-1">
                   {/* Dealer chip indicator */}
                   {index === dealerIndex && (
-                    <div className="w-5 h-5 rounded-full bg-white border-2 border-gray-800 flex items-center justify-center" title="Dealer">
-                      <span className="text-[8px] font-bold text-gray-800">D</span>
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white border-2 border-gray-800 flex items-center justify-center" title="Dealer">
+                      <span className="text-[7px] sm:text-[8px] font-bold text-gray-800">D</span>
                     </div>
                   )}
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <div>
-                      <p className="text-xs font-semibold whitespace-nowrap">
-                        {player.name.length > 12 ? player.name.substring(0, 12) + '...' : player.name}
+                      <p className="text-[10px] sm:text-xs font-semibold whitespace-nowrap">
+                        {player.name.length > 10 ? player.name.substring(0, 10) + '...' : player.name}
                         {player.isAI && ' 🤖'}
                       </p>
                     </div>
-                    <div className={`text-lg font-bold px-1.5 py-0.5 rounded ${
+                    <div className={`text-sm sm:text-lg font-bold px-1 sm:px-1.5 py-0.5 rounded ${
                       score <= 0 ? 'bg-green-600 text-white' : 
                       score >= 28 ? 'bg-red-600 text-white' : 
                       score > 16 ? 'bg-orange-500 text-white' : 
