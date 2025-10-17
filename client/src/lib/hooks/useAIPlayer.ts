@@ -19,12 +19,19 @@ export function useAIPlayer() {
     currentTrick,
     playingPlayers,
     scores,
-    isSimulating
+    isSimulating,
+    multiplayerMode,
+    isMultiplayerHost
   } = useShnarps();
 
   useEffect(() => {
     const currentPlayer = players[currentPlayerIndex];
     if (!currentPlayer || !currentPlayer.isAI) return;
+
+    // In online multiplayer, only the host should control AI players
+    if (multiplayerMode === 'online' && !isMultiplayerHost) {
+      return;
+    }
 
     const difficulty = currentPlayer.aiDifficulty || 'medium';
 
@@ -113,5 +120,5 @@ export function useAIPlayer() {
     }, baseDelay + Math.random() * randomDelay);
 
     return () => clearTimeout(aiDelay);
-  }, [gamePhase, currentPlayerIndex, players, bids, trumpSuit, currentTrick, playingPlayers, scores, isSimulating, placeBid, chooseTrumpSuit, chooseSitOrPlay, choosePenalty, playCard]);
+  }, [gamePhase, currentPlayerIndex, players, bids, trumpSuit, currentTrick, playingPlayers, scores, isSimulating, multiplayerMode, isMultiplayerHost, placeBid, chooseTrumpSuit, chooseSitOrPlay, choosePenalty, playCard]);
 }
