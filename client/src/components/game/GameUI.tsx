@@ -62,6 +62,13 @@ export default function GameUI() {
     }
   }, [gamePhase, players.length]);
 
+  // Auto-close multiplayer setup when connected
+  useEffect(() => {
+    if (gameMode === 'online' && mode === 'online') {
+      setGameMode('menu');
+    }
+  }, [gameMode, mode]);
+
   // Welcome screen - choose game mode
   if (gameMode === 'menu' && gamePhase === 'setup' && players.length === 0) {
     return (
@@ -117,7 +124,7 @@ export default function GameUI() {
     );
   }
 
-  // Multiplayer setup
+  // Multiplayer setup - only show if not connected yet
   if (gameMode === 'online' && mode === 'local') {
     return <MultiplayerSetup onBack={() => setGameMode('menu')} />;
   }
