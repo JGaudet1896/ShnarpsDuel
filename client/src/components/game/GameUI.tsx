@@ -54,6 +54,9 @@ export default function GameUI() {
   const isHighestBidder = highestBidder === localPlayerId;
   const localPlayer = players.find(p => p.id === localPlayerId);
 
+  // DEBUG: Log all state values
+  console.log('🔍 GameUI Render - gameMode:', gameMode, 'mode:', mode, 'gamePhase:', gamePhase, 'players:', players.length, 'roomCode:', roomCode);
+
   // Check if first-time user and show walkthrough
   useEffect(() => {
     const walkthroughCompleted = localStorage.getItem('shnarps_walkthrough_completed');
