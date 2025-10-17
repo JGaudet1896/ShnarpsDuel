@@ -97,12 +97,9 @@ export default function GameUI() {
                       {balance.toFixed(2)} coins
                     </span>
                   </div>
-                  <p className="text-[10px] text-green-500 font-medium mt-0.5">
-                    (play money - not real!)
-                  </p>
                   <p className="text-xs text-center text-green-600 mt-2 flex items-center justify-center gap-1">
                     <History className="h-3 w-3" />
-                    View history • First 100 coins free!
+                    View transaction history
                   </p>
                 </div>
               </div>

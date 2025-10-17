@@ -80,7 +80,7 @@ const tutorialSteps = [
           </div>
         </div>
         <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200 mt-2">
-          <p className="text-sm"><strong>Musty Rule:</strong> If you sit 3 rounds in a row, you MUST play the next round!</p>
+          <p className="text-sm"><strong>Musty Rule:</strong> If you sit 2 rounds in a row, you MUST play the next round!</p>
         </div>
         <div className="bg-green-50 p-3 rounded-lg border border-green-200 mt-2">
           <p className="text-sm"><strong>Bonus:</strong> If you sit while at 4 points or less, you get +1 point!</p>

@@ -80,11 +80,6 @@ export function Settings({ open, onClose }: SettingsProps) {
           </TabsList>
 
           <TabsContent value="stakes" className="space-y-6 mt-6">
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
-              <p className="text-sm text-amber-800 font-medium">
-                💰 These are play money stakes - not real currency!
-              </p>
-            </div>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="moneyPerPoint" className="text-base text-gray-900">Coins Per Point</Label>
@@ -101,7 +96,7 @@ export function Settings({ open, onClose }: SettingsProps) {
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Play money coins losers pay per point difference to the winner
+                  Coins losers pay per point difference to the winner
                 </p>
               </div>
 
@@ -120,7 +115,7 @@ export function Settings({ open, onClose }: SettingsProps) {
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Play money coins losers pay per successful punt to the winner
+                  Coins losers pay per successful punt to the winner
                 </p>
               </div>
             </div>

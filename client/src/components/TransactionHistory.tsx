@@ -34,7 +34,7 @@ export function TransactionHistory({ open, onClose }: TransactionHistoryProps) {
         <DialogHeader>
           <DialogTitle className="text-2xl text-gray-900 flex items-center gap-2">
             <Wallet className="h-6 w-6" />
-            Transaction History (Play Money)
+            Transaction History
           </DialogTitle>
         </DialogHeader>
 
@@ -42,12 +42,9 @@ export function TransactionHistory({ open, onClose }: TransactionHistoryProps) {
           {/* Current Balance */}
           <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-green-700">Current Balance (Not Real Money)</span>
+              <span className="text-sm font-medium text-green-700">Current Balance</span>
               <span className="text-2xl font-bold text-green-700">🪙 {balance.toFixed(2)}</span>
             </div>
-            <p className="text-xs text-green-600 mt-2 text-center">
-              Your first 100 coins are on the house! 🎉
-            </p>
           </div>
 
           {/* Transactions List */}
