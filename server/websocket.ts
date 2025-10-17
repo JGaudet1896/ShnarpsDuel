@@ -55,6 +55,58 @@ function generateRoomCode(): string {
   return code;
 }
 
+// Card utility functions
+function createDeck(): Card[] {
+  const suits = ['♠', '♥', '♦', '♣'];
+  const values = [
+    { value: 14, name: 'A' },
+    { value: 13, name: 'K' },
+    { value: 12, name: 'Q' },
+    { value: 11, name: 'J' },
+    { value: 10, name: '10' },
+    { value: 9, name: '9' },
+    { value: 8, name: '8' },
+    { value: 7, name: '7' },
+    { value: 6, name: '6' },
+    { value: 5, name: '5' },
+    { value: 4, name: '4' },
+    { value: 3, name: '3' },
+    { value: 2, name: '2' }
+  ];
+
+  const deck: Card[] = [];
+  for (const suit of suits) {
+    for (const val of values) {
+      deck.push({
+        suit,
+        value: val.value,
+        name: val.name
+      });
+    }
+  }
+  return deck;
+}
+
+function shuffleDeck(deck: Card[]): Card[] {
+  const shuffled = [...deck];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function dealCards(deck: Card[], numPlayers: number): Card[][] {
+  const hands: Card[][] = Array.from({ length: numPlayers }, () => []);
+  for (let i = 0; i < 5; i++) {
+    for (let p = 0; p < numPlayers; p++) {
+      const card = deck[i * numPlayers + p];
+      if (card) hands[p].push(card);
+    }
+  }
+  return hands;
+}
+
 function createRoom(hostId: string, hostName: string): GameRoom {
   const roomId = generateRoomCode();
   
@@ -290,7 +342,21 @@ export function setupWebSocket(server: Server) {
               break;
             }
 
+            // Deal cards to all players
+            const shuffledDeck = shuffleDeck(createDeck());
+            const playerArray = Array.from(room.players.values());
+            const dealtCards = dealCards(shuffledDeck, playerArray.length);
+            
+            playerArray.forEach((player, index) => {
+              player.hand = dealtCards[index] || [];
+            });
+
             room.gameState.gamePhase = 'bidding';
+            room.gameState.deck = shuffledDeck.slice(playerArray.length * 5); // Remaining cards
+            room.gameState.currentPlayerIndex = (room.gameState.dealerIndex + 1) % playerArray.length;
+            room.gameState.bids = new Map();
+            room.gameState.trumpSuit = null;
+            room.gameState.highestBidder = null;
             
             broadcastToRoom(room.id, {
               type: 'GAME_STARTED',
