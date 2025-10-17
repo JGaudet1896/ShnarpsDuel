@@ -5,9 +5,9 @@ type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'everyon
 type AIDifficulty = 'easy' | 'medium' | 'hard';
 
 interface Card {
-  suit: string;
+  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
+  rank: 'A' | 'K' | 'Q' | 'J' | '10' | '9' | '8' | '7' | '6' | '5' | '4' | '3' | '2';
   value: number;
-  name: string;
 }
 
 interface Player {
@@ -57,30 +57,30 @@ function generateRoomCode(): string {
 
 // Card utility functions
 function createDeck(): Card[] {
-  const suits = ['♠', '♥', '♦', '♣'];
-  const values = [
-    { value: 14, name: 'A' },
-    { value: 13, name: 'K' },
-    { value: 12, name: 'Q' },
-    { value: 11, name: 'J' },
-    { value: 10, name: '10' },
-    { value: 9, name: '9' },
-    { value: 8, name: '8' },
-    { value: 7, name: '7' },
-    { value: 6, name: '6' },
-    { value: 5, name: '5' },
-    { value: 4, name: '4' },
-    { value: 3, name: '3' },
-    { value: 2, name: '2' }
+  const suits: Card['suit'][] = ['spades', 'hearts', 'diamonds', 'clubs'];
+  const ranks: Array<{ rank: Card['rank']; value: number }> = [
+    { rank: 'A', value: 14 },
+    { rank: 'K', value: 13 },
+    { rank: 'Q', value: 12 },
+    { rank: 'J', value: 11 },
+    { rank: '10', value: 10 },
+    { rank: '9', value: 9 },
+    { rank: '8', value: 8 },
+    { rank: '7', value: 7 },
+    { rank: '6', value: 6 },
+    { rank: '5', value: 5 },
+    { rank: '4', value: 4 },
+    { rank: '3', value: 3 },
+    { rank: '2', value: 2 }
   ];
 
   const deck: Card[] = [];
   for (const suit of suits) {
-    for (const val of values) {
+    for (const r of ranks) {
       deck.push({
         suit,
-        value: val.value,
-        name: val.name
+        value: r.value,
+        rank: r.rank
       });
     }
   }
