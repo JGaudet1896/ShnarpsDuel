@@ -19,7 +19,8 @@ import { BookOpen, HelpCircle } from 'lucide-react';
 export default function GameUI() {
   const { 
     gamePhase, 
-    players, 
+    players,
+    eliminatedPlayers,
     scores,
     round,
     history,
@@ -384,11 +385,14 @@ export default function GameUI() {
     const lastRound = history[history.length - 1];
     const moneyChanges = lastRound?.moneyChanges || new Map<string, number>();
     
+    // Combine active players and eliminated players for final scoreboard
+    const allPlayers = [...players, ...(eliminatedPlayers || [])];
+    
     // Find the winner (player with score <= 0)
-    const winner = players.find(p => (scores.get(p.id) ?? 16) <= 0);
+    const winner = allPlayers.find(p => (scores.get(p.id) ?? 16) <= 0);
     
     // Sort players: winner first, then by score (lowest to highest)
-    const sortedPlayers = players
+    const sortedPlayers = allPlayers
       .map(player => ({
         ...player,
         score: scores.get(player.id) ?? 16,
