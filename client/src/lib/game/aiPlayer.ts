@@ -184,19 +184,91 @@ export function chooseAICardToPlay(
   
   // If leading
   if (currentTrick.length === 0) {
+    // IMPROVED LEADING STRATEGY
+    const trumpCards = playableCards.filter(c => c.suit === trumpSuit);
+    const nonTrumpCards = playableCards.filter(c => c.suit !== trumpSuit);
+    
     if (difficulty === 'hard') {
-      // Hard: Plays highest card strategically
-      return playableCards.reduce((highest, card) => 
-        card.value > highest.value ? card : highest
+      // HARD: Smart leading strategy
+      
+      // Strategy 1: If you have the Ace of trump, lead it (guaranteed winner)
+      const trumpAce = trumpCards.find(c => c.value === 14);
+      if (trumpAce) return trumpAce;
+      
+      // Strategy 2: If you have Ace of any non-trump suit, lead it
+      const nonTrumpAce = nonTrumpCards.find(c => c.value === 14);
+      if (nonTrumpAce) return nonTrumpAce;
+      
+      // Strategy 3: If you have multiple high trump cards (Q, K, or A), you can lead the lowest high one
+      const highTrumps = trumpCards.filter(c => c.value >= 12); // Q, K, A
+      if (highTrumps.length >= 2) {
+        return highTrumps.reduce((lowest, card) => 
+          card.value < lowest.value ? card : lowest
+        );
+      }
+      
+      // Strategy 4: If you have trump, lead low trump to draw out higher cards
+      if (trumpCards.length > 0) {
+        return trumpCards.reduce((lowest, card) => 
+          card.value < lowest.value ? card : lowest
+        );
+      }
+      
+      // Strategy 5: Lead lowest non-trump to get rid of weak cards
+      if (nonTrumpCards.length > 0) {
+        return nonTrumpCards.reduce((lowest, card) => 
+          card.value < lowest.value ? card : lowest
+        );
+      }
+      
+      // Fallback: play lowest card
+      return playableCards.reduce((lowest, card) => 
+        card.value < lowest.value ? card : lowest
       );
-    } else if (difficulty === 'medium' && Math.random() > 0.3) {
-      // Medium: Usually plays high, sometimes plays random
-      return playableCards.reduce((highest, card) => 
-        card.value > highest.value ? card : highest
-      );
+      
+    } else if (difficulty === 'medium') {
+      // MEDIUM: Decent strategy with occasional mistakes
+      
+      // 70% of time, use good strategy
+      if (Math.random() > 0.3) {
+        // Lead Ace of trump if you have it
+        const trumpAce = trumpCards.find(c => c.value === 14);
+        if (trumpAce) return trumpAce;
+        
+        // Lead Ace of non-trump if you have it
+        const nonTrumpAce = nonTrumpCards.find(c => c.value === 14);
+        if (nonTrumpAce) return nonTrumpAce;
+        
+        // If you have trump, lead low trump
+        if (trumpCards.length > 0) {
+          return trumpCards.reduce((lowest, card) => 
+            card.value < lowest.value ? card : lowest
+          );
+        }
+        
+        // Otherwise lead low non-trump
+        return playableCards.reduce((lowest, card) => 
+          card.value < lowest.value ? card : lowest
+        );
+      }
+      
+      // 30% of time, make a mistake (play random or highest)
+      if (Math.random() > 0.5) {
+        return playableCards.reduce((highest, card) => 
+          card.value > highest.value ? card : highest
+        );
+      }
+      return playableCards[Math.floor(Math.random() * playableCards.length)];
     }
-    // Easy or medium mistake: play random
-    return playableCards[Math.floor(Math.random() * playableCards.length)];
+    
+    // EASY: Often plays poorly
+    // 60% random, 40% highest (often wastes high cards)
+    if (Math.random() > 0.4) {
+      return playableCards[Math.floor(Math.random() * playableCards.length)];
+    }
+    return playableCards.reduce((highest, card) => 
+      card.value > highest.value ? card : highest
+    );
   }
   
   const leadSuit = currentTrick[0].card.suit;
