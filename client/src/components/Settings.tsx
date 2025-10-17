@@ -57,9 +57,9 @@ export function Settings({ open, onClose }: SettingsProps) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-100">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Game Settings</DialogTitle>
+          <DialogTitle className="text-2xl text-gray-900">Game Settings</DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="stakes" className="w-full">
@@ -85,7 +85,7 @@ export function Settings({ open, onClose }: SettingsProps) {
           <TabsContent value="stakes" className="space-y-6 mt-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="moneyPerPoint" className="text-base">Money Per Point</Label>
+                <Label htmlFor="moneyPerPoint" className="text-base text-gray-900">Money Per Point</Label>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">$</span>
                   <Input
@@ -104,7 +104,7 @@ export function Settings({ open, onClose }: SettingsProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="moneyPerPunt" className="text-base">Money Per Punt</Label>
+                <Label htmlFor="moneyPerPunt" className="text-base text-gray-900">Money Per Punt</Label>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">$</span>
                   <Input
@@ -123,7 +123,7 @@ export function Settings({ open, onClose }: SettingsProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="startingWallet" className="text-base">Starting Wallet</Label>
+                <Label htmlFor="startingWallet" className="text-base text-gray-900">Starting Wallet</Label>
                 <div className="flex items-center gap-2">
                   <span className="text-lg">$</span>
                   <Input
@@ -146,7 +146,7 @@ export function Settings({ open, onClose }: SettingsProps) {
           <TabsContent value="rules" className="space-y-6 mt-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="startingScore" className="text-base">Starting Score</Label>
+                <Label htmlFor="startingScore" className="text-base text-gray-900">Starting Score</Label>
                 <Input
                   id="startingScore"
                   type="number"
@@ -162,7 +162,7 @@ export function Settings({ open, onClose }: SettingsProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="winningScore" className="text-base">Winning Score</Label>
+                <Label htmlFor="winningScore" className="text-base text-gray-900">Winning Score</Label>
                 <Input
                   id="winningScore"
                   type="number"
@@ -178,7 +178,7 @@ export function Settings({ open, onClose }: SettingsProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="eliminationScore" className="text-base">Elimination Score</Label>
+                <Label htmlFor="eliminationScore" className="text-base text-gray-900">Elimination Score</Label>
                 <Input
                   id="eliminationScore"
                   type="number"
@@ -199,7 +199,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="soundEnabled" className="text-base">Sound Effects</Label>
+                  <Label htmlFor="soundEnabled" className="text-base text-gray-900">Sound Effects</Label>
                   <p className="text-sm text-muted-foreground">
                     Play sound effects for game actions
                   </p>
@@ -213,7 +213,7 @@ export function Settings({ open, onClose }: SettingsProps) {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="musicEnabled" className="text-base">Background Music</Label>
+                  <Label htmlFor="musicEnabled" className="text-base text-gray-900">Background Music</Label>
                   <p className="text-sm text-muted-foreground">
                     Play background music during gameplay
                   </p>
@@ -230,7 +230,7 @@ export function Settings({ open, onClose }: SettingsProps) {
           <TabsContent value="ai" className="space-y-6 mt-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="aiDifficulty" className="text-base">Default AI Difficulty</Label>
+                <Label htmlFor="aiDifficulty" className="text-base text-gray-900">Default AI Difficulty</Label>
                 <Select value={defaultAIDifficulty} onValueChange={(value: any) => setDefaultAIDifficulty(value)}>
                   <SelectTrigger className="max-w-[200px]">
                     <SelectValue />
