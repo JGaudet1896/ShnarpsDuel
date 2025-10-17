@@ -264,8 +264,8 @@ export function chooseAICardToPlay(
         }
       }
       
-      // Strategy 4: If you have trump, lead low trump to draw out higher cards
-      if (trumpCards.length > 0) {
+      // Strategy 4: If you have multiple trump cards (2+), lead low trump to draw out higher cards
+      if (trumpCards.length >= 2) {
         return trumpCards.reduce((lowest, card) => 
           card.value < lowest.value ? card : lowest
         );
@@ -286,8 +286,8 @@ export function chooseAICardToPlay(
     } else if (difficulty === 'medium') {
       // MEDIUM: Decent strategy with occasional mistakes
       
-      // 80% of time, use good strategy
-      if (Math.random() > 0.2) {
+      // 90% of time, use good strategy
+      if (Math.random() > 0.1) {
         // Lead Ace of trump if you have it
         const trumpAce = trumpCards.find(c => c.value === 14);
         if (trumpAce) return trumpAce;
@@ -307,8 +307,8 @@ export function chooseAICardToPlay(
           }
         }
         
-        // If you have trump, lead low trump
-        if (trumpCards.length > 0) {
+        // If you have multiple trump cards (2+), lead low trump
+        if (trumpCards.length >= 2) {
           return trumpCards.reduce((lowest, card) => 
             card.value < lowest.value ? card : lowest
           );
@@ -320,7 +320,7 @@ export function chooseAICardToPlay(
         );
       }
       
-      // 20% of time, make a mistake (play random)
+      // 10% of time, make a mistake (play random)
       return playableCards[Math.floor(Math.random() * playableCards.length)];
     }
     
