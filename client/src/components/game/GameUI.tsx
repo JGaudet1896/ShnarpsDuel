@@ -570,7 +570,7 @@ export default function GameUI() {
           </CardContent>
           <div className="p-6 pt-0 flex-shrink-0">
             <Button onClick={resetGame} className="w-full h-12 text-base touch-manipulation">
-              Play Again
+              {mode === 'online' ? 'Return to Menu' : 'Play Again'}
             </Button>
           </div>
         </Card>

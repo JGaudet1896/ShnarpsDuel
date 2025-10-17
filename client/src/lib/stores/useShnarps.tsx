@@ -854,7 +854,25 @@ export const useShnarps = create<ShnarpsState>()(
     resetGame: () => {
       const state = get();
       
-      // Save player wallets and avatars before reset
+      // If in multiplayer mode, disconnect and return to menu
+      if (state.multiplayerMode === 'online') {
+        // Close WebSocket connection
+        if (state.websocket) {
+          state.websocket.close();
+        }
+        
+        // Reset to menu state
+        get().initializeGame();
+        set({
+          multiplayerMode: 'local',
+          multiplayerRoomCode: null,
+          isMultiplayerHost: false,
+          websocket: null
+        });
+        return;
+      }
+      
+      // Local game reset: Save player wallets and avatars before reset
       const playerWallets = new Map<string, number>();
       const playerAvatars = new Map<string, { color: string; icon: string }>();
       const playerNames = new Map<string, string>();
