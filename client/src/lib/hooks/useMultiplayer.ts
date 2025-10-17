@@ -39,7 +39,7 @@ export function useMultiplayer() {
           type: 'CREATE_ROOM',
           playerName
         }));
-        setMultiplayerMode('online', null, true);
+        // Mode will be set to 'online' when we receive ROOM_CREATED message
       }
     };
 
@@ -61,7 +61,7 @@ export function useMultiplayer() {
     };
 
     wsRef.current = ws;
-    setMultiplayerMode('online');
+    // Note: Don't set mode to 'online' here - wait for ROOM_CREATED/JOINED_ROOM message
   };
 
   const handleServerMessage = (message: any) => {

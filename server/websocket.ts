@@ -135,8 +135,11 @@ function serializeGameState(room: GameRoom, playerId: string) {
 
 export function setupWebSocket(server: Server) {
   const wss = new WebSocketServer({ server, path: '/ws' });
+  
+  console.log('WebSocket server initialized on /ws');
 
   wss.on('connection', (ws: WebSocket) => {
+    console.log('✅ WebSocket client connected');
     let currentPlayerId: string | null = null;
     let currentRoomId: string | null = null;
 
