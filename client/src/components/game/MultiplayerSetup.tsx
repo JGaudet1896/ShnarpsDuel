@@ -15,14 +15,22 @@ export default function MultiplayerSetup({ onBack }: MultiplayerSetupProps) {
   const { connectToRoom, isConnected } = useMultiplayer();
 
   const handleCreateRoom = () => {
+    console.log('Create room button clicked, playerName:', playerName);
     if (playerName.trim()) {
+      console.log('Calling connectToRoom...');
       connectToRoom(playerName.trim());
+    } else {
+      console.log('Player name is empty');
     }
   };
 
   const handleJoinRoom = () => {
+    console.log('Join room button clicked, playerName:', playerName, 'roomCode:', roomCode);
     if (playerName.trim() && roomCode.trim()) {
+      console.log('Calling connectToRoom...');
       connectToRoom(playerName.trim(), roomCode.trim().toUpperCase());
+    } else {
+      console.log('Player name or room code is empty');
     }
   };
 
