@@ -80,29 +80,24 @@ export default function GameUI() {
     return (
       <>
         <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
-          <Card className="w-full max-w-md mx-4 shadow-2xl bg-white">
+          <Card className="w-full max-w-md mx-4 shadow-2xl bg-white relative">
+            <div 
+              className="absolute top-3 right-3 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => setShowHistory(true)}
+              title="View game statistics"
+            >
+              <div className="flex items-center gap-1 text-gray-600">
+                <Wallet className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  {balance.toFixed(0)}
+                </span>
+              </div>
+            </div>
             <CardHeader>
               <CardTitle className="text-center text-2xl">Shnarps</CardTitle>
               <p className="text-center text-sm text-muted-foreground">
                 Choose your game mode
               </p>
-              <div 
-                className="mt-3 p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors border-2 border-green-200"
-                onClick={() => setShowHistory(true)}
-              >
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="h-5 w-5 text-green-600" />
-                    <span className="text-lg font-bold text-green-700">
-                      {balance.toFixed(2)} coins
-                    </span>
-                  </div>
-                  <p className="text-xs text-center text-green-600 mt-2 flex items-center justify-center gap-1">
-                    <History className="h-3 w-3" />
-                    View game statistics
-                  </p>
-                </div>
-              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button onClick={() => setGameMode('local')} className="w-full" size="lg">
