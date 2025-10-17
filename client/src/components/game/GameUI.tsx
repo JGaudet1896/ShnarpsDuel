@@ -126,6 +126,7 @@ export default function GameUI() {
   if (gamePhase === 'setup') {
     // Show room code for online games
     const isOnline = mode === 'online';
+    console.log('Setup phase - mode:', mode, 'roomCode:', roomCode, 'isOnline:', isOnline);
     
     return (
       <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
