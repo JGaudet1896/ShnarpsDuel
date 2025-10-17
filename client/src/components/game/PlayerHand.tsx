@@ -20,9 +20,9 @@ export default function PlayerHand({
   if (!faceUp) {
     return (
       <div className="flex justify-center items-center">
-        {cards.slice(0, 3).map((card, index) => (
+        {cards.slice(0, 5).map((card, index) => (
           <div key={`${card.suit}-${card.rank}-${index}`} 
-               className={index > 0 ? '-ml-4' : ''}>
+               className={index > 0 ? '-ml-5' : ''}>
             <Card
               card={card}
               faceDown={true}
@@ -30,9 +30,6 @@ export default function PlayerHand({
             />
           </div>
         ))}
-        {cards.length > 3 && (
-          <span className="ml-1 text-xs text-gray-400">+{cards.length - 3}</span>
-        )}
       </div>
     );
   }
