@@ -165,7 +165,7 @@ function serializeGameState(room: GameRoom, playerId: string) {
     players: Array.from(room.players.values()).map(p => ({
       id: p.id,
       name: p.name,
-      hand: p.id === playerId ? p.hand : [], // Only send hand to the player who owns it
+      hand: (p.id === playerId || p.isAI) ? p.hand : [], // Send hand to owner OR if it's an AI player
       isActive: p.isActive,
       consecutiveSits: p.consecutiveSits,
       isAI: p.isAI,
