@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { useSettings } from './useSettings';
 
 export interface Transaction {
   id: string;
@@ -21,10 +20,12 @@ interface WalletState {
   setBalance: (balance: number) => void;
 }
 
+const DEFAULT_WALLET_BALANCE = 100;
+
 export const useWallet = create<WalletState>()(
   persist(
     (set, get) => ({
-      balance: useSettings.getState().startingWallet,
+      balance: DEFAULT_WALLET_BALANCE,
       transactions: [],
       
       addTransaction: (type: 'win' | 'loss' | 'reset', amount: number, description: string) => {
@@ -51,9 +52,8 @@ export const useWallet = create<WalletState>()(
       },
       
       resetWallet: () => {
-        const settings = useSettings.getState();
         set({
-          balance: settings.startingWallet,
+          balance: DEFAULT_WALLET_BALANCE,
           transactions: []
         });
       },

@@ -5,7 +5,6 @@ export interface GameSettings {
   // Money & Stakes
   moneyPerPoint: number;
   moneyPerPunt: number;
-  startingWallet: number;
   
   // Game Rules
   startingScore: number;
@@ -28,7 +27,6 @@ interface SettingsState extends GameSettings {
 const defaultSettings: GameSettings = {
   moneyPerPoint: 0.25,
   moneyPerPunt: 1.00,
-  startingWallet: 100,
   startingScore: 16,
   winningScore: 0,
   eliminationScore: 32,
