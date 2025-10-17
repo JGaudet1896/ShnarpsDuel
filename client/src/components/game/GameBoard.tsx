@@ -274,7 +274,7 @@ export default function GameBoard() {
               )}
 
               {/* Player hand - always visible for local player */}
-              {(isPlaying || (isLocalPlayer && (gamePhase === 'bidding' || gamePhase === 'sit_pass'))) && (
+              {(isPlaying || (isLocalPlayer && (gamePhase === 'bidding' || gamePhase === 'sit_pass' || gamePhase === 'trump_selection'))) && (
                 <PlayerHand
                   cards={player.hand}
                   isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && isPlaying}
