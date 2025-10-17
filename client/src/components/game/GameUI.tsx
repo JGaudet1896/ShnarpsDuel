@@ -213,7 +213,7 @@ export default function GameUI() {
                     <SelectTrigger className="flex-1">
                       <SelectValue placeholder="Difficulty" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-gray-700">
+                    <SelectContent className="bg-white border-gray-300">
                       <SelectItem value="easy">Easy</SelectItem>
                       <SelectItem value="medium">Medium</SelectItem>
                       <SelectItem value="hard">Hard</SelectItem>
