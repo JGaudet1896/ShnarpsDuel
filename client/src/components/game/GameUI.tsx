@@ -12,11 +12,12 @@ import AvatarCustomizer, { Avatar, type PlayerAvatar } from './AvatarCustomizer'
 import Tutorial from './Tutorial';
 import AppWalkthrough from './AppWalkthrough';
 import { Settings as SettingsDialog } from '../Settings';
+import { TransactionHistory } from '../TransactionHistory';
 import { useState, useEffect } from 'react';
 import { AIDifficulty } from '../../lib/game/gameLogic';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
 import { useWallet } from '../../lib/stores/useWallet';
-import { BookOpen, HelpCircle, Settings, X, Wallet } from 'lucide-react';
+import { BookOpen, HelpCircle, Settings, X, Wallet, History } from 'lucide-react';
 
 export default function GameUI() {
   const { 
@@ -52,6 +53,7 @@ export default function GameUI() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [currentAvatar, setCurrentAvatar] = useState<PlayerAvatar>({
     color: '#3B82F6',
     icon: '👤'
@@ -84,14 +86,20 @@ export default function GameUI() {
               <p className="text-center text-sm text-muted-foreground">
                 Choose your game mode
               </p>
-              <div className="mt-3 p-3 bg-green-50 rounded-lg">
+              <div 
+                className="mt-3 p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+                onClick={() => setShowHistory(true)}
+              >
                 <div className="flex items-center justify-center gap-2">
                   <Wallet className="h-5 w-5 text-green-600" />
                   <span className="text-lg font-bold text-green-700">
                     ${balance.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-xs text-center text-green-600 mt-1">Your Bank Balance</p>
+                <p className="text-xs text-center text-green-600 mt-1 flex items-center justify-center gap-1">
+                  <History className="h-3 w-3" />
+                  Click to view transaction history
+                </p>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -139,10 +147,11 @@ export default function GameUI() {
           </Card>
         </div>
         
-        {/* Settings, Tutorial and Walkthrough modals */}
+        {/* Settings, Tutorial, Walkthrough, and Transaction History modals */}
         <SettingsDialog open={showSettings} onClose={() => setShowSettings(false)} />
         <Tutorial open={showTutorial} onClose={() => setShowTutorial(false)} />
         <AppWalkthrough open={showWalkthrough} onClose={() => setShowWalkthrough(false)} />
+        <TransactionHistory open={showHistory} onClose={() => setShowHistory(false)} />
       </>
     );
   }

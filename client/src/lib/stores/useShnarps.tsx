@@ -104,6 +104,7 @@ export const useShnarps = create<ShnarpsState>()(
       if (state.players.length >= 8 || state.gamePhase !== 'setup') return;
       
       const settings = useSettings.getState();
+      const wallet = useWallet.getState();
       
       const newPlayer: Player = {
         id: `player_${Date.now()}_${Math.random()}`,
@@ -113,7 +114,7 @@ export const useShnarps = create<ShnarpsState>()(
         consecutiveSits: 0,
         isAI: false,
         avatar,
-        wallet: settings.startingWallet,
+        wallet: wallet.balance, // Use persistent wallet balance
         punts: 0
       };
       
