@@ -339,15 +339,33 @@ export function chooseAICardToPlay(
     play.card.value > highest.card.value ? play : highest
   );
   
+  // Check if any trump cards have been played in this trick
+  const trumpCardsInTrick = trumpSuit 
+    ? currentTrick.filter(play => play.card.suit === trumpSuit)
+    : [];
+  const highestTrumpInTrick = trumpCardsInTrick.length > 0
+    ? trumpCardsInTrick.reduce((highest, play) => 
+        play.card.value > highest.card.value ? play : highest
+      )
+    : null;
+  
   // Try to win the trick
   const winningCards = playableCards.filter(card => {
-    if (trumpSuit && card.suit === trumpSuit && highestCardInTrick.card.suit !== trumpSuit) {
-      return true;
-    }
-    if (trumpSuit && card.suit === trumpSuit && highestCardInTrick.card.suit === trumpSuit) {
+    // If my card is trump
+    if (trumpSuit && card.suit === trumpSuit) {
+      // If a trump has already been played, I must beat the highest trump
+      if (highestTrumpInTrick) {
+        return card.value > highestTrumpInTrick.card.value;
+      }
+      // If no trump has been played yet, any trump wins (unless lead suit is trump)
+      if (highestCardInTrick.card.suit !== trumpSuit) {
+        return true;
+      }
+      // Lead suit is trump, must beat highest card
       return card.value > highestCardInTrick.card.value;
     }
-    if (card.suit === leadSuit && highestCardInTrick.card.suit === leadSuit) {
+    // If my card is not trump, can only win if matching lead suit and beating highest
+    if (card.suit === leadSuit && highestCardInTrick.card.suit === leadSuit && !highestTrumpInTrick) {
       return card.value > highestCardInTrick.card.value;
     }
     return false;
