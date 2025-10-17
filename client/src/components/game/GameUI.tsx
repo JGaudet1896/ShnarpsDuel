@@ -502,24 +502,6 @@ export default function GameUI() {
   // Phase-specific UI overlays
   return (
     <div>
-      {/* Game info overlay */}
-      <div className="fixed top-2 left-2 sm:top-4 sm:left-4 z-30">
-        <Card className="w-40 sm:w-64 bg-white/95">
-          <CardContent className="pt-3 sm:pt-4 p-2 sm:p-4">
-            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-              <div className="flex justify-between">
-                <span>Round:</span>
-                <span className="font-mono">{round}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Phase:</span>
-                <span className="capitalize font-mono text-xs sm:text-sm">{gamePhase.replace('_', ' ')}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Phase-specific overlays */}
       {gamePhase === 'bidding' && <BiddingPhase />}
       {gamePhase === 'sit_pass' && <SitPassPhase />}

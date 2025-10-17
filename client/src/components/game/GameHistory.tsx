@@ -10,7 +10,7 @@ export default function GameHistory() {
 
   if (!isOpen) {
     return (
-      <div className="fixed bottom-4 right-4 z-30">
+      <div className="fixed top-4 right-4 z-30">
         <Button
           onClick={() => setIsOpen(true)}
           variant="outline"
@@ -23,7 +23,7 @@ export default function GameHistory() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 w-96 max-h-96">
+    <div className="fixed top-4 right-4 z-40 w-96 max-h-96">
       <Card className="bg-white border-2 border-gray-300 shadow-2xl">
         <CardHeader className="pb-2 bg-white">
           <div className="flex justify-between items-center">
