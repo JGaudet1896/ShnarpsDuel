@@ -39,6 +39,7 @@ export interface RoundHistory {
 export interface GameState {
   gamePhase: GamePhase;
   players: Player[];
+  eliminatedPlayers: Player[]; // Players removed from game (score > 32) but tracked for final scoreboard
   currentPlayerIndex: number;
   dealerIndex: number;
   deck: Card[];
