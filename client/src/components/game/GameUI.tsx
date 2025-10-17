@@ -82,7 +82,7 @@ export default function GameUI() {
         <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
           <Card className="w-full max-w-md mx-4 shadow-2xl bg-white">
             <CardHeader>
-              <CardTitle className="text-center text-2xl">Shnarps Card Game</CardTitle>
+              <CardTitle className="text-center text-2xl">Shnarps</CardTitle>
               <p className="text-center text-sm text-muted-foreground">
                 Choose your game mode
               </p>
@@ -183,7 +183,7 @@ export default function GameUI() {
       <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
         <Card className="w-full max-w-md mx-4 shadow-2xl bg-white">
           <CardHeader>
-            <CardTitle className="text-center">Shnarps Card Game</CardTitle>
+            <CardTitle className="text-center">Shnarps</CardTitle>
             <p className="text-center text-sm text-muted-foreground">
               {isOnline ? `🌐 Online Room` : '🏠 Local Game'} • {players.length}/8 players
             </p>
