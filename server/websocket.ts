@@ -303,6 +303,18 @@ export function setupWebSocket(server: Server) {
             // Update game state based on action
             const { action, payload } = message;
             
+            // Track consecutiveSits on server for sitpass actions
+            if (action === 'sitpass') {
+              const player = room.players.get(payload.playerId);
+              if (player) {
+                if (payload.decision === 'play') {
+                  player.consecutiveSits = 0;
+                } else {
+                  player.consecutiveSits += 1;
+                }
+              }
+            }
+            
             // Broadcast the action to all players
             broadcastToRoom(room.id, {
               type: 'GAME_STATE_UPDATE',
