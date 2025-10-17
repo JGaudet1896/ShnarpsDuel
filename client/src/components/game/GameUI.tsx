@@ -31,7 +31,9 @@ export default function GameUI() {
     choosePenalty,
     highestBidder,
     resetGame,
-    localPlayerId
+    localPlayerId,
+    isSimulating,
+    setSimulating
   } = useShnarps();
   
   const { mode, roomCode, isHost, addAIPlayer: addMultiplayerAI, startGame: startMultiplayerGame } = useMultiplayer();
@@ -506,6 +508,10 @@ export default function GameUI() {
     );
   }
 
+  // Check if local player is eliminated
+  const localPlayerScore = localPlayerId ? scores.get(localPlayerId) : undefined;
+  const isLocalPlayerEliminated = localPlayerScore !== undefined && localPlayerScore > 32;
+
   // Phase-specific UI overlays
   return (
     <div>
@@ -516,6 +522,44 @@ export default function GameUI() {
 
       {/* Game history */}
       {gamePhase !== 'setup' && <GameHistory />}
+
+      {/* Eliminated player - Simulate to End option */}
+      {isLocalPlayerEliminated && !isSimulating && gamePhase !== 'game_over' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md bg-gray-900 bg-opacity-95 text-white">
+            <CardHeader>
+              <CardTitle className="text-center text-red-400 text-xl">You've Been Eliminated!</CardTitle>
+              <p className="text-center text-sm text-gray-300 mt-2">
+                Your score went over 32 points. You're out of the game, but you can watch the bots play or simulate to the end.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button 
+                onClick={() => setSimulating(true)} 
+                className="w-full h-12 text-base touch-manipulation bg-blue-600 hover:bg-blue-700"
+              >
+                ⚡ Simulate to End
+              </Button>
+              <p className="text-xs text-center text-gray-400">
+                Or continue watching the bots play
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Simulating overlay */}
+      {isSimulating && gamePhase !== 'game_over' && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <Card className="w-full max-w-sm bg-gray-900 bg-opacity-95 text-white">
+            <CardContent className="py-8 text-center">
+              <div className="text-4xl mb-4">⚡</div>
+              <p className="text-xl font-semibold mb-2">Simulating...</p>
+              <p className="text-sm text-gray-400">Fast-forwarding to the end</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Avatar customizer */}
       <AvatarCustomizer
