@@ -168,7 +168,7 @@ export const useShnarps = create<ShnarpsState>()(
         isAI: true,
         aiDifficulty: aiDifficulty,
         avatar: randomAvatar,
-        wallet: settings.startingWallet,
+        wallet: 100, // Default wallet for AI players
         punts: 0
       };
       
@@ -762,18 +762,18 @@ export const useShnarps = create<ShnarpsState>()(
           // Update player wallets with game-end payout for ALL players
           const updatedRemainingPlayers = remainingPlayers.map(player => ({
             ...player,
-            wallet: (player.wallet || settings.startingWallet) + (moneyChanges.get(player.id) || 0)
+            wallet: (player.wallet || 100) + (moneyChanges.get(player.id) || 0)
           }));
           
           const updatedEliminatedPlayers = allEliminatedPlayers.map(player => ({
             ...player,
-            wallet: (player.wallet || settings.startingWallet) + (moneyChanges.get(player.id) || 0)
+            wallet: (player.wallet || 100) + (moneyChanges.get(player.id) || 0)
           }));
           
           // Add money changes to the final round history
           roundHistory.moneyChanges = moneyChanges;
           roundHistory.finalWallets = new Map(
-            [...updatedRemainingPlayers, ...updatedEliminatedPlayers].map(p => [p.id, p.wallet || settings.startingWallet])
+            [...updatedRemainingPlayers, ...updatedEliminatedPlayers].map(p => [p.id, p.wallet || 100])
           );
           
           set({
