@@ -156,9 +156,11 @@ export default function GameUI() {
                           Score: {scores.get(player.id) || 16}
                         </span>
                       </div>
-                      <div className="text-xs text-green-600 font-medium">
-                        Wallet: ${(player.wallet || 100).toFixed(2)}
-                      </div>
+                      {!player.isAI && (
+                        <div className="text-xs text-green-600 font-medium">
+                          Wallet: ${(player.wallet || 100).toFixed(2)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -33,6 +33,19 @@ export function shuffleDeck(deck: Card[]): Card[] {
   return shuffled;
 }
 
+export function sortHandBySuit(hand: Card[]): Card[] {
+  const suitOrder = { 'spades': 0, 'hearts': 1, 'diamonds': 2, 'clubs': 3 };
+  
+  return [...hand].sort((a, b) => {
+    // First sort by suit
+    const suitDiff = suitOrder[a.suit] - suitOrder[b.suit];
+    if (suitDiff !== 0) return suitDiff;
+    
+    // Then by value (high to low within same suit)
+    return b.value - a.value;
+  });
+}
+
 export function dealCards(deck: Card[], numPlayers: number): Card[][] {
   const hands: Card[][] = Array.from({ length: numPlayers }, () => []);
   
@@ -46,7 +59,8 @@ export function dealCards(deck: Card[], numPlayers: number): Card[][] {
     }
   }
   
-  return hands;
+  // Sort each hand by suit
+  return hands.map(hand => sortHandBySuit(hand));
 }
 
 export function getSuitColor(suit: Card['suit']): string {
