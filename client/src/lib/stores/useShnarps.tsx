@@ -3,6 +3,7 @@ import { subscribeWithSelector } from "zustand/middleware";
 import { GamePhase, Player, GameState, RoundHistory, AIDifficulty, calculateGameEndPayout } from "../game/gameLogic";
 import { Card, createDeck, shuffleDeck, dealCards, determineTrickWinner, sortHandBySuit } from "../game/cardUtils";
 import { useSettings } from "./useSettings";
+import { useWallet } from "./useWallet";
 
 interface ShnarpsState extends GameState {
   localPlayerId: string | null;
@@ -782,6 +783,21 @@ export const useShnarps = create<ShnarpsState>()(
             history: [...state.history, roundHistory],
             isSimulating: false
           });
+          
+          // Update persistent wallet for local human player
+          if (state.localPlayerId && moneyChanges.has(state.localPlayerId)) {
+            const localPlayer = [...updatedRemainingPlayers, ...updatedEliminatedPlayers].find(p => p.id === state.localPlayerId);
+            if (localPlayer && !localPlayer.isAI) {
+              const moneyChange = moneyChanges.get(state.localPlayerId) || 0;
+              const wallet = useWallet.getState();
+              
+              if (moneyChange > 0) {
+                wallet.addTransaction('win', moneyChange, `Won game - Round ${state.round}`);
+              } else if (moneyChange < 0) {
+                wallet.addTransaction('loss', Math.abs(moneyChange), `Lost game - Round ${state.round}`);
+              }
+            }
+          }
         } else {
           // Start next round (no wallet changes between rounds)
           // Only deal cards to active players, eliminated players are completely removed
