@@ -421,8 +421,8 @@ export default function GameUI() {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
-          <CardHeader className="pb-3">
+        <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white flex flex-col max-h-[90vh]">
+          <CardHeader className="pb-3 flex-shrink-0">
             <CardTitle className="text-center text-white text-xl md:text-2xl">Game Over!</CardTitle>
             <div className="text-center mt-2 mb-3 py-2 bg-green-900 bg-opacity-40 rounded border border-green-500">
               <p className="text-2xl md:text-3xl font-bold text-green-400">
@@ -434,9 +434,9 @@ export default function GameUI() {
               Total Pot: ${totalPot.toFixed(2)}
             </p>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-2">
-              <h3 className="font-semibold text-sm text-white">Final Results:</h3>
+          <CardContent className="space-y-3 overflow-y-auto flex-1">
+            <div className="space-y-2 pb-2">
+              <h3 className="font-semibold text-sm text-white sticky top-0 bg-gray-900 py-1 z-10">Final Results:</h3>
               {sortedPlayers.map((player, index) => {
                 const isWinner = player.id === winner?.id;
                 const pointsCost = player.score * 0.25;
@@ -495,11 +495,12 @@ export default function GameUI() {
                 );
               })}
             </div>
-            
+          </CardContent>
+          <div className="p-6 pt-0 flex-shrink-0">
             <Button onClick={resetGame} className="w-full h-12 text-base touch-manipulation">
               Play Again
             </Button>
-          </CardContent>
+          </div>
         </Card>
       </div>
     );
