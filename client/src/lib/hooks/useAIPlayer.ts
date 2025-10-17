@@ -64,6 +64,7 @@ export function useAIPlayer() {
           highestBid,
           canSit,
           currentScore,
+          scores,
           difficulty
         );
         chooseSitOrPlay(currentPlayer.id, decision);

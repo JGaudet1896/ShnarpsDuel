@@ -117,16 +117,43 @@ export function makeAISitPlayDecision(
   highestBid: number,
   canSit: boolean,
   currentScore: number | undefined,
+  allScores: Map<string, number>,
   difficulty: AIDifficulty = 'medium'
 ): 'sit' | 'play' {
   if (!canSit) return 'play';
   
   const handStrength = evaluateHandStrength(hand, trumpSuit);
   
+  // Check if any opponent is close to winning (score ≤ 3)
+  // Strategy: Gang up on them by playing to try to punt them
+  const opponentScores = Array.from(allScores.entries()).filter(([id]) => id !== player.id);
+  const someoneCloseToWinning = opponentScores.some(([_, score]) => score <= 3);
+  
   // Easy: Makes poor sit/play decisions (often sits with good hands or plays with bad)
   if (difficulty === 'easy') {
+    // Easy bots don't recognize the collusion strategy
     if (Math.random() > 0.6) {
       return Math.random() > 0.5 ? 'sit' : 'play'; // Random 40% of the time
+    }
+  }
+  
+  // COLLUSION STRATEGY: If someone is at 3 or lower, be aggressive and play
+  if (someoneCloseToWinning && difficulty !== 'easy') {
+    if (difficulty === 'hard') {
+      // Hard: Always plays to gang up unless hand is completely terrible
+      if (handStrength === 0 && player.consecutiveSits === 0 && Math.random() > 0.7) {
+        return 'sit'; // Only 30% chance to sit even with terrible hand
+      }
+      return 'play';
+    } else if (difficulty === 'medium') {
+      // Medium: Usually plays, but occasionally sits
+      if (handStrength >= 1 || player.consecutiveSits >= 1) {
+        return 'play';
+      }
+      if (Math.random() > 0.5) {
+        return 'play'; // 50% chance to play even with weak hand
+      }
+      return 'sit';
     }
   }
   
