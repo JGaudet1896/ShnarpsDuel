@@ -157,13 +157,8 @@ export function useMultiplayer() {
     setMultiplayerMode('local', null, false);
   };
 
-  useEffect(() => {
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, []);
+  // Don't close WebSocket on unmount - it should persist across components
+  // Only close it explicitly via disconnect() or when connection fails
 
   return {
     mode,
