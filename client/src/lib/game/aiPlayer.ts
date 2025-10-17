@@ -29,6 +29,9 @@ export function makeAIBid(
   currentHighestBid: number,
   isDealer: boolean,
   playerCount: number,
+  currentPlayerId: string,
+  allScores: Map<string, number>,
+  highestBidderId: string | null,
   difficulty: AIDifficulty = 'medium'
 ): number {
   // Evaluate hand without knowing trump yet
@@ -38,6 +41,29 @@ export function makeAIBid(
     evaluateHandStrength(hand, 'clubs') +
     evaluateHandStrength(hand, 'spades')
   ) / 4;
+  
+  // Check if opponent with current highest bid is close to winning
+  const currentScore = allScores.get(currentPlayerId) || 16;
+  const highestBidderScore = highestBidderId ? (allScores.get(highestBidderId) || 16) : 16;
+  const someoneCloseToWinning = highestBidderScore <= 3;
+  
+  // DEFENSIVE BIDDING STRATEGY: Block players near winning from calling trump
+  const canAffordPunt = currentScore >= 8; // If at 8+, a punt (+5) won't put you in danger
+  
+  if (someoneCloseToWinning && canAffordPunt && difficulty !== 'easy') {
+    if (difficulty === 'hard') {
+      // Hard: Always tries to block if possible and can afford it
+      if (currentHighestBid < 5 && avgStrength >= 1.5) {
+        // Overbid to prevent them from calling trump
+        return Math.min(5, currentHighestBid + 1);
+      }
+    } else if (difficulty === 'medium') {
+      // Medium: Sometimes blocks, 60% of the time
+      if (currentHighestBid < 5 && avgStrength >= 2 && Math.random() > 0.4) {
+        return Math.min(5, currentHighestBid + 1);
+      }
+    }
+  }
   
   // Adjust conservativeness based on player count
   let conservativenessAdjustment = 0;
