@@ -6,8 +6,12 @@ import { Card, createDeck, shuffleDeck, dealCards, determineTrickWinner } from "
 interface ShnarpsState extends GameState {
   localPlayerId: string | null;
   isSimulating: boolean;
+  multiplayerMode: 'local' | 'online';
+  multiplayerRoomCode: string | null;
+  isMultiplayerHost: boolean;
   // Actions
   initializeGame: () => void;
+  setMultiplayerMode: (mode: 'local' | 'online', roomCode?: string | null, isHost?: boolean) => void;
   joinGame: (playerName: string, avatar?: { color: string; icon: string }) => void;
   addAIPlayer: (difficulty?: AIDifficulty) => void;
   startGame: () => void;
@@ -33,6 +37,9 @@ export const useShnarps = create<ShnarpsState>()(
     gamePhase: 'setup' as GamePhase,
     localPlayerId: null,
     isSimulating: false,
+    multiplayerMode: 'local' as 'local' | 'online',
+    multiplayerRoomCode: null,
+    isMultiplayerHost: false,
     players: [],
     eliminatedPlayers: [],
     currentPlayerIndex: 0,
@@ -49,6 +56,14 @@ export const useShnarps = create<ShnarpsState>()(
     round: 1,
     history: [],
     lastTrickWinner: null as string | null,
+    
+    setMultiplayerMode: (mode, roomCode, isHost) => {
+      set({
+        multiplayerMode: mode,
+        multiplayerRoomCode: roomCode ?? null,
+        isMultiplayerHost: isHost ?? false
+      });
+    },
     
     initializeGame: () => {
       const deck = shuffleDeck(createDeck());

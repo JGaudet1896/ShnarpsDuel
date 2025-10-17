@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
@@ -6,13 +6,22 @@ import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
 
 interface MultiplayerSetupProps {
   onBack: () => void;
+  onConnected?: () => void;
 }
 
-export default function MultiplayerSetup({ onBack }: MultiplayerSetupProps) {
+export default function MultiplayerSetup({ onBack, onConnected }: MultiplayerSetupProps) {
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [mode, setMode] = useState<'menu' | 'create' | 'join'>('menu');
-  const { connectToRoom, isConnected } = useMultiplayer();
+  const { connectToRoom, isConnected, mode: multiplayerMode } = useMultiplayer();
+
+  // When successfully connected to online mode, notify parent to close this dialog
+  useEffect(() => {
+    if (multiplayerMode === 'online' && onConnected) {
+      console.log('✅ MultiplayerSetup: Connected to online mode, calling onConnected');
+      onConnected();
+    }
+  }, [multiplayerMode, onConnected]);
 
   const handleCreateRoom = () => {
     console.log('Create room button clicked, playerName:', playerName);

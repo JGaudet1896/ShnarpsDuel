@@ -34,10 +34,13 @@ export default function GameUI() {
     localPlayerId,
     isSimulating,
     setSimulating,
-    removePlayer
+    removePlayer,
+    multiplayerMode: mode,
+    multiplayerRoomCode: roomCode,
+    isMultiplayerHost: isHost
   } = useShnarps();
   
-  const { mode, roomCode, isHost, addAIPlayer: addMultiplayerAI, removePlayer: removeMultiplayerPlayer, startGame: startMultiplayerGame } = useMultiplayer();
+  const { addAIPlayer: addMultiplayerAI, removePlayer: removeMultiplayerPlayer, startGame: startMultiplayerGame } = useMultiplayer();
   
   const [playerName, setPlayerName] = useState('');
   const [trumpSuit, setTrumpSuit] = useState<string>('');
@@ -124,7 +127,15 @@ export default function GameUI() {
   // Multiplayer setup - only show if trying to connect AND not yet connected
   if (gameMode === 'online' && mode === 'local') {
     console.log('Showing multiplayer setup');
-    return <MultiplayerSetup onBack={() => setGameMode('menu')} />;
+    return (
+      <MultiplayerSetup 
+        onBack={() => setGameMode('menu')} 
+        onConnected={() => {
+          console.log('✅ GameUI: Multiplayer connected, staying in online mode');
+          // Don't change gameMode - just let the setup phase render
+        }}
+      />
+    );
   }
 
   // Setup phase (works for both local and online games)

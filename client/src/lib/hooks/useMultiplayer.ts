@@ -6,9 +6,14 @@ export type MultiplayerMode = 'local' | 'online';
 export function useMultiplayer() {
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [mode, setMode] = useState<MultiplayerMode>('local');
-  const [roomCode, setRoomCode] = useState<string | null>(null);
-  const [isHost, setIsHost] = useState(false);
+  
+  // Get mode, roomCode, and isHost from Zustand store instead of local state
+  const { 
+    multiplayerMode: mode, 
+    multiplayerRoomCode: roomCode, 
+    isMultiplayerHost: isHost,
+    setMultiplayerMode 
+  } = useShnarps();
 
   const connectToRoom = (playerName: string, existingRoomCode?: string) => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -34,7 +39,7 @@ export function useMultiplayer() {
           type: 'CREATE_ROOM',
           playerName
         }));
-        setIsHost(true);
+        setMultiplayerMode('online', null, true);
       }
     };
 
@@ -47,8 +52,7 @@ export function useMultiplayer() {
     ws.onclose = () => {
       console.log('WebSocket closed');
       setIsConnected(false);
-      setMode('local');
-      setRoomCode(null);
+      setMultiplayerMode('local', null, false);
     };
 
     ws.onerror = (error) => {
@@ -57,7 +61,7 @@ export function useMultiplayer() {
     };
 
     wsRef.current = ws;
-    setMode('online');
+    setMultiplayerMode('online');
   };
 
   const handleServerMessage = (message: any) => {
@@ -67,13 +71,13 @@ export function useMultiplayer() {
     switch (message.type) {
       case 'ROOM_CREATED':
         console.log('Room created:', message.roomId);
-        setRoomCode(message.roomId);
+        store.setMultiplayerMode('online', message.roomId, true);
         store.setMultiplayerState(message.players, message.gameState, message.localPlayerId);
         break;
 
       case 'JOINED_ROOM':
         console.log('Joined room:', message.roomId);
-        setRoomCode(message.roomId);
+        store.setMultiplayerMode('online', message.roomId, false);
         store.setMultiplayerState(message.players, message.gameState, message.localPlayerId);
         break;
 
@@ -150,9 +154,7 @@ export function useMultiplayer() {
       wsRef.current = null;
     }
     setIsConnected(false);
-    setMode('local');
-    setRoomCode(null);
-    setIsHost(false);
+    setMultiplayerMode('local', null, false);
   };
 
   useEffect(() => {
