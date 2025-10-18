@@ -201,10 +201,17 @@ export default function GameUI() {
                       {player.avatar && <Avatar avatar={player.avatar} size="sm" />}
                       <div className="flex-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">
-                            {player.name}
-                            {player.isAI && ` 🤖 (${player.aiDifficulty || 'medium'})`}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              {player.name}
+                              {player.isAI && ` 🤖 (${player.aiDifficulty || 'medium'})`}
+                            </span>
+                            {isOnline && !player.isAI && (
+                              <span className={`text-xs ${player.isConnected === false ? 'text-red-500' : 'text-green-500'}`}>
+                                {player.isConnected === false ? '⚠️ Disconnected' : '🟢'}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-sm text-muted-foreground">
                             Score: {scores.get(player.id) || 16}
                           </span>

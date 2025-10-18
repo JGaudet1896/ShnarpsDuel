@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DollarSign, Trophy, Volume2, Bot } from 'lucide-react';
+import { DollarSign, Trophy, Volume2, Bot, Users } from 'lucide-react';
 
 interface SettingsProps {
   open: boolean;
@@ -25,6 +25,8 @@ export function Settings({ open, onClose }: SettingsProps) {
   const [soundEnabled, setSoundEnabled] = useState(settings.soundEnabled);
   const [musicEnabled, setMusicEnabled] = useState(settings.musicEnabled);
   const [defaultAIDifficulty, setDefaultAIDifficulty] = useState(settings.defaultAIDifficulty);
+  const [turnTimeLimit, setTurnTimeLimit] = useState(settings.turnTimeLimit);
+  const [autoPlayDisconnected, setAutoPlayDisconnected] = useState(settings.autoPlayDisconnected);
 
   const handleSave = () => {
     settings.updateSettings({
@@ -35,7 +37,9 @@ export function Settings({ open, onClose }: SettingsProps) {
       eliminationScore,
       soundEnabled,
       musicEnabled,
-      defaultAIDifficulty
+      defaultAIDifficulty,
+      turnTimeLimit,
+      autoPlayDisconnected
     });
     onClose();
   };
@@ -50,6 +54,8 @@ export function Settings({ open, onClose }: SettingsProps) {
     setSoundEnabled(true);
     setMusicEnabled(true);
     setDefaultAIDifficulty('hard');
+    setTurnTimeLimit(30);
+    setAutoPlayDisconnected(true);
   };
 
   return (
@@ -60,7 +66,7 @@ export function Settings({ open, onClose }: SettingsProps) {
         </DialogHeader>
 
         <Tabs defaultValue="stakes" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="stakes">
               <DollarSign className="w-4 h-4 mr-2" />
               Stakes
@@ -68,6 +74,10 @@ export function Settings({ open, onClose }: SettingsProps) {
             <TabsTrigger value="rules">
               <Trophy className="w-4 h-4 mr-2" />
               Rules
+            </TabsTrigger>
+            <TabsTrigger value="multiplayer">
+              <Users className="w-4 h-4 mr-2" />
+              Online
             </TabsTrigger>
             <TabsTrigger value="audio">
               <Volume2 className="w-4 h-4 mr-2" />
@@ -169,6 +179,40 @@ export function Settings({ open, onClose }: SettingsProps) {
                 <p className="text-sm text-muted-foreground">
                   Players are eliminated when reaching this score
                 </p>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="multiplayer" className="space-y-6 mt-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="turnTimeLimit" className="text-base text-gray-900">Turn Time Limit</Label>
+                <Input
+                  id="turnTimeLimit"
+                  type="number"
+                  min="0"
+                  max="120"
+                  value={turnTimeLimit}
+                  onChange={(e) => setTurnTimeLimit(parseInt(e.target.value) || 0)}
+                  className="max-w-[150px]"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Seconds per turn (0 = no limit). Default is 30 seconds.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="autoPlayDisconnected" className="text-base text-gray-900">Auto-Play for Disconnected</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically play safe moves for disconnected or timed-out players
+                  </p>
+                </div>
+                <Switch
+                  id="autoPlayDisconnected"
+                  checked={autoPlayDisconnected}
+                  onCheckedChange={setAutoPlayDisconnected}
+                />
               </div>
             </div>
           </TabsContent>
