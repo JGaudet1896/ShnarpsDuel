@@ -12,6 +12,7 @@ interface ShnarpsState extends GameState {
   multiplayerRoomCode: string | null;
   isMultiplayerHost: boolean;
   websocket: WebSocket | null;
+  turnTimeRemaining: number | null;
   // Actions
   initializeGame: () => void;
   setMultiplayerMode: (mode: 'local' | 'online', roomCode?: string | null, isHost?: boolean) => void;
@@ -27,6 +28,7 @@ interface ShnarpsState extends GameState {
   nextTrick: () => void;
   resetGame: () => void;
   setSimulating: (simulating: boolean) => void;
+  setTurnTimer: (timeLimit: number) => void;
   // Multiplayer actions
   setMultiplayerState: (players: Player[], gameState: any, localPlayerId: string) => void;
   addRemotePlayer: (player: Player) => void;
@@ -45,6 +47,7 @@ export const useShnarps = create<ShnarpsState>()(
     multiplayerRoomCode: null,
     isMultiplayerHost: false,
     websocket: null,
+    turnTimeRemaining: null,
     players: [],
     eliminatedPlayers: [],
     currentPlayerIndex: 0,
@@ -68,6 +71,21 @@ export const useShnarps = create<ShnarpsState>()(
         multiplayerRoomCode: roomCode ?? null,
         isMultiplayerHost: isHost ?? false
       });
+    },
+
+    setTurnTimer: (timeLimit: number) => {
+      set({ turnTimeRemaining: timeLimit });
+      
+      // Count down timer
+      const interval = setInterval(() => {
+        const state = get();
+        if (state.turnTimeRemaining === null || state.turnTimeRemaining <= 0) {
+          clearInterval(interval);
+          set({ turnTimeRemaining: null });
+        } else {
+          set({ turnTimeRemaining: state.turnTimeRemaining - 1 });
+        }
+      }, 1000);
     },
 
     setWebSocket: (ws) => {

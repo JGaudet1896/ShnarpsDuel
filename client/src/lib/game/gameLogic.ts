@@ -18,6 +18,7 @@ export interface Player {
   avatar?: PlayerAvatar;
   wallet?: number;
   punts?: number; // Track total punts across game
+  isConnected?: boolean; // Track if player is connected in multiplayer
 }
 
 export type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'everyone_sat' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';

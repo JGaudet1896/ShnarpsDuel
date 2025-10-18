@@ -13,6 +13,7 @@ import Tutorial from './Tutorial';
 import AppWalkthrough from './AppWalkthrough';
 import { Settings as SettingsDialog } from '../Settings';
 import { TransactionHistory } from '../TransactionHistory';
+import { TurnTimer } from './TurnTimer';
 import { useState, useEffect } from 'react';
 import { AIDifficulty } from '../../lib/game/gameLogic';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
@@ -585,6 +586,9 @@ export default function GameUI() {
   // Phase-specific UI overlays
   return (
     <div>
+      {/* Turn timer (multiplayer only) */}
+      <TurnTimer />
+
       {/* Phase-specific overlays */}
       {gamePhase === 'bidding' && <BiddingPhase />}
       {gamePhase === 'sit_pass' && <SitPassPhase />}

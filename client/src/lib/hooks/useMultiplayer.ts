@@ -110,6 +110,40 @@ export function useMultiplayer() {
         store.initializeGame();
         break;
 
+      case 'PLAYER_DISCONNECTED':
+        console.log('Player disconnected:', message.playerName);
+        // Store will handle marking player as disconnected
+        const disconnectedPlayer = store.players.find(p => p.id === message.playerId);
+        if (disconnectedPlayer) {
+          disconnectedPlayer.isConnected = false;
+        }
+        break;
+
+      case 'PLAYER_RECONNECTED':
+        console.log('Player reconnected:', message.playerName);
+        const reconnectedPlayer = store.players.find(p => p.id === message.playerId);
+        if (reconnectedPlayer) {
+          reconnectedPlayer.isConnected = true;
+        }
+        break;
+
+      case 'REJOINED_ROOM':
+        console.log('Rejoined room:', message.roomId);
+        store.setMultiplayerMode('online', message.roomId, message.isHost);
+        store.setMultiplayerState(message.players, message.gameState, message.localPlayerId);
+        setIsConnected(true);
+        break;
+
+      case 'TURN_TIMER_START':
+        console.log('Turn timer started:', message.timeLimit);
+        store.setTurnTimer(message.timeLimit);
+        break;
+
+      case 'GAME_STATE_SYNC':
+        console.log('Game state sync');
+        store.setMultiplayerState(message.players, message.gameState, message.localPlayerId || store.localPlayerId);
+        break;
+
       case 'GAME_STATE_UPDATE':
         console.log('Game state update:', message.action);
         store.applyGameAction(message.action, message.payload);
