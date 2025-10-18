@@ -92,6 +92,24 @@ export function useMultiplayer() {
         store.removePlayer(message.playerId);
         break;
 
+      case 'HOST_TRANSFERRED':
+        console.log('Host transferred to:', message.newHostId);
+        const isNewHost = message.newHostId === store.localPlayerId;
+        store.setMultiplayerMode('online', store.multiplayerRoomCode, isNewHost);
+        // Also remove the player who left
+        if (message.leftPlayerId) {
+          store.removePlayer(message.leftPlayerId);
+        }
+        break;
+
+      case 'ROOM_CLOSED':
+        console.log('Room closed:', message.reason);
+        alert(`Game ended: ${message.reason}`);
+        setIsConnected(false);
+        store.setMultiplayerMode('local', null, false);
+        store.initializeGame();
+        break;
+
       case 'GAME_STATE_UPDATE':
         console.log('Game state update:', message.action);
         store.applyGameAction(message.action, message.payload);

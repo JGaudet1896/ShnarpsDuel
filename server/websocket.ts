@@ -395,11 +395,43 @@ export function setupWebSocket(server: Server) {
         if (room) {
           room.players.delete(currentPlayerId);
           
-          // If room is empty or host left, clean up room
-          if (room.players.size === 0 || currentPlayerId === room.host) {
+          // If room is empty, clean up room
+          if (room.players.size === 0) {
             rooms.delete(currentRoomId);
+          } else if (currentPlayerId === room.host) {
+            // Host left - transfer host to another player if game is in progress
+            if (room.gameState.gamePhase !== 'setup') {
+              // Find a non-AI player to be the new host, or any player if all are AI
+              const newHost = Array.from(room.players.entries()).find(([_, p]) => !p.isAI)?.[0] 
+                || Array.from(room.players.keys())[0];
+              
+              if (newHost) {
+                room.host = newHost;
+                broadcastToRoom(room.id, {
+                  type: 'HOST_TRANSFERRED',
+                  newHostId: newHost,
+                  leftPlayerId: currentPlayerId
+                });
+                
+                // Also notify about player leaving
+                broadcastToRoom(room.id, {
+                  type: 'PLAYER_LEFT',
+                  playerId: currentPlayerId
+                });
+              } else {
+                // No players left, delete room
+                rooms.delete(currentRoomId);
+              }
+            } else {
+              // Game hasn't started yet, delete the room
+              rooms.delete(currentRoomId);
+              broadcastToRoom(room.id, {
+                type: 'ROOM_CLOSED',
+                reason: 'Host disconnected'
+              });
+            }
           } else {
-            // Notify others of player leaving
+            // Non-host player left - just notify others
             broadcastToRoom(room.id, {
               type: 'PLAYER_LEFT',
               playerId: currentPlayerId
