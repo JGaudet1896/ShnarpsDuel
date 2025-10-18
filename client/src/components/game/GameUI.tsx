@@ -154,8 +154,8 @@ export default function GameUI() {
     );
   }
 
-  // Multiplayer setup - only show if trying to connect AND not yet connected
-  if (gameMode === 'online' && mode === 'local') {
+  // Multiplayer setup - only show if trying to connect AND not yet connected AND not in an active game
+  if (gameMode === 'online' && mode === 'local' && gamePhase === 'setup' && players.length === 0) {
     console.log('Showing multiplayer setup');
     return (
       <MultiplayerSetup 
