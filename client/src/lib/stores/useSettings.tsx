@@ -11,6 +11,10 @@ export interface GameSettings {
   winningScore: number;
   eliminationScore: number;
   
+  // Multiplayer
+  turnTimeLimit: number; // in seconds, 0 = no limit
+  autoPlayDisconnected: boolean;
+  
   // Audio
   soundEnabled: boolean;
   musicEnabled: boolean;
@@ -30,6 +34,8 @@ const defaultSettings: GameSettings = {
   startingScore: 16,
   winningScore: 0,
   eliminationScore: 32,
+  turnTimeLimit: 30, // 30 seconds per turn
+  autoPlayDisconnected: true,
   soundEnabled: true,
   musicEnabled: true,
   defaultAIDifficulty: 'hard'

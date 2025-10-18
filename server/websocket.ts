@@ -20,6 +20,7 @@ interface Player {
   aiDifficulty?: AIDifficulty;
   avatar?: { color: string; icon: string };
   wallet?: number;
+  isConnected?: boolean; // Track if human player is connected
 }
 
 interface GameRoom {
@@ -42,6 +43,9 @@ interface GameRoom {
   };
   host: string;
   createdAt: number;
+  turnTimer?: NodeJS.Timeout;
+  turnTimeLimit: number; // in seconds
+  turnStartTime?: number;
 }
 
 const rooms = new Map<string, GameRoom>();
@@ -117,7 +121,8 @@ function createRoom(hostId: string, hostName: string): GameRoom {
     isActive: true,
     consecutiveSits: 0,
     isAI: false,
-    wallet: 100
+    wallet: 100,
+    isConnected: true
   };
 
   const room: GameRoom = {
@@ -139,7 +144,8 @@ function createRoom(hostId: string, hostName: string): GameRoom {
       round: 1
     },
     host: hostId,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    turnTimeLimit: 30 // 30 seconds default, can be configured
   };
 
   rooms.set(roomId, room);
@@ -171,7 +177,8 @@ function serializeGameState(room: GameRoom, playerId: string) {
       isAI: p.isAI,
       aiDifficulty: p.aiDifficulty,
       avatar: p.avatar,
-      wallet: p.wallet || 100
+      wallet: p.wallet || 100,
+      isConnected: p.isConnected ?? true
     })),
     gameState: {
       ...room.gameState,
@@ -181,8 +188,181 @@ function serializeGameState(room: GameRoom, playerId: string) {
       scores: Object.fromEntries(room.gameState.scores)
     },
     localPlayerId: playerId,
-    isHost: room.host === playerId
+    isHost: room.host === playerId,
+    turnTimeRemaining: room.turnStartTime ? Math.max(0, room.turnTimeLimit - Math.floor((Date.now() - room.turnStartTime) / 1000)) : null
   };
+}
+
+// Timer and auto-play functions
+function startTurnTimer(room: GameRoom) {
+  // Clear any existing timer
+  if (room.turnTimer) {
+    clearTimeout(room.turnTimer);
+  }
+  
+  // Don't start timer if limit is 0 (no limit)
+  if (room.turnTimeLimit <= 0) return;
+  
+  // Get current player
+  const playerArray = Array.from(room.players.values());
+  const currentPlayer = playerArray[room.gameState.currentPlayerIndex];
+  
+  // Don't set timer for AI players (they move instantly) or connected human players in setup
+  if (!currentPlayer || currentPlayer.isAI || room.gameState.gamePhase === 'setup') return;
+  
+  room.turnStartTime = Date.now();
+  
+  // Broadcast timer start
+  broadcastToRoom(room.id, {
+    type: 'TURN_TIMER_START',
+    timeLimit: room.turnTimeLimit
+  });
+  
+  // Set timeout for auto-play
+  room.turnTimer = setTimeout(() => {
+    console.log(`Turn timer expired for player ${currentPlayer.name} in room ${room.id}`);
+    autoPlayTurn(room, currentPlayer);
+  }, room.turnTimeLimit * 1000);
+}
+
+function stopTurnTimer(room: GameRoom) {
+  if (room.turnTimer) {
+    clearTimeout(room.turnTimer);
+    room.turnTimer = undefined;
+    room.turnStartTime = undefined;
+  }
+}
+
+function autoPlayTurn(room: GameRoom, player: Player) {
+  // Simple auto-play logic based on current phase
+  const phase = room.gameState.gamePhase;
+  
+  try {
+    if (phase === 'bidding') {
+      // Auto-bid 0 (safest option)
+      room.gameState.bids.set(player.id, 0);
+      
+      const playerArray = Array.from(room.players.values());
+      const nextIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
+      
+      // Check if bidding is complete
+      if (room.gameState.bids.size === playerArray.length) {
+        const highestBid = Math.max(...Array.from(room.gameState.bids.values()));
+        const highestBidderId = Array.from(room.gameState.bids.entries())
+          .find(([_, bid]) => bid === highestBid)?.[0];
+        
+        room.gameState.highestBidder = highestBidderId || null;
+        room.gameState.gamePhase = 'trump_selection';
+        room.gameState.currentPlayerIndex = playerArray.findIndex(p => p.id === highestBidderId);
+      } else {
+        room.gameState.currentPlayerIndex = nextIndex;
+      }
+      
+      broadcastGameState(room);
+      if (room.gameState.gamePhase === 'bidding') {
+        startTurnTimer(room);
+      }
+    }
+    else if (phase === 'trump_selection') {
+      // Auto-select first suit with most cards in hand
+      const suitCounts = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
+      player.hand.forEach(card => suitCounts[card.suit]++);
+      const trumpSuit = Object.entries(suitCounts).sort((a, b) => b[1] - a[1])[0][0];
+      
+      room.gameState.trumpSuit = trumpSuit;
+      room.gameState.gamePhase = 'sit_pass';
+      room.gameState.currentPlayerIndex = 0;
+      
+      broadcastGameState(room);
+      startTurnTimer(room);
+    }
+    else if (phase === 'sit_pass') {
+      // Auto-sit if possible, otherwise play
+      const canSit = player.consecutiveSits < 2;
+      const decision = canSit ? 'sit' : 'play';
+      
+      if (decision === 'sit') {
+        player.consecutiveSits++;
+      } else {
+        player.consecutiveSits = 0;
+        room.gameState.playingPlayers.add(player.id);
+      }
+      
+      const playerArray = Array.from(room.players.values());
+      const nextIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
+      
+      // Check if sit/pass is complete
+      const allDecided = playerArray.every(p => 
+        room.gameState.playingPlayers.has(p.id) || p.consecutiveSits > 0
+      );
+      
+      if (allDecided) {
+        if (room.gameState.playingPlayers.size === 0) {
+          room.gameState.gamePhase = 'everyone_sat';
+        } else {
+          room.gameState.gamePhase = 'hand_play';
+          room.gameState.currentPlayerIndex = (room.gameState.dealerIndex + 1) % playerArray.length;
+        }
+      } else {
+        room.gameState.currentPlayerIndex = nextIndex;
+      }
+      
+      broadcastGameState(room);
+      if (room.gameState.gamePhase === 'sit_pass' || room.gameState.gamePhase === 'hand_play') {
+        startTurnTimer(room);
+      }
+    }
+    else if (phase === 'hand_play') {
+      // Auto-play lowest valid card
+      const currentTrick = room.gameState.currentTrick;
+      const leadSuit = currentTrick.length > 0 ? currentTrick[0].card.suit : null;
+      
+      let validCards = player.hand;
+      if (leadSuit) {
+        const suitCards = player.hand.filter(c => c.suit === leadSuit);
+        if (suitCards.length > 0) validCards = suitCards;
+      }
+      
+      // Play lowest value card
+      const cardToPlay = validCards.sort((a, b) => a.value - b.value)[0];
+      
+      if (cardToPlay) {
+        player.hand = player.hand.filter(c => !(c.suit === cardToPlay.suit && c.rank === cardToPlay.rank));
+        room.gameState.currentTrick.push({ playerId: player.id, card: cardToPlay });
+        
+        const playingPlayerIds = Array.from(room.gameState.playingPlayers);
+        
+        if (room.gameState.currentTrick.length === playingPlayerIds.length) {
+          room.gameState.gamePhase = 'trick_complete';
+        } else {
+          const playerArray = Array.from(room.players.values());
+          let nextIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
+          while (!room.gameState.playingPlayers.has(playerArray[nextIndex].id)) {
+            nextIndex = (nextIndex + 1) % playerArray.length;
+          }
+          room.gameState.currentPlayerIndex = nextIndex;
+        }
+        
+        broadcastGameState(room);
+        if (room.gameState.gamePhase === 'hand_play') {
+          startTurnTimer(room);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error in autoPlayTurn:', error);
+  }
+}
+
+function broadcastGameState(room: GameRoom) {
+  room.players.forEach((player, playerId) => {
+    if (player.ws && player.ws.readyState === WebSocket.OPEN) {
+      player.ws.send(JSON.stringify({
+        type: 'GAME_STATE_SYNC',
+        ...serializeGameState(room, playerId)
+      }));
+    }
+  });
 }
 
 export function setupWebSocket(server: Server) {
