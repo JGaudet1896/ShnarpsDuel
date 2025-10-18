@@ -105,7 +105,7 @@ export default function GameBoard() {
   }
 
   return (
-    <div className="relative w-full h-full pb-16 sm:pb-8">
+    <div className="relative w-full h-full pb-36 sm:pb-8">
       {/* Game table center */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-green-700 border-4 sm:border-8 border-green-600 shadow-2xl" />
