@@ -447,6 +447,47 @@ export function setupWebSocket(server: Server) {
             break;
           }
 
+          case 'REJOIN_ROOM': {
+            const room = rooms.get(message.roomId);
+            if (!room) {
+              ws.send(JSON.stringify({ type: 'ERROR', message: 'Room not found' }));
+              break;
+            }
+
+            // Check if player exists in the room (disconnected player)
+            const existingPlayer = Array.from(room.players.entries())
+              .find(([_, p]) => p.name === message.playerName && !p.isAI);
+
+            if (!existingPlayer) {
+              ws.send(JSON.stringify({ type: 'ERROR', message: 'Player not found in this game' }));
+              break;
+            }
+
+            const [playerId, player] = existingPlayer;
+            
+            // Reconnect the player
+            player.ws = ws;
+            player.isConnected = true;
+            currentPlayerId = playerId;
+            currentRoomId = room.id;
+
+            // Send current game state to rejoining player
+            ws.send(JSON.stringify({
+              type: 'REJOINED_ROOM',
+              ...serializeGameState(room, playerId)
+            }));
+
+            // Notify others
+            broadcastToRoom(room.id, {
+              type: 'PLAYER_RECONNECTED',
+              playerId,
+              playerName: player.name
+            }, playerId);
+
+            console.log(`Player ${player.name} rejoined room ${room.id}`);
+            break;
+          }
+
           case 'ADD_AI': {
             if (!currentRoomId || !currentPlayerId) break;
             const room = rooms.get(currentRoomId);
@@ -480,6 +521,9 @@ export function setupWebSocket(server: Server) {
             const room = rooms.get(currentRoomId);
             if (!room) break;
 
+            // Stop current turn timer since action was received
+            stopTurnTimer(room);
+
             // Update game state based on action
             const { action, payload } = message;
             
@@ -501,6 +545,9 @@ export function setupWebSocket(server: Server) {
               action,
               payload
             });
+
+            // Start timer for next player's turn
+            setTimeout(() => startTurnTimer(room), 500);
 
             break;
           }
@@ -560,6 +607,9 @@ export function setupWebSocket(server: Server) {
               }
             });
 
+            // Start turn timer for first player
+            setTimeout(() => startTurnTimer(room), 1000);
+
             break;
           }
         }
@@ -573,49 +623,65 @@ export function setupWebSocket(server: Server) {
       if (currentRoomId && currentPlayerId) {
         const room = rooms.get(currentRoomId);
         if (room) {
-          room.players.delete(currentPlayerId);
+          const player = room.players.get(currentPlayerId);
           
-          // If room is empty, clean up room
-          if (room.players.size === 0) {
-            rooms.delete(currentRoomId);
-          } else if (currentPlayerId === room.host) {
-            // Host left - transfer host to another player if game is in progress
-            if (room.gameState.gamePhase !== 'setup') {
-              // Find a non-AI player to be the new host, or any player if all are AI
-              const newHost = Array.from(room.players.entries()).find(([_, p]) => !p.isAI)?.[0] 
+          // If game is in progress, mark as disconnected instead of removing
+          if (room.gameState.gamePhase !== 'setup' && player && !player.isAI) {
+            player.isConnected = false;
+            player.ws = undefined;
+            
+            broadcastToRoom(room.id, {
+              type: 'PLAYER_DISCONNECTED',
+              playerId: currentPlayerId,
+              playerName: player.name
+            });
+            
+            // If it's the disconnected player's turn, auto-play for them
+            const playerArray = Array.from(room.players.values());
+            const currentPlayer = playerArray[room.gameState.currentPlayerIndex];
+            if (currentPlayer && currentPlayer.id === currentPlayerId) {
+              console.log(`Auto-playing for disconnected player ${player.name}`);
+              setTimeout(() => autoPlayTurn(room, player), 2000);
+            }
+            
+            // Transfer host if needed
+            if (currentPlayerId === room.host) {
+              const newHost = Array.from(room.players.entries())
+                .find(([id, p]) => !p.isAI && p.isConnected !== false && id !== currentPlayerId)?.[0] 
+                || Array.from(room.players.entries()).find(([_, p]) => !p.isAI)?.[0]
                 || Array.from(room.players.keys())[0];
               
               if (newHost) {
                 room.host = newHost;
                 broadcastToRoom(room.id, {
                   type: 'HOST_TRANSFERRED',
-                  newHostId: newHost,
-                  leftPlayerId: currentPlayerId
+                  newHostId: newHost
                 });
-                
-                // Also notify about player leaving
-                broadcastToRoom(room.id, {
-                  type: 'PLAYER_LEFT',
-                  playerId: currentPlayerId
-                });
-              } else {
-                // No players left, delete room
-                rooms.delete(currentRoomId);
               }
-            } else {
+            }
+          } else {
+            // Game not started or AI player - remove completely
+            room.players.delete(currentPlayerId);
+            
+            // If room is empty, clean up room
+            if (room.players.size === 0) {
+              stopTurnTimer(room);
+              rooms.delete(currentRoomId);
+            } else if (currentPlayerId === room.host) {
               // Game hasn't started yet, delete the room
+              stopTurnTimer(room);
               rooms.delete(currentRoomId);
               broadcastToRoom(room.id, {
                 type: 'ROOM_CLOSED',
                 reason: 'Host disconnected'
               });
+            } else {
+              // Non-host player left during setup - just notify others
+              broadcastToRoom(room.id, {
+                type: 'PLAYER_LEFT',
+                playerId: currentPlayerId
+              });
             }
-          } else {
-            // Non-host player left - just notify others
-            broadcastToRoom(room.id, {
-              type: 'PLAYER_LEFT',
-              playerId: currentPlayerId
-            });
           }
         }
       }
