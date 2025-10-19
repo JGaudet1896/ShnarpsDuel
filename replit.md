@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+### Multiplayer Stability & Bug Fixes (October 19, 2024)
+- **WebSocket Reconnection:** Added automatic reconnection with exponential backoff (up to 5 attempts) to prevent players from being kicked to main menu during network hiccups
+- **Connection Resilience:** WebSocket only resets to menu on explicit user disconnect or server-initiated close, not on temporary connection drops
+- **Deck Validation:** Added comprehensive validation to detect and prevent duplicate cards in deck creation and dealing (both client and server side)
+- **Mobile Card Display:** Fixed card visibility on iPhone 14 by increasing GameBoard bottom padding to 144px (pb-36) for mobile devices
+- **MultiplayerSetup Dialog:** Fixed dialog appearing mid-game by adding checks for gamePhase and player count
+
 ### iOS App Deployment Setup (October 2024)
 - **Capacitor Integration:** Added Capacitor to wrap the web app as a native iOS app for App Store deployment
 - **iOS Platform:** Configured iOS project in `ios/` folder with proper build pipeline
