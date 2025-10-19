@@ -5,6 +5,9 @@ export type MultiplayerMode = 'local' | 'online';
 
 export function useMultiplayer() {
   const [isConnected, setIsConnected] = useState(false);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 5;
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   
   // Get mode, roomCode, isHost, and websocket from Zustand store
   const { 
@@ -12,11 +15,67 @@ export function useMultiplayer() {
     multiplayerRoomCode: roomCode, 
     isMultiplayerHost: isHost,
     websocket,
+    localPlayerId,
     setMultiplayerMode,
     setWebSocket 
   } = useShnarps();
 
+  const attemptReconnect = (existingRoomCode: string) => {
+    const store = useShnarps.getState();
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    console.log('Attempting to reconnect to WebSocket:', wsUrl);
+    
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log('WebSocket reconnected! Rejoining room:', existingRoomCode);
+      setIsConnected(true);
+      reconnectAttempts.current = 0; // Reset counter on successful reconnect
+      
+      // Rejoin the existing room
+      ws.send(JSON.stringify({
+        type: 'REJOIN_ROOM',
+        roomId: existingRoomCode,
+        playerId: store.localPlayerId
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      handleServerMessage(message);
+    };
+
+    ws.onclose = (event) => {
+      console.log('WebSocket closed during reconnect attempt', event.code);
+      setIsConnected(false);
+      
+      // Try again if we haven't hit max attempts
+      if (reconnectAttempts.current < maxReconnectAttempts && event.code !== 1000) {
+        reconnectAttempts.current++;
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current - 1), 10000);
+        console.log(`Reconnect attempt failed. Retrying ${reconnectAttempts.current}/${maxReconnectAttempts} in ${delay}ms...`);
+        
+        reconnectTimeoutRef.current = setTimeout(() => {
+          attemptReconnect(existingRoomCode);
+        }, delay);
+      } else {
+        console.log('Max reconnect attempts reached or connection closed normally');
+        setMultiplayerMode('local', null, false);
+        store.initializeGame();
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error during reconnect:', error);
+      setIsConnected(false);
+    };
+
+    setWebSocket(ws);
+  };
+
   const connectToRoom = (playerName: string, existingRoomCode?: string) => {
+    reconnectAttempts.current = 0; // Reset reconnect counter for fresh connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     console.log('Connecting to WebSocket:', wsUrl);
@@ -50,10 +109,36 @@ export function useMultiplayer() {
       handleServerMessage(message);
     };
 
-    ws.onclose = () => {
-      console.log('WebSocket closed');
+    ws.onclose = (event) => {
+      console.log('WebSocket closed', event.code, event.reason);
       setIsConnected(false);
-      setMultiplayerMode('local', null, false);
+      
+      // Only auto-reconnect if:
+      // 1. We're in online mode (not a user-initiated disconnect)
+      // 2. We have a room code (we were in a game)
+      // 3. We haven't exceeded max reconnect attempts
+      // 4. The close wasn't a normal close (code 1000) or server-initiated close
+      const store = useShnarps.getState();
+      const shouldReconnect = 
+        store.multiplayerMode === 'online' && 
+        store.multiplayerRoomCode && 
+        reconnectAttempts.current < maxReconnectAttempts &&
+        event.code !== 1000; // 1000 = normal closure
+      
+      if (shouldReconnect) {
+        reconnectAttempts.current++;
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current - 1), 10000); // Exponential backoff, max 10s
+        console.log(`Attempting reconnect ${reconnectAttempts.current}/${maxReconnectAttempts} in ${delay}ms...`);
+        
+        reconnectTimeoutRef.current = setTimeout(() => {
+          attemptReconnect(store.multiplayerRoomCode!);
+        }, delay);
+      } else if (event.code !== 1000) {
+        // Only reset to menu if it wasn't a normal close AND we can't reconnect
+        console.log('WebSocket closed permanently - returning to menu');
+        setMultiplayerMode('local', null, false);
+        store.initializeGame();
+      }
     };
 
     ws.onerror = (error) => {
@@ -207,16 +292,29 @@ export function useMultiplayer() {
   };
 
   const disconnect = () => {
+    // Clear any pending reconnection attempts
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = undefined;
+    }
+    reconnectAttempts.current = 0;
+    
     if (websocket) {
-      websocket.close();
+      websocket.close(1000, 'User disconnected'); // Normal closure
       setWebSocket(null);
     }
     setIsConnected(false);
     setMultiplayerMode('local', null, false);
   };
 
-  // Don't close WebSocket on unmount - it should persist across components
-  // Only close it explicitly via disconnect() or when connection fails
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     mode,
