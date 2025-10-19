@@ -21,6 +21,17 @@ export function createDeck(): Card[] {
     }
   }
   
+  // Validate deck has exactly 52 unique cards
+  if (deck.length !== 52) {
+    console.error('❌ DECK ERROR: Deck has', deck.length, 'cards instead of 52!');
+  }
+  
+  const uniqueCards = new Set(deck.map(c => `${c.rank}${c.suit}`));
+  if (uniqueCards.size !== 52) {
+    console.error('❌ DECK ERROR: Deck has duplicate cards!', deck.length - uniqueCards.size, 'duplicates found');
+    console.error('Deck:', deck.map(c => `${c.rank}${c.suit}`).sort());
+  }
+  
   return deck;
 }
 
@@ -58,6 +69,20 @@ export function dealCards(deck: Card[], numPlayers: number): Card[][] {
       }
     }
   }
+  
+  // Validate: Check for duplicate cards across all hands
+  const allDealtCards: string[] = [];
+  hands.forEach((hand, playerIndex) => {
+    hand.forEach(card => {
+      const cardId = `${card.rank}${card.suit}`;
+      if (allDealtCards.includes(cardId)) {
+        console.error(`❌ DEAL ERROR: Duplicate card ${cardId} found in player ${playerIndex}'s hand!`);
+        console.error('All dealt cards:', allDealtCards);
+        console.error('Current hand:', hand.map(c => `${c.rank}${c.suit}`));
+      }
+      allDealtCards.push(cardId);
+    });
+  });
   
   // Sort each hand by suit
   return hands.map(hand => sortHandBySuit(hand));
