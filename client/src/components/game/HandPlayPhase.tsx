@@ -30,7 +30,7 @@ export default function HandPlayPhase() {
   // Trick complete button
   if (isTrickComplete) {
     return (
-      <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-40">
+      <div className="fixed bottom-32 sm:bottom-24 left-1/2 transform -translate-x-1/2 z-40">
         <Button 
           onClick={nextTrick} 
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 px-8 touch-manipulation"
@@ -44,7 +44,7 @@ export default function HandPlayPhase() {
   // Local player's turn - show play button if card is selected
   if (isLocalPlayerTurn && selectedCard) {
     return (
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40 max-w-full px-2">
+      <div className="fixed bottom-8 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-40 max-w-full px-2">
         <Button 
           onClick={handleCardPlay}
           className="w-full max-w-md mx-auto bg-green-600 hover:bg-green-700 text-white font-bold h-12 touch-manipulation"
