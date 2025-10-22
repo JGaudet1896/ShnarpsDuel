@@ -81,6 +81,9 @@ export default function GameBoard() {
   const playerPositions = useMemo(() => {
     const localPlayerIndex = players.findIndex(p => p.id === localPlayerId);
     
+    // Check if mobile (window width < 640px)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    
     return players.map((_, index) => {
       // Calculate offset so local player is at bottom (Math.PI/2 = 90 degrees = bottom)
       const positionIndex = localPlayerIndex >= 0 
@@ -90,8 +93,16 @@ export default function GameBoard() {
       // Start at bottom and go counter-clockwise
       const angle = (positionIndex / players.length) * Math.PI * 2 + Math.PI / 2;
       const radius = 38; // percentage - slightly larger for better spacing
-      const x = 50 + Math.cos(angle) * radius;
-      const y = 50 + Math.sin(angle) * radius;
+      
+      // On mobile, move local player (bottom position) higher to avoid browser chrome cutting off cards
+      let x = 50 + Math.cos(angle) * radius;
+      let y = 50 + Math.sin(angle) * radius;
+      
+      // If this is the local player position (bottom) on mobile, shift up by 8%
+      if (isMobile && positionIndex === 0) {
+        y = y - 8; // Move up by 8 percentage points (from ~88% to ~80%)
+      }
+      
       return { x, y, angle };
     });
   }, [players.length, players, localPlayerId]);
@@ -105,7 +116,14 @@ export default function GameBoard() {
   }
 
   return (
-    <div className="relative w-full h-full pb-36 sm:pb-8">
+    <div 
+      className="relative w-full h-full pb-44 sm:pb-8"
+      style={{ 
+        paddingBottom: typeof window !== 'undefined' && window.innerWidth < 640 
+          ? 'max(176px, calc(env(safe-area-inset-bottom, 0px) + 140px))' 
+          : undefined 
+      }}
+    >
       {/* Game table center */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-green-700 border-4 sm:border-8 border-green-600 shadow-2xl" />
