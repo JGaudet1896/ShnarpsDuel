@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+### Critical Multiplayer Fixes (October 26, 2024)
+- **Mobile Card Visibility:** Improved iPhone card display by raising player position 8% on mobile and increasing bottom padding to 176px (pb-44) with safe-area support
+- **Phase UI Positioning:** Adjusted bidding buttons, sit/pass controls, and play card button to bottom-56/bottom-32/bottom-8 on mobile to prevent overlap with raised cards
+- **Reconnection Logic:** Fixed WebSocket close handler to only reset to menu after exhausting all 5 reconnection attempts, preventing premature menu boots
+- **Rejoin Bug Fix:** Fixed critical bug where server looked for playerName instead of playerId during rejoin, causing reconnection failures
+- **Error Handling:** Added try-catch around message handling to prevent freezes from server message errors
+- **Enhanced Logging:** Added detailed logging for all WebSocket messages to aid debugging
+
 ### Multiplayer Stability & Bug Fixes (October 19, 2024)
 - **WebSocket Reconnection:** Added automatic reconnection with exponential backoff (up to 5 attempts) to prevent players from being kicked to main menu during network hiccups
 - **Connection Resilience:** WebSocket only resets to menu on explicit user disconnect or server-initiated close, not on temporary connection drops

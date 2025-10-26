@@ -133,12 +133,14 @@ export function useMultiplayer() {
         reconnectTimeoutRef.current = setTimeout(() => {
           attemptReconnect(store.multiplayerRoomCode!);
         }, delay);
-      } else if (event.code !== 1000) {
-        // Only reset to menu if it wasn't a normal close AND we can't reconnect
-        console.log('WebSocket closed permanently - returning to menu');
+      } else if (event.code !== 1000 && reconnectAttempts.current >= maxReconnectAttempts) {
+        // Only reset to menu if we've exhausted all reconnection attempts
+        console.log('Max reconnect attempts exhausted - returning to menu');
         setMultiplayerMode('local', null, false);
         store.initializeGame();
       }
+      // Note: If event.code === 1000 (normal close), we don't reset to menu
+      // The user explicitly disconnected via the disconnect() function
     };
 
     ws.onerror = (error) => {
@@ -152,8 +154,9 @@ export function useMultiplayer() {
 
   const handleServerMessage = (message: any) => {
     const store = useShnarps.getState();
-    console.log('Handling server message:', message.type);
+    console.log('Handling server message:', message.type, message);
 
+    try {
     switch (message.type) {
       case 'ROOM_CREATED':
         console.log('Room created:', message.roomId);
@@ -247,6 +250,10 @@ export function useMultiplayer() {
         
       default:
         console.warn('Unknown message type:', message.type);
+    }
+    } catch (error) {
+      console.error('Error handling server message:', error, message);
+      // Don't reset to menu on message handling errors - just log them
     }
   };
 

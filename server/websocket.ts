@@ -481,16 +481,14 @@ export function setupWebSocket(server: Server) {
               break;
             }
 
-            // Check if player exists in the room (disconnected player)
-            const existingPlayer = Array.from(room.players.entries())
-              .find(([_, p]) => p.name === message.playerName && !p.isAI);
+            // Check if player exists in the room by playerId (disconnected player)
+            const playerId = message.playerId;
+            const player = room.players.get(playerId);
 
-            if (!existingPlayer) {
+            if (!player || player.isAI) {
               ws.send(JSON.stringify({ type: 'ERROR', message: 'Player not found in this game' }));
               break;
             }
-
-            const [playerId, player] = existingPlayer;
             
             // Reconnect the player
             player.ws = ws;
