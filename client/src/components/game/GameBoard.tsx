@@ -98,9 +98,9 @@ export default function GameBoard() {
       let x = 50 + Math.cos(angle) * radius;
       let y = 50 + Math.sin(angle) * radius;
       
-      // If this is the local player position (bottom) on mobile, shift up by 8%
+      // If this is the local player position (bottom) on mobile, shift up by 15%
       if (isMobile && positionIndex === 0) {
-        y = y - 8; // Move up by 8 percentage points (from ~88% to ~80%)
+        y = y - 15; // Move up by 15 percentage points (from ~88% to ~73%)
       }
       
       return { x, y, angle };
