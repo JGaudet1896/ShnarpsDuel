@@ -572,22 +572,25 @@ export const useShnarps = create<ShnarpsState>()(
       const currentPlayer = state.players[state.currentPlayerIndex];
       if (currentPlayer.id !== playerId || !state.playingPlayers.has(playerId)) return;
 
-      // In online multiplayer, send action to server
-      if (state.multiplayerMode === 'online' && state.websocket) {
-        state.websocket.send(JSON.stringify({
-          type: 'GAME_ACTION',
-          action: 'playcard',
-          payload: { playerId, card }
-        }));
-        return; // Server will broadcast the state update
-      }
-      
-      // Remove card from player's hand
+      // Remove card from player's hand IMMEDIATELY (prevents duplicate card bug)
       const updatedPlayers = state.players.map(player => 
         player.id === playerId 
           ? { ...player, hand: player.hand.filter(c => c.suit !== card.suit || c.rank !== card.rank) }
           : player
       );
+
+      // In online multiplayer, send action to server
+      if (state.multiplayerMode === 'online' && state.websocket) {
+        // Update local state immediately to prevent duplicate plays
+        set({ players: updatedPlayers });
+        
+        state.websocket.send(JSON.stringify({
+          type: 'GAME_ACTION',
+          action: 'playcard',
+          payload: { playerId, card }
+        }));
+        return; // Server will broadcast the full state update
+      }
       
       const newTrick = [...state.currentTrick, { playerId, card }];
       
@@ -652,6 +655,13 @@ export const useShnarps = create<ShnarpsState>()(
 
     nextTrick: () => {
       const state = get();
+      
+      // In multiplayer, only host should calculate scores to prevent desync
+      if (state.multiplayerMode === 'online' && !state.isMultiplayerHost) {
+        // Non-host players should wait for host to broadcast state update
+        console.log('Non-host waiting for score update from host');
+        return;
+      }
       
       // Determine winner of current trick if it's complete
       let trickWinnerId = null;
@@ -849,6 +859,23 @@ export const useShnarps = create<ShnarpsState>()(
             round: state.round + 1,
             history: [...state.history, roundHistory]
           });
+          
+          // In multiplayer, host broadcasts new round state to all clients
+          if (state.multiplayerMode === 'online' && state.isMultiplayerHost && state.websocket) {
+            const newState = get();
+            state.websocket.send(JSON.stringify({
+              type: 'GAME_ACTION',
+              action: 'sync_state',
+              payload: {
+                gamePhase: newState.gamePhase,
+                players: newState.players,
+                scores: Object.fromEntries(newState.scores),
+                round: newState.round,
+                dealerIndex: newState.dealerIndex,
+                currentPlayerIndex: newState.currentPlayerIndex
+              }
+            }));
+          }
         }
       } else {
         // Continue with next trick - winner of this trick leads the next
@@ -866,6 +893,19 @@ export const useShnarps = create<ShnarpsState>()(
           currentTrick: [],
           currentPlayerIndex: nextPlayerIndex
         });
+        
+        // In multiplayer, host broadcasts trick completion to all clients
+        if (state.multiplayerMode === 'online' && state.isMultiplayerHost && state.websocket) {
+          const newState = get();
+          state.websocket.send(JSON.stringify({
+            type: 'GAME_ACTION',
+            action: 'sync_state',
+            payload: {
+              currentTrick: newState.currentTrick,
+              currentPlayerIndex: newState.currentPlayerIndex
+            }
+          }));
+        }
       }
     },
 
@@ -1016,6 +1056,18 @@ export const useShnarps = create<ShnarpsState>()(
           break;
         case 'playcard':
           get().playCard(payload.playerId, payload.card);
+          break;
+        case 'sync_state':
+          // Host is broadcasting authoritative state (scores, round changes, etc.)
+          const updates: any = {};
+          if (payload.gamePhase) updates.gamePhase = payload.gamePhase;
+          if (payload.scores) updates.scores = new Map(Object.entries(payload.scores));
+          if (payload.round !== undefined) updates.round = payload.round;
+          if (payload.dealerIndex !== undefined) updates.dealerIndex = payload.dealerIndex;
+          if (payload.currentPlayerIndex !== undefined) updates.currentPlayerIndex = payload.currentPlayerIndex;
+          if (payload.currentTrick !== undefined) updates.currentTrick = payload.currentTrick;
+          if (payload.players) updates.players = payload.players;
+          set(updates);
           break;
       }
 

@@ -11,7 +11,9 @@ Preferred communication style: Simple, everyday language.
 ## Recent Updates
 
 ### Critical Multiplayer Fixes (October 26, 2024)
-- **Mobile Card Visibility:** Improved iPhone card display by raising player position 8% on mobile and increasing bottom padding to 176px (pb-44) with safe-area support
+- **Duplicate Card Bug Fix:** Fixed critical bug where same card could be played multiple times by immediately removing cards from hand on client side, even before server response
+- **Score Desync Fix:** Implemented host-authoritative scoring where only the host calculates scores and broadcasts to all clients, preventing score resets and desyncs mid-game
+- **Mobile Card Visibility:** Improved iPhone card display by raising player position 15% on mobile and increasing bottom padding to 176px (pb-44) with safe-area support
 - **Phase UI Positioning:** Adjusted bidding buttons, sit/pass controls, and play card button to bottom-56/bottom-32/bottom-8 on mobile to prevent overlap with raised cards
 - **Reconnection Logic:** Fixed WebSocket close handler to only reset to menu after exhausting all 5 reconnection attempts, preventing premature menu boots
 - **Rejoin Bug Fix:** Fixed critical bug where server looked for playerName instead of playerId during rejoin, causing reconnection failures
