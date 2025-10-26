@@ -611,9 +611,24 @@ export function setupWebSocket(server: Server) {
             const playerArray = Array.from(room.players.values());
             const dealtCards = dealCards(shuffledDeck, playerArray.length);
             
+            // Log all dealt cards for debugging
+            console.log(`🃏 Dealing cards to ${playerArray.length} players in room ${room.id}`);
+            const allCardIds: string[] = [];
             playerArray.forEach((player, index) => {
               player.hand = dealtCards[index] || [];
+              const cardIds = player.hand.map(c => `${c.rank}${c.suit}`);
+              console.log(`  Player ${index} (${player.name}): ${cardIds.join(', ')}`);
+              allCardIds.push(...cardIds);
             });
+            
+            // Check for duplicates
+            const uniqueCards = new Set(allCardIds);
+            if (uniqueCards.size !== allCardIds.length) {
+              console.error(`❌ DUPLICATE CARDS DEALT! ${allCardIds.length - uniqueCards.size} duplicates found`);
+              console.error('All cards:', allCardIds.sort());
+            } else {
+              console.log(`✅ All ${allCardIds.length} cards unique`);
+            }
 
             room.gameState.gamePhase = 'bidding';
             room.gameState.deck = shuffledDeck.slice(playerArray.length * 5); // Remaining cards

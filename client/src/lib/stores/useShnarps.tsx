@@ -203,7 +203,13 @@ export const useShnarps = create<ShnarpsState>()(
       const state = get();
       if (state.players.length < 4) return;
       
-      // Deal cards to all players
+      // In online multiplayer, don't deal cards locally - server handles it
+      if (state.multiplayerMode === 'online') {
+        console.log('Online mode: Server will deal cards');
+        return;
+      }
+      
+      // Deal cards to all players (local mode only)
       const shuffledDeck = shuffleDeck(createDeck());
       const dealtCards = dealCards(shuffledDeck, state.players.length);
       
