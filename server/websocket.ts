@@ -172,7 +172,7 @@ function createRoom(hostId: string, hostName: string): GameRoom {
     },
     host: hostId,
     createdAt: Date.now(),
-    turnTimeLimit: 30 // 30 seconds default, can be configured
+    turnTimeLimit: 0 // 0 = no timer (disabled for multiplayer)
   };
 
   rooms.set(roomId, room);

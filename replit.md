@@ -17,6 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **Rejoin Bug Fix:** Fixed critical bug where server looked for playerName instead of playerId during rejoin, causing reconnection failures
 - **Error Handling:** Added try-catch around message handling to prevent freezes from server message errors
 - **Enhanced Logging:** Added detailed logging for all WebSocket messages to aid debugging
+- **Timer Disabled:** Removed turn timer from multiplayer games (set to 0) to allow players to take their time without rushing
 
 ### Multiplayer Stability & Bug Fixes (October 19, 2024)
 - **WebSocket Reconnection:** Added automatic reconnection with exponential backoff (up to 5 attempts) to prevent players from being kicked to main menu during network hiccups
