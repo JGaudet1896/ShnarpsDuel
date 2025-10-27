@@ -12,8 +12,10 @@ Preferred communication style: Simple, everyday language.
 
 ### Critical Multiplayer Fixes (October 27, 2024)
 - **Phase Synchronization Fix:** Fixed critical multiplayer desync where game phases advanced incorrectly, causing players to see trump selection before bidding completed, wrong number of cards, and other players' cards before they played. Rewrote `applyGameAction` to apply state changes directly instead of calling action functions, preventing double-execution
+- **Duplicate Plays in Trick Fix:** Fixed critical bug where same player could play multiple cards in one trick due to late-arriving messages being processed after trick completion. Added phase check and duplicate player detection to ignore invalid playcard messages
 - **Duplicate Card Bug Fix:** Fixed critical bug where client was dealing cards locally even in multiplayer mode, creating duplicate cards across players' hands. Now only server deals cards in online mode
-- **Card Play Desync Fix:** Fixed issue where same card could be played multiple times by immediately removing cards from hand on client side, even before server response
+- **Trick Freeze Fix:** Fixed issue where AI players stopped playing mid-trick because playingPlayers state wasn't synced after trick completion. Now broadcasts complete game state including active players
+- **Everyone Sat Freeze Fix:** Fixed freeze when everyone sits except bidder by properly transitioning to everyone_sat phase and implementing penalty choice action in multiplayer
 - **Score Desync Fix:** Implemented host-authoritative scoring where only the host calculates scores and broadcasts to all clients, preventing score resets and desyncs mid-game
 - **Mobile Card Visibility:** Improved iPhone card display by raising player position 15% on mobile and increasing bottom padding to 176px (pb-44) with safe-area support
 - **Phase UI Positioning:** Adjusted bidding buttons, sit/pass controls, and play card button to bottom-56/bottom-32/bottom-8 on mobile to prevent overlap with raised cards

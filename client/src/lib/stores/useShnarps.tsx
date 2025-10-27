@@ -1193,6 +1193,19 @@ export const useShnarps = create<ShnarpsState>()(
         case 'playcard': {
           const { playerId, card } = payload;
           
+          // CRITICAL: Ignore playcard if we're not in hand_play phase
+          // This prevents duplicate cards being added to completed tricks
+          if (state.gamePhase !== 'hand_play') {
+            console.log(`⚠️ Ignoring playcard in phase ${state.gamePhase}`);
+            return;
+          }
+          
+          // CRITICAL: Check if this player already played in current trick
+          if (state.currentTrick.some(play => play.playerId === playerId)) {
+            console.log(`⚠️ Player ${playerId} already played in this trick, ignoring duplicate`);
+            return;
+          }
+          
           // Remove card from player's hand
           const updatedPlayers = state.players.map(player => 
             player.id === playerId
