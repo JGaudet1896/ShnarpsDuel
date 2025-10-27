@@ -20,11 +20,11 @@
 - **Issues Found:** None
 - **Notes:** Clean run, no freezes or errors detected 
 
-### Game 2
-- **Status:** 
-- **Rounds Completed:** 
-- **Issues Found:** 
-- **Notes:** 
+### Game 2 (Multi-Device Test)
+- **Status:** ❄️ FROZEN 
+- **Rounds Completed:** 0 (froze after first hand - all 5 tricks)
+- **Issues Found:** Freeze at hand completion, server crashed with EADDRINUSE
+- **Notes:** Laptop + phone test. Freeze happened when transitioning from hand_play to new round. Logs lost due to server crash. Pattern: after all 5 tricks complete, game should start new round but freezes instead 
 
 ### Game 3
 - **Status:** 
