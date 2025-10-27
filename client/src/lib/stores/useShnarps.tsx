@@ -1174,10 +1174,13 @@ export const useShnarps = create<ShnarpsState>()(
             // Check if everyone sat (only bidder is playing)
             if (newPlayingPlayers.size === 1) {
               console.log('Everyone sat except bidder - moving to everyone_sat phase');
+              // Set current player to the bidder so they can make the penalty choice
+              const bidderIndex = state.players.findIndex(p => p.id === state.highestBidder);
               set({
                 playingPlayers: newPlayingPlayers,
                 mustyPlayers: newMustyPlayers,
-                gamePhase: 'everyone_sat'
+                gamePhase: 'everyone_sat',
+                currentPlayerIndex: bidderIndex
               });
             } else {
               // Find first player to lead who is actually playing

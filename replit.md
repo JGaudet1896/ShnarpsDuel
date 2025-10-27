@@ -25,7 +25,9 @@ Preferred communication style: Simple, everyday language.
   - Fixed completedTricks broadcast sending old count instead of current count, causing state inconsistencies
 - **Duplicate Card Bug Fix:** Fixed critical bug where client was dealing cards locally even in multiplayer mode, creating duplicate cards across players' hands. Now only server deals cards in online mode
 - **Trick Freeze Fix:** Fixed issue where AI players stopped playing mid-trick because playingPlayers state wasn't synced after trick completion. Now broadcasts complete game state including active players
-- **Everyone Sat Freeze Fix:** Fixed freeze when everyone sits except bidder by properly transitioning to everyone_sat phase and implementing penalty choice action in multiplayer
+- **Everyone Sat Freeze Fix:** Fixed freeze when everyone sits except bidder by:
+  - Properly transitioning to everyone_sat phase with currentPlayerIndex set to bidder
+  - Implementing penalty choice action in multiplayer with proper state sync
 - **Score Desync Fix:** Implemented host-authoritative scoring where only the host calculates scores and broadcasts to all clients, preventing score resets and desyncs mid-game
 - **Mobile Card Visibility:** Improved iPhone card display by raising player position 15% on mobile and increasing bottom padding to 176px (pb-44) with safe-area support
 - **Card Overlap Fix:** Fixed other players' hands overlapping local player's cards by giving local player higher z-index (30 vs 10)
