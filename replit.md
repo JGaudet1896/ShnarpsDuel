@@ -15,7 +15,9 @@ Preferred communication style: Simple, everyday language.
 - **Elimination Sync Fix:** Fixed players with scores > 32 continuing to play in multiplayer games. Host now broadcasts eliminatedPlayers list when starting new rounds, ensuring all clients know which players have been removed
 - **Phase Synchronization Fix:** Fixed critical multiplayer desync where game phases advanced incorrectly, causing players to see trump selection before bidding completed, wrong number of cards, and other players' cards before they played. Rewrote `applyGameAction` to apply state changes directly instead of calling action functions, preventing double-execution
 - **Duplicate Plays in Trick Fix:** Fixed critical bug where same player could play multiple cards in one trick. Added checks to ignore playcard actions when not in hand_play phase and when player already played in current trick (both in applyGameAction and useAIPlayer hook)
-- **AI Multi-Play Prevention:** Fixed AI players attempting to play multiple cards per trick by adding check in useAIPlayer to skip if player already played in current trick (hook was re-triggering on currentTrick changes)
+- **AI Multi-Play Prevention:** Fixed AI players attempting to play multiple cards per trick by:
+  - Added check to skip if player already played in current trick
+  - Implemented useRef-based deduplication to prevent race conditions where AI hook fires multiple times before state updates
 - **Sitting Player Selected Fix:** Fixed game freeze when sitting players were selected as current player after sit/pass phase. Now correctly finds first playing player after dealer when transitioning to hand_play
 - **Stale State Bug Fix:** Fixed critical freeze issues where setTimeout callbacks were using stale/captured state:
   - Fixed player selection after tricks using old player data, causing sitting players to be selected

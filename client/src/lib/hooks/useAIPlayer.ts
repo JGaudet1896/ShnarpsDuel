@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useShnarps } from '../stores/useShnarps';
 import { makeAIBid, chooseAITrumpSuit, makeAISitPlayDecision, chooseAICardToPlay } from '../game/aiPlayer';
 import { isValidPlay } from '../game/cardUtils';
@@ -24,6 +24,9 @@ export function useAIPlayer() {
     isMultiplayerHost
   } = useShnarps();
 
+  // Track if we've already started an action for this turn to prevent duplicates
+  const actionPendingRef = useRef<string | null>(null);
+
   useEffect(() => {
     const currentPlayer = players[currentPlayerIndex];
     
@@ -31,6 +34,14 @@ export function useAIPlayer() {
 
     // In online multiplayer, only the host should control AI players
     if (multiplayerMode === 'online' && !isMultiplayerHost) {
+      return;
+    }
+    
+    // Create a unique key for this exact game state to prevent duplicate actions
+    const stateKey = `${gamePhase}-${currentPlayerIndex}-${currentPlayer.id}-${currentTrick.length}`;
+    
+    // If we're already processing an action for this exact state, skip
+    if (actionPendingRef.current === stateKey) {
       return;
     }
 
@@ -48,6 +59,9 @@ export function useAIPlayer() {
     const baseDelay = isSimulating ? 10 : (hasHumanPlaying ? 300 : 100);
     const randomDelay = isSimulating ? 0 : (hasHumanPlaying ? 200 : 100);
 
+    // Mark this state as being processed
+    actionPendingRef.current = stateKey;
+    
     // Add delay to make AI decisions feel more natural
     const aiDelay = setTimeout(() => {
       // Bidding phase
@@ -124,8 +138,15 @@ export function useAIPlayer() {
           playCard(currentPlayer.id, cardToPlay);
         }
       }
+      
+      // Clear the pending flag after action completes
+      actionPendingRef.current = null;
     }, baseDelay + Math.random() * randomDelay);
 
-    return () => clearTimeout(aiDelay);
+    return () => {
+      clearTimeout(aiDelay);
+      // Clear pending flag if component unmounts or dependencies change
+      actionPendingRef.current = null;
+    };
   }, [gamePhase, currentPlayerIndex, players, bids, trumpSuit, currentTrick, playingPlayers, scores, isSimulating, multiplayerMode, isMultiplayerHost, placeBid, chooseTrumpSuit, chooseSitOrPlay, choosePenalty, playCard]);
 }
