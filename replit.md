@@ -23,6 +23,7 @@ Preferred communication style: Simple, everyday language.
 - **Everyone Sat Freeze Fix:** Fixed freeze when everyone sits except bidder by properly transitioning to everyone_sat phase and implementing penalty choice action in multiplayer
 - **Score Desync Fix:** Implemented host-authoritative scoring where only the host calculates scores and broadcasts to all clients, preventing score resets and desyncs mid-game
 - **Mobile Card Visibility:** Improved iPhone card display by raising player position 15% on mobile and increasing bottom padding to 176px (pb-44) with safe-area support
+- **Card Overlap Fix:** Fixed other players' hands overlapping local player's cards by giving local player higher z-index (30 vs 10)
 - **Phase UI Positioning:** Adjusted bidding buttons, sit/pass controls, and play card button to bottom-56/bottom-32/bottom-8 on mobile to prevent overlap with raised cards
 - **Reconnection Logic:** Fixed WebSocket close handler to only reset to menu after exhausting all 5 reconnection attempts, preventing premature menu boots
 - **Rejoin Bug Fix:** Fixed critical bug where server looked for playerName instead of playerId during rejoin, causing reconnection failures

@@ -206,6 +206,7 @@ export default function GameBoard() {
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
+              zIndex: isLocalPlayer ? 30 : 10,
             }}
           >
             <div className="flex flex-col items-center gap-0.5">
