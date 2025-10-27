@@ -10,7 +10,8 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
-### Critical Multiplayer Fixes (October 26, 2024)
+### Critical Multiplayer Fixes (October 27, 2024)
+- **Phase Synchronization Fix:** Fixed critical multiplayer desync where game phases advanced incorrectly, causing players to see trump selection before bidding completed, wrong number of cards, and other players' cards before they played. Rewrote `applyGameAction` to apply state changes directly instead of calling action functions, preventing double-execution
 - **Duplicate Card Bug Fix:** Fixed critical bug where client was dealing cards locally even in multiplayer mode, creating duplicate cards across players' hands. Now only server deals cards in online mode
 - **Card Play Desync Fix:** Fixed issue where same card could be played multiple times by immediately removing cards from hand on client side, even before server response
 - **Score Desync Fix:** Implemented host-authoritative scoring where only the host calculates scores and broadcasts to all clients, preventing score resets and desyncs mid-game

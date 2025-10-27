@@ -1042,28 +1042,171 @@ export const useShnarps = create<ShnarpsState>()(
     },
 
     applyGameAction: (action: string, payload: any) => {
-      // Temporarily disable multiplayer mode to prevent WebSocket loop
+      // Apply state changes directly from server without executing full game logic
+      // This prevents double-execution and phase desync issues
       const state = get();
-      const wasOnline = state.multiplayerMode === 'online';
-      if (wasOnline) {
-        set({ multiplayerMode: 'local' });
-      }
+      
+      console.log(`📥 Applying action from server: ${action}`, payload);
 
-      // Apply game actions from server
       switch (action) {
-        case 'bid':
-          get().placeBid(payload.playerId, payload.bid);
+        case 'bid': {
+          const newBids = new Map(state.bids);
+          newBids.set(payload.playerId, payload.bid);
+          
+          // Find highest bid and bidder
+          let highestBid = 0;
+          let highestBidder = null;
+          for (const [id, playerBid] of newBids) {
+            if (playerBid > highestBid) {
+              highestBid = playerBid;
+              highestBidder = id;
+            }
+          }
+          
+          // Check if bidding is complete
+          const allPlayersBid = state.players.every(player => newBids.has(player.id));
+          
+          if (allPlayersBid && highestBidder) {
+            // Move to trump selection
+            set({
+              bids: newBids,
+              highestBidder,
+              gamePhase: 'trump_selection',
+              currentPlayerIndex: state.players.findIndex(p => p.id === highestBidder)
+            });
+          } else {
+            // Move to next player
+            const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+            set({
+              bids: newBids,
+              currentPlayerIndex: nextPlayerIndex,
+              highestBidder
+            });
+          }
           break;
-        case 'trump':
-          get().chooseTrumpSuit(payload.suit);
+        }
+        
+        case 'trump': {
+          const suit = payload.suit;
+          const highestBid = Math.max(0, ...Array.from(state.bids.values()));
+          const everyoneMustPlay = highestBid === 1 || suit === 'spades';
+          
+          // Build playing players set
+          const playingPlayers = new Set<string>();
+          if (state.highestBidder) {
+            playingPlayers.add(state.highestBidder);
+          }
+          
+          if (everyoneMustPlay) {
+            state.players.forEach(player => {
+              if (player.isActive) {
+                playingPlayers.add(player.id);
+              }
+            });
+            
+            // Skip sit/pass, go directly to hand_play
+            const firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+            set({
+              trumpSuit: suit,
+              gamePhase: 'hand_play',
+              playingPlayers,
+              currentPlayerIndex: firstPlayerIndex,
+              currentTrick: []
+            });
+          } else {
+            // Go to sit/pass
+            const highestBidderIndex = state.players.findIndex(p => p.id === state.highestBidder);
+            const nextPlayerIndex = (highestBidderIndex + 1) % state.players.length;
+            set({
+              trumpSuit: suit,
+              gamePhase: 'sit_pass',
+              playingPlayers,
+              currentPlayerIndex: nextPlayerIndex
+            });
+          }
           break;
-        case 'sitpass':
-          get().chooseSitOrPlay(payload.playerId, payload.decision);
+        }
+        
+        case 'sitpass': {
+          const { playerId, decision } = payload;
+          const newPlayingPlayers = new Set(state.playingPlayers);
+          const newMustyPlayers = new Set(state.mustyPlayers);
+          
+          if (decision === 'play') {
+            newPlayingPlayers.add(playerId);
+            newMustyPlayers.delete(playerId);
+          } else {
+            newMustyPlayers.add(playerId);
+          }
+          
+          // Check if all players have decided
+          const nonBidders = state.players.filter(p => p.id !== state.highestBidder);
+          const allDecided = nonBidders.every(p => 
+            newPlayingPlayers.has(p.id) || newMustyPlayers.has(p.id)
+          );
+          
+          if (allDecided) {
+            const firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+            set({
+              playingPlayers: newPlayingPlayers,
+              mustyPlayers: newMustyPlayers,
+              gamePhase: 'hand_play',
+              currentPlayerIndex: firstPlayerIndex,
+              currentTrick: []
+            });
+          } else {
+            let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+            while (state.players[nextPlayerIndex].id === state.highestBidder || 
+                   newPlayingPlayers.has(state.players[nextPlayerIndex].id) ||
+                   newMustyPlayers.has(state.players[nextPlayerIndex].id)) {
+              nextPlayerIndex = (nextPlayerIndex + 1) % state.players.length;
+            }
+            set({
+              playingPlayers: newPlayingPlayers,
+              mustyPlayers: newMustyPlayers,
+              currentPlayerIndex: nextPlayerIndex
+            });
+          }
           break;
-        case 'playcard':
-          get().playCard(payload.playerId, payload.card);
+        }
+        
+        case 'playcard': {
+          const { playerId, card } = payload;
+          
+          // Remove card from player's hand
+          const updatedPlayers = state.players.map(player => 
+            player.id === playerId
+              ? { ...player, hand: player.hand.filter(c => !(c.suit === card.suit && c.rank === card.rank)) }
+              : player
+          );
+          
+          // Add to current trick
+          const newTrick = [...state.currentTrick, { playerId, card }];
+          
+          // Check if trick is complete
+          const playingPlayersList = Array.from(state.playingPlayers);
+          if (newTrick.length === playingPlayersList.length) {
+            // Trick complete - server will handle the rest
+            set({
+              players: updatedPlayers,
+              currentTrick: newTrick
+            });
+          } else {
+            // Move to next playing player
+            let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+            while (!state.playingPlayers.has(state.players[nextPlayerIndex].id)) {
+              nextPlayerIndex = (nextPlayerIndex + 1) % state.players.length;
+            }
+            set({
+              players: updatedPlayers,
+              currentTrick: newTrick,
+              currentPlayerIndex: nextPlayerIndex
+            });
+          }
           break;
-        case 'sync_state':
+        }
+        
+        case 'sync_state': {
           // Host is broadcasting authoritative state (scores, round changes, etc.)
           const updates: any = {};
           if (payload.gamePhase) updates.gamePhase = payload.gamePhase;
@@ -1073,13 +1216,14 @@ export const useShnarps = create<ShnarpsState>()(
           if (payload.currentPlayerIndex !== undefined) updates.currentPlayerIndex = payload.currentPlayerIndex;
           if (payload.currentTrick !== undefined) updates.currentTrick = payload.currentTrick;
           if (payload.players) updates.players = payload.players;
+          if (payload.playingPlayers) updates.playingPlayers = new Set(payload.playingPlayers);
+          if (payload.mustyPlayers) updates.mustyPlayers = new Set(payload.mustyPlayers);
+          if (payload.trumpSuit !== undefined) updates.trumpSuit = payload.trumpSuit;
+          if (payload.bids) updates.bids = new Map(Object.entries(payload.bids));
+          if (payload.highestBidder !== undefined) updates.highestBidder = payload.highestBidder;
           set(updates);
           break;
-      }
-
-      // Restore multiplayer mode
-      if (wasOnline) {
-        set({ multiplayerMode: 'online' });
+        }
       }
     },
 
