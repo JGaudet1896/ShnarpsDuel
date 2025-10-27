@@ -75,20 +75,16 @@ export function makeAIBid(
   
   // Difficulty-based bid adjustments
   let difficultyAdjustment = 0;
-  let bluffChance = 0;
   
   if (difficulty === 'easy') {
     // Easy: Makes poor bids, often overbids or underbids
     difficultyAdjustment = Math.random() > 0.5 ? 1 : -1; // Random +1 or -1
-    bluffChance = 0.3; // Bluffs often (bad strategy)
   } else if (difficulty === 'medium') {
     // Medium: Occasionally makes mistakes
     difficultyAdjustment = Math.random() > 0.7 ? 1 : 0; // 30% chance of +1
-    bluffChance = playerCount <= 4 ? 0.15 : 0.08;
   } else { // hard
     // Hard: Optimal play, no random errors
     difficultyAdjustment = 0;
-    bluffChance = playerCount <= 4 ? 0.1 : 0.05; // Strategic bluffing only
   }
   
   const adjustedBid = Math.max(0, Math.min(5, Math.floor(avgStrength) - conservativenessAdjustment + difficultyAdjustment));
@@ -98,10 +94,9 @@ export function makeAIBid(
     return adjustedBid;
   }
   
-  // Bluffing logic
-  if (Math.random() < bluffChance && currentHighestBid < 3) {
-    return currentHighestBid + 1;
-  }
+  // NOTE: Bluffing removed - it doesn't make sense in this game since bluffing = punting.
+  // The only strategic "bluff" is defensive bidding (already handled above) to block
+  // players close to winning from calling trump.
   
   return 0; // Pass
 }

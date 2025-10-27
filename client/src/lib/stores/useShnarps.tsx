@@ -335,11 +335,9 @@ export const useShnarps = create<ShnarpsState>()(
           }
         });
         
-        // Reset sit counters for all players
-        const updatedPlayers = state.players.map(player => ({
-          ...player,
-          consecutiveSits: 0
-        }));
+        // NOTE: Do NOT reset consecutiveSits here! 
+        // Musty rule tracks sits ACROSS ROUNDS, not per round.
+        // consecutiveSits only resets when player actively chooses to PLAY.
         
         // First player to lead is to the left of the dealer
         let firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
@@ -352,7 +350,6 @@ export const useShnarps = create<ShnarpsState>()(
         set({
           trumpSuit: suit,
           gamePhase: 'hand_play',
-          players: updatedPlayers,
           currentPlayerIndex: firstPlayerIndex,
           playingPlayers,
           currentTrick: []
