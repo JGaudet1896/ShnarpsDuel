@@ -374,6 +374,16 @@ export const useShnarps = create<ShnarpsState>()(
     choosePenalty: (choice: 'self' | 'others') => {
       const state = get();
       if (state.gamePhase !== 'everyone_sat') return;
+
+      // In online multiplayer, send action to server
+      if (state.multiplayerMode === 'online' && state.websocket) {
+        state.websocket.send(JSON.stringify({
+          type: 'GAME_ACTION',
+          action: 'penalty',
+          payload: { choice }
+        }));
+        return; // Server will broadcast the state update
+      }
       
       const newScores = new Map(state.scores);
       
@@ -1146,14 +1156,24 @@ export const useShnarps = create<ShnarpsState>()(
           );
           
           if (allDecided) {
-            const firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
-            set({
-              playingPlayers: newPlayingPlayers,
-              mustyPlayers: newMustyPlayers,
-              gamePhase: 'hand_play',
-              currentPlayerIndex: firstPlayerIndex,
-              currentTrick: []
-            });
+            // Check if everyone sat (only bidder is playing)
+            if (newPlayingPlayers.size === 1) {
+              console.log('Everyone sat except bidder - moving to everyone_sat phase');
+              set({
+                playingPlayers: newPlayingPlayers,
+                mustyPlayers: newMustyPlayers,
+                gamePhase: 'everyone_sat'
+              });
+            } else {
+              const firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+              set({
+                playingPlayers: newPlayingPlayers,
+                mustyPlayers: newMustyPlayers,
+                gamePhase: 'hand_play',
+                currentPlayerIndex: firstPlayerIndex,
+                currentTrick: []
+              });
+            }
           } else {
             let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
             while (state.players[nextPlayerIndex].id === state.highestBidder || 
@@ -1254,6 +1274,43 @@ export const useShnarps = create<ShnarpsState>()(
               currentPlayerIndex: nextPlayerIndex
             });
           }
+          break;
+        }
+        
+        case 'penalty': {
+          // Handle everyone_sat penalty choice
+          const { choice } = payload;
+          const newScores = new Map(state.scores);
+          
+          if (choice === 'self') {
+            const currentScore = newScores.get(state.highestBidder!) || 16;
+            newScores.set(state.highestBidder!, currentScore - 5);
+          } else {
+            state.players.forEach(player => {
+              if (player.id !== state.highestBidder) {
+                const currentScore = newScores.get(player.id) || 16;
+                newScores.set(player.id, currentScore + 5);
+              }
+            });
+          }
+          
+          // Move to next round
+          const nextDealerIndex = (state.dealerIndex + 1) % state.players.length;
+          
+          set({
+            scores: newScores,
+            gamePhase: 'bidding',
+            round: state.round + 1,
+            dealerIndex: nextDealerIndex,
+            currentPlayerIndex: (nextDealerIndex + 1) % state.players.length,
+            bids: new Map(),
+            trumpSuit: null,
+            highestBidder: null,
+            playingPlayers: new Set(),
+            mustyPlayers: new Set(),
+            currentTrick: [],
+            completedTricks: []
+          });
           break;
         }
         
