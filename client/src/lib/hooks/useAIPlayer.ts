@@ -30,18 +30,34 @@ export function useAIPlayer() {
   useEffect(() => {
     const currentPlayer = players[currentPlayerIndex];
     
-    if (!currentPlayer || !currentPlayer.isAI) return;
+    if (!currentPlayer || !currentPlayer.isAI) {
+      // Clear pending action when it's not AI's turn
+      actionPendingRef.current = null;
+      return;
+    }
 
     // In online multiplayer, only the host should control AI players
     if (multiplayerMode === 'online' && !isMultiplayerHost) {
       return;
     }
     
+    // During hand_play, check if this player already played in current trick
+    if (gamePhase === 'hand_play') {
+      const hasPlayedInTrick = currentTrick.some(play => play.playerId === currentPlayer.id);
+      if (hasPlayedInTrick) {
+        console.log(`AI ${currentPlayer.name} already played in this trick, skipping`);
+        return;
+      }
+    }
+    
     // Create a unique key for this exact game state to prevent duplicate actions
-    const stateKey = `${gamePhase}-${currentPlayerIndex}-${currentPlayer.id}-${currentTrick.length}`;
+    // Include a hash of the current trick to differentiate between tricks
+    const trickHash = currentTrick.map(p => `${p.playerId}-${p.card.suit}${p.card.rank}`).join(',');
+    const stateKey = `${gamePhase}-${currentPlayerIndex}-${currentPlayer.id}-${currentTrick.length}-${trickHash}`;
     
     // If we're already processing an action for this exact state, skip
     if (actionPendingRef.current === stateKey) {
+      console.log(`AI ${currentPlayer.name} action already pending for this state, skipping`);
       return;
     }
 
