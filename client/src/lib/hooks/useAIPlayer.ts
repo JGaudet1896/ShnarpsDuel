@@ -102,6 +102,12 @@ export function useAIPlayer() {
 
       // Hand play phase
       else if (gamePhase === 'hand_play' && playingPlayers.has(currentPlayer.id)) {
+        // CRITICAL: Check if this player already played in current trick
+        const hasPlayedInTrick = currentTrick.some(play => play.playerId === currentPlayer.id);
+        if (hasPlayedInTrick) {
+          return; // Already played, don't play again
+        }
+        
         const playableCards = currentPlayer.hand.filter(card =>
           isValidPlay(card, currentPlayer.hand, currentTrick, trumpSuit)
         );

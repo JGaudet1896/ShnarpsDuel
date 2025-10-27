@@ -12,7 +12,10 @@ Preferred communication style: Simple, everyday language.
 
 ### Critical Multiplayer Fixes (October 27, 2024)
 - **Phase Synchronization Fix:** Fixed critical multiplayer desync where game phases advanced incorrectly, causing players to see trump selection before bidding completed, wrong number of cards, and other players' cards before they played. Rewrote `applyGameAction` to apply state changes directly instead of calling action functions, preventing double-execution
-- **Duplicate Plays in Trick Fix:** Fixed critical bug where same player could play multiple cards in one trick due to late-arriving messages being processed after trick completion. Added phase check and duplicate player detection to ignore invalid playcard messages
+- **Duplicate Plays in Trick Fix:** Fixed critical bug where same player could play multiple cards in one trick. Added checks to ignore playcard actions when not in hand_play phase and when player already played in current trick (both in applyGameAction and useAIPlayer hook)
+- **AI Multi-Play Prevention:** Fixed AI players attempting to play multiple cards per trick by adding check in useAIPlayer to skip if player already played in current trick (hook was re-triggering on currentTrick changes)
+- **Sitting Player Selected Fix:** Fixed game freeze when sitting players were selected as current player after sit/pass phase. Now correctly finds first playing player after dealer when transitioning to hand_play
+- **Trick Winner Validation:** Added validation to ensure trick winner is in playingPlayers set before setting as current player, with fallback to first playing player
 - **Duplicate Card Bug Fix:** Fixed critical bug where client was dealing cards locally even in multiplayer mode, creating duplicate cards across players' hands. Now only server deals cards in online mode
 - **Trick Freeze Fix:** Fixed issue where AI players stopped playing mid-trick because playingPlayers state wasn't synced after trick completion. Now broadcasts complete game state including active players
 - **Everyone Sat Freeze Fix:** Fixed freeze when everyone sits except bidder by properly transitioning to everyone_sat phase and implementing penalty choice action in multiplayer
