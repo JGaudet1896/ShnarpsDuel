@@ -885,6 +885,7 @@ export const useShnarps = create<ShnarpsState>()(
               payload: {
                 gamePhase: newState.gamePhase,
                 players: newState.players,
+                eliminatedPlayers: newState.eliminatedPlayers,
                 scores: Object.fromEntries(newState.scores),
                 round: newState.round,
                 dealerIndex: newState.dealerIndex,
@@ -1370,6 +1371,7 @@ export const useShnarps = create<ShnarpsState>()(
                 payload: {
                   gamePhase: newState.gamePhase,
                   players: newState.players,
+                  eliminatedPlayers: newState.eliminatedPlayers,
                   scores: Object.fromEntries(newState.scores),
                   round: newState.round,
                   dealerIndex: newState.dealerIndex,
@@ -1409,6 +1411,7 @@ export const useShnarps = create<ShnarpsState>()(
           if (payload.completedTricks !== undefined) updates.completedTricks = payload.completedTricks;
           if (payload.lastTrickWinner !== undefined) updates.lastTrickWinner = payload.lastTrickWinner;
           if (payload.players) updates.players = payload.players;
+          if (payload.eliminatedPlayers) updates.eliminatedPlayers = payload.eliminatedPlayers;
           if (payload.playingPlayers) updates.playingPlayers = new Set(payload.playingPlayers);
           if (payload.mustyPlayers) updates.mustyPlayers = new Set(payload.mustyPlayers);
           if (payload.trumpSuit !== undefined) updates.trumpSuit = payload.trumpSuit;
