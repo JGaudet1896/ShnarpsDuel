@@ -1186,11 +1186,62 @@ export const useShnarps = create<ShnarpsState>()(
           // Check if trick is complete
           const playingPlayersList = Array.from(state.playingPlayers);
           if (newTrick.length === playingPlayersList.length) {
-            // Trick complete - server will handle the rest
+            // Trick complete!
+            console.log('🎯 Trick complete!', newTrick.length, 'cards played');
+            
+            const trickWinnerId = determineTrickWinner(newTrick, state.trumpSuit);
+            const newCompletedTricks = [...state.completedTricks, newTrick];
+            
+            console.log(`Trick winner: ${trickWinnerId}, Completed tricks: ${newCompletedTricks.length}/5`);
+            
+            // Update state with completed trick
             set({
               players: updatedPlayers,
-              currentTrick: newTrick
+              currentTrick: newTrick,
+              completedTricks: newCompletedTricks,
+              gamePhase: 'trick_complete',
+              lastTrickWinner: trickWinnerId
             });
+            
+            // Only the host handles trick completion and broadcasts the next state
+            if (state.isMultiplayerHost) {
+              console.log('Host handling trick completion');
+              setTimeout(() => {
+                const currentState = get();
+                
+                if (newCompletedTricks.length === 5) {
+                  // Hand complete - trigger scoring
+                  console.log('All 5 tricks complete - triggering scoring');
+                  get().nextTrick();
+                } else {
+                  // Move to next trick - winner leads
+                  const winnerIndex = state.players.findIndex(p => p.id === trickWinnerId);
+                  console.log(`Starting next trick, winner index: ${winnerIndex}`);
+                  
+                  // Broadcast the cleared trick state
+                  if (currentState.websocket) {
+                    currentState.websocket.send(JSON.stringify({
+                      type: 'GAME_ACTION',
+                      action: 'sync_state',
+                      payload: {
+                        gamePhase: 'hand_play',
+                        currentTrick: [],
+                        currentPlayerIndex: winnerIndex,
+                        completedTricks: newCompletedTricks,
+                        lastTrickWinner: null
+                      }
+                    }));
+                  }
+                  
+                  set({ 
+                    gamePhase: 'hand_play',
+                    currentTrick: [],
+                    currentPlayerIndex: winnerIndex,
+                    lastTrickWinner: null
+                  });
+                }
+              }, 1500);
+            }
           } else {
             // Move to next playing player
             let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
@@ -1215,6 +1266,8 @@ export const useShnarps = create<ShnarpsState>()(
           if (payload.dealerIndex !== undefined) updates.dealerIndex = payload.dealerIndex;
           if (payload.currentPlayerIndex !== undefined) updates.currentPlayerIndex = payload.currentPlayerIndex;
           if (payload.currentTrick !== undefined) updates.currentTrick = payload.currentTrick;
+          if (payload.completedTricks !== undefined) updates.completedTricks = payload.completedTricks;
+          if (payload.lastTrickWinner !== undefined) updates.lastTrickWinner = payload.lastTrickWinner;
           if (payload.players) updates.players = payload.players;
           if (payload.playingPlayers) updates.playingPlayers = new Set(payload.playingPlayers);
           if (payload.mustyPlayers) updates.mustyPlayers = new Set(payload.mustyPlayers);
