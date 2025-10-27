@@ -41,24 +41,27 @@ export function useAIPlayer() {
       return;
     }
     
+    // CRITICAL: For hand_play phase, use player+phase as the lock key
+    // This prevents multiple plays in the same trick regardless of trick state changes
+    const stateKey = gamePhase === 'hand_play' 
+      ? `${gamePhase}-${currentPlayer.id}`
+      : `${gamePhase}-${currentPlayerIndex}-${currentPlayer.id}`;
+    
+    // If we're already processing an action for this player in this phase, skip
+    if (actionPendingRef.current === stateKey) {
+      console.log(`AI ${currentPlayer.name} action already pending for this state, skipping`);
+      return;
+    }
+    
     // During hand_play, check if this player already played in current trick
     if (gamePhase === 'hand_play') {
       const hasPlayedInTrick = currentTrick.some(play => play.playerId === currentPlayer.id);
       if (hasPlayedInTrick) {
         console.log(`AI ${currentPlayer.name} already played in this trick, skipping`);
+        // Clear the lock so they can play in the NEXT trick
+        actionPendingRef.current = null;
         return;
       }
-    }
-    
-    // Create a unique key for this exact game state to prevent duplicate actions
-    // Include a hash of the current trick to differentiate between tricks
-    const trickHash = currentTrick.map(p => `${p.playerId}-${p.card.suit}${p.card.rank}`).join(',');
-    const stateKey = `${gamePhase}-${currentPlayerIndex}-${currentPlayer.id}-${currentTrick.length}-${trickHash}`;
-    
-    // If we're already processing an action for this exact state, skip
-    if (actionPendingRef.current === stateKey) {
-      console.log(`AI ${currentPlayer.name} action already pending for this state, skipping`);
-      return;
     }
 
     // CRITICAL: Mark this state as being processed IMMEDIATELY before any async operations
