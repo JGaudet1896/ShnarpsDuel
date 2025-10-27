@@ -1272,12 +1272,19 @@ export const useShnarps = create<ShnarpsState>()(
                 } else {
                   // Move to next trick - winner leads
                   // CRITICAL: Use currentState, not the old captured state
+                  console.log(`🔍 Finding winner of trick. Winner ID: ${trickWinnerId}`);
+                  console.log(`🔍 Current players:`, currentState.players.map(p => `${p.name}(${p.id})`));
+                  console.log(`🔍 Playing players:`, Array.from(currentState.playingPlayers));
+                  
                   let winnerIndex = currentState.players.findIndex(p => p.id === trickWinnerId);
+                  
+                  console.log(`🔍 findIndex returned: ${winnerIndex}, player at index: ${currentState.players[winnerIndex]?.name}`);
                   
                   // CRITICAL: Ensure winner is actually in playingPlayers
                   // This can fail if player indices don't match playing status
-                  if (!currentState.playingPlayers.has(currentState.players[winnerIndex]?.id)) {
+                  if (winnerIndex === -1 || !currentState.playingPlayers.has(currentState.players[winnerIndex]?.id)) {
                     console.error(`⚠️ Winner index ${winnerIndex} (${currentState.players[winnerIndex]?.name}) not in playingPlayers! Finding first playing player...`);
+                    console.error(`⚠️ Winner ID "${trickWinnerId}" not found in players array or not playing`);
                     // Find first playing player as fallback
                     for (let i = 0; i < currentState.players.length; i++) {
                       if (currentState.playingPlayers.has(currentState.players[i].id)) {
