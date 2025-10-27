@@ -10,6 +10,10 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
 
+### AI & Musty Rule Fixes (October 27, 2024)
+- **Bluffing Removed:** Eliminated illogical random bluffing from AI bidding strategy. AI now only overbids defensively when blocking players close to winning from calling trump, preventing wasteful punting.
+- **Musty Rule Fixed:** Corrected critical bug where `consecutiveSits` was incorrectly reset at start of each round, allowing players to sit indefinitely. Musty rule now properly tracks sits ACROSS rounds - players who sit 2 consecutive rounds must play the next round. Counter only resets when player actively chooses to play.
+
 ### Critical Multiplayer Fixes (October 27, 2024)
 - **Everyone Sat Loop Fix:** Fixed infinite loop when everyone sits - penalty action now properly deals new cards for next round instead of reusing same hand, preventing repeated sit cycles and score drain
 - **Elimination Sync Fix:** Fixed players with scores > 32 continuing to play in multiplayer games. Host now broadcasts eliminatedPlayers list when starting new rounds, ensuring all clients know which players have been removed

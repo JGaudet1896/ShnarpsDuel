@@ -462,8 +462,8 @@ export const useShnarps = create<ShnarpsState>()(
         
         const updatedPlayers = activePlayers.map((player, index) => ({
           ...player,
-          hand: dealtCards[index] || [],
-          consecutiveSits: 0
+          hand: dealtCards[index] || []
+          // NOTE: Do NOT reset consecutiveSits - musty rule persists across rounds!
         }));
         
         set({
@@ -1364,8 +1364,8 @@ export const useShnarps = create<ShnarpsState>()(
             
             const updatedPlayers = state.players.map((player, index) => ({
               ...player,
-              hand: dealtCards[index] || [],
-              consecutiveSits: 0
+              hand: dealtCards[index] || []
+              // NOTE: Do NOT reset consecutiveSits - musty rule persists!
             }));
             
             set({
