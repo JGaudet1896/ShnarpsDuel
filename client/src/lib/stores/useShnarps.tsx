@@ -1264,7 +1264,8 @@ export const useShnarps = create<ShnarpsState>()(
               setTimeout(() => {
                 const currentState = get();
                 
-                if (newCompletedTricks.length === 5) {
+                // CRITICAL: Use currentState.completedTricks, not the captured newCompletedTricks
+                if (currentState.completedTricks.length === 5) {
                   // Hand complete - trigger scoring
                   console.log('All 5 tricks complete - triggering scoring');
                   get().nextTrick();

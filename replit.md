@@ -17,7 +17,9 @@ Preferred communication style: Simple, everyday language.
 - **Duplicate Plays in Trick Fix:** Fixed critical bug where same player could play multiple cards in one trick. Added checks to ignore playcard actions when not in hand_play phase and when player already played in current trick (both in applyGameAction and useAIPlayer hook)
 - **AI Multi-Play Prevention:** Fixed AI players attempting to play multiple cards per trick by adding check in useAIPlayer to skip if player already played in current trick (hook was re-triggering on currentTrick changes)
 - **Sitting Player Selected Fix:** Fixed game freeze when sitting players were selected as current player after sit/pass phase. Now correctly finds first playing player after dealer when transitioning to hand_play
-- **Stale State Bug Fix:** Fixed critical freeze issue where setTimeout callback was using stale/captured state instead of current state when determining next player after trick completion, causing sitting players to be selected as current player
+- **Stale State Bug Fix:** Fixed critical freeze issues where setTimeout callbacks were using stale/captured state:
+  - Fixed player selection after tricks using old player data, causing sitting players to be selected
+  - Fixed hand completion check using old trick count, causing game to try starting 6th trick when only 5 exist
 - **Duplicate Card Bug Fix:** Fixed critical bug where client was dealing cards locally even in multiplayer mode, creating duplicate cards across players' hands. Now only server deals cards in online mode
 - **Trick Freeze Fix:** Fixed issue where AI players stopped playing mid-trick because playingPlayers state wasn't synced after trick completion. Now broadcasts complete game state including active players
 - **Everyone Sat Freeze Fix:** Fixed freeze when everyone sits except bidder by properly transitioning to everyone_sat phase and implementing penalty choice action in multiplayer

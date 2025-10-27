@@ -27,13 +27,10 @@ export function useAIPlayer() {
   useEffect(() => {
     const currentPlayer = players[currentPlayerIndex];
     
-    console.log(`🤖 AI Hook triggered - Phase: ${gamePhase}, CurrentIndex: ${currentPlayerIndex}, Player: ${currentPlayer?.name}, IsAI: ${currentPlayer?.isAI}`);
-    
     if (!currentPlayer || !currentPlayer.isAI) return;
 
     // In online multiplayer, only the host should control AI players
     if (multiplayerMode === 'online' && !isMultiplayerHost) {
-      console.log(`🤖 Non-host skipping AI control`);
       return;
     }
 
@@ -109,15 +106,12 @@ export function useAIPlayer() {
         // CRITICAL: Check if this player already played in current trick
         const hasPlayedInTrick = currentTrick.some(play => play.playerId === currentPlayer.id);
         if (hasPlayedInTrick) {
-          console.log(`🤖 ${currentPlayer.name} already played in this trick, skipping`);
           return; // Already played, don't play again
         }
         
         const playableCards = currentPlayer.hand.filter(card =>
           isValidPlay(card, currentPlayer.hand, currentTrick, trumpSuit)
         );
-        
-        console.log(`🤖 ${currentPlayer.name} has ${currentPlayer.hand.length} cards, ${playableCards.length} playable`);
         
         if (playableCards.length > 0) {
           const cardToPlay = chooseAICardToPlay(
@@ -127,13 +121,8 @@ export function useAIPlayer() {
             playableCards,
             difficulty
           );
-          console.log(`🤖 ${currentPlayer.name} playing ${cardToPlay.rank}${cardToPlay.suit}`);
           playCard(currentPlayer.id, cardToPlay);
-        } else {
-          console.error(`🤖 ${currentPlayer.name} has no playable cards!`);
         }
-      } else if (gamePhase === 'hand_play') {
-        console.log(`🤖 ${currentPlayer.name} not in playingPlayers (sitting out)`);
       }
     }, baseDelay + Math.random() * randomDelay);
 
