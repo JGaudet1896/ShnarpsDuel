@@ -1299,7 +1299,7 @@ export const useShnarps = create<ShnarpsState>()(
                         gamePhase: 'hand_play',
                         currentTrick: [],
                         currentPlayerIndex: winnerIndex,
-                        completedTricks: newCompletedTricks,
+                        completedTricks: currentState.completedTricks,
                         lastTrickWinner: null,
                         playingPlayers: Array.from(currentState.playingPlayers)
                       }
