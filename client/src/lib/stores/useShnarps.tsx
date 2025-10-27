@@ -634,7 +634,21 @@ export const useShnarps = create<ShnarpsState>()(
           }, 2000);
         } else {
           // More tricks to play - winner leads next trick
-          const winnerIndex = state.players.findIndex(p => p.id === trickWinnerId);
+          let winnerIndex = state.players.findIndex(p => p.id === trickWinnerId);
+          
+          // CRITICAL: Ensure winner is in playingPlayers, otherwise find next playing player
+          if (!state.playingPlayers.has(state.players[winnerIndex].id)) {
+            console.warn('Trick winner is sitting out, finding next playing player');
+            // Find first playing player starting from winner position
+            let searchIndex = winnerIndex;
+            for (let i = 0; i < state.players.length; i++) {
+              searchIndex = (winnerIndex + i) % state.players.length;
+              if (state.playingPlayers.has(state.players[searchIndex].id)) {
+                winnerIndex = searchIndex;
+                break;
+              }
+            }
+          }
           
           set({
             players: updatedPlayers,
