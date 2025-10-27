@@ -1444,6 +1444,14 @@ export const useShnarps = create<ShnarpsState>()(
           if (payload.bids) updates.bids = new Map(Object.entries(payload.bids));
           if (payload.highestBidder !== undefined) updates.highestBidder = payload.highestBidder;
           set(updates);
+          
+          // CRITICAL: When a new trick starts (currentTrick is empty), force a state update
+          // This ensures AI hooks re-evaluate and don't stay locked from previous attempts
+          if (payload.currentTrick && payload.currentTrick.length === 0 && payload.gamePhase === 'hand_play') {
+            // Force re-render by updating a timestamp or similar to break AI lock
+            console.log('🔄 New trick started via sync, clearing AI locks');
+            set({ lastTrickWinner: null });
+          }
           break;
         }
       }

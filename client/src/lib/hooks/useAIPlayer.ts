@@ -18,6 +18,7 @@ export function useAIPlayer() {
     trumpSuit,
     currentTrick,
     playingPlayers,
+    completedTricks,
     scores,
     isSimulating,
     multiplayerMode,
@@ -26,6 +27,7 @@ export function useAIPlayer() {
 
   // Track if we've already started an action for this turn to prevent duplicates
   const actionPendingRef = useRef<string | null>(null);
+  const lastTrickCountRef = useRef<number>(0);
 
   useEffect(() => {
     const currentPlayer = players[currentPlayerIndex];
@@ -41,13 +43,21 @@ export function useAIPlayer() {
       return;
     }
     
-    // CRITICAL: For hand_play phase, use player+phase as the lock key
-    // This prevents multiple plays in the same trick regardless of trick state changes
+    // CRITICAL: Detect when a new trick has started (completed tricks increased AND current trick is empty)
+    // This means the previous trick finished and we're starting fresh
+    if (gamePhase === 'hand_play' && currentTrick.length === 0 && completedTricks.length > lastTrickCountRef.current) {
+      console.log(`🔄 New trick detected (${completedTricks.length} completed), clearing AI lock for ${currentPlayer.name}`);
+      actionPendingRef.current = null;
+      lastTrickCountRef.current = completedTricks.length;
+    }
+    
+    // CRITICAL: For hand_play phase, use player+trick as the lock key
+    // Include trick count so lock resets for each new trick
     const stateKey = gamePhase === 'hand_play' 
-      ? `${gamePhase}-${currentPlayer.id}`
+      ? `${gamePhase}-${currentPlayer.id}-trick${completedTricks.length}`
       : `${gamePhase}-${currentPlayerIndex}-${currentPlayer.id}`;
     
-    // If we're already processing an action for this player in this phase, skip
+    // If we're already processing an action for this player in this trick, skip
     if (actionPendingRef.current === stateKey) {
       console.log(`AI ${currentPlayer.name} action already pending for this state, skipping`);
       return;
@@ -58,8 +68,6 @@ export function useAIPlayer() {
       const hasPlayedInTrick = currentTrick.some(play => play.playerId === currentPlayer.id);
       if (hasPlayedInTrick) {
         console.log(`AI ${currentPlayer.name} already played in this trick, skipping`);
-        // Clear the lock so they can play in the NEXT trick
-        actionPendingRef.current = null;
         return;
       }
     }
