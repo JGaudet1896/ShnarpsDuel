@@ -18,6 +18,7 @@ Preferred communication style: Simple, everyday language.
 - **AI Multi-Play Prevention:** Fixed AI players attempting to play multiple cards per trick by:
   - Added check to skip if player already played in current trick
   - Implemented useRef-based deduplication to prevent race conditions where AI hook fires multiple times before state updates
+  - Set pending action flag IMMEDIATELY before async operations to prevent multiple useEffect calls from scheduling duplicate actions
 - **Sitting Player Selected Fix:** Fixed game freeze when sitting players were selected as current player after sit/pass phase. Now correctly finds first playing player after dealer when transitioning to hand_play
 - **Stale State Bug Fix:** Fixed critical freeze issues where setTimeout callbacks were using stale/captured state instead of current state:
   - Fixed player selection after tricks using old player data, causing sitting players to be selected as current player

@@ -61,6 +61,10 @@ export function useAIPlayer() {
       return;
     }
 
+    // CRITICAL: Mark this state as being processed IMMEDIATELY before any async operations
+    // This prevents race conditions where multiple useEffect calls can schedule actions
+    actionPendingRef.current = stateKey;
+
     const difficulty = currentPlayer.aiDifficulty || 'medium';
 
     // Check if any human players are in the game
@@ -74,9 +78,6 @@ export function useAIPlayer() {
     // Speed control: instant when simulating (10ms), fast when only bots (100-200ms), normal with humans (300-500ms)
     const baseDelay = isSimulating ? 10 : (hasHumanPlaying ? 300 : 100);
     const randomDelay = isSimulating ? 0 : (hasHumanPlaying ? 200 : 100);
-
-    // Mark this state as being processed
-    actionPendingRef.current = stateKey;
     
     // Add delay to make AI decisions feel more natural
     const aiDelay = setTimeout(() => {
