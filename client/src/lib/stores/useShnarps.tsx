@@ -1255,8 +1255,23 @@ export const useShnarps = create<ShnarpsState>()(
                   get().nextTrick();
                 } else {
                   // Move to next trick - winner leads
-                  const winnerIndex = state.players.findIndex(p => p.id === trickWinnerId);
-                  console.log(`Starting next trick, winner index: ${winnerIndex}`);
+                  let winnerIndex = state.players.findIndex(p => p.id === trickWinnerId);
+                  
+                  // CRITICAL: Ensure winner is actually in playingPlayers
+                  // This can fail if player indices don't match playing status
+                  if (!state.playingPlayers.has(state.players[winnerIndex]?.id)) {
+                    console.error(`⚠️ Winner index ${winnerIndex} not in playingPlayers! Finding first playing player...`);
+                    // Find first playing player as fallback
+                    for (let i = 0; i < state.players.length; i++) {
+                      if (state.playingPlayers.has(state.players[i].id)) {
+                        winnerIndex = i;
+                        break;
+                      }
+                    }
+                    console.log(`Using index ${winnerIndex} instead`);
+                  }
+                  
+                  console.log(`Starting next trick, winner index: ${winnerIndex}, winner: ${state.players[winnerIndex]?.name}`);
                   
                   // Broadcast the cleared trick state
                   if (currentState.websocket) {
