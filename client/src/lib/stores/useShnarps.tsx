@@ -1330,23 +1330,70 @@ export const useShnarps = create<ShnarpsState>()(
             });
           }
           
-          // Move to next round
+          // Move to next round - CRITICAL: Deal new cards!
           const nextDealerIndex = (state.dealerIndex + 1) % state.players.length;
           
-          set({
-            scores: newScores,
-            gamePhase: 'bidding',
-            round: state.round + 1,
-            dealerIndex: nextDealerIndex,
-            currentPlayerIndex: (nextDealerIndex + 1) % state.players.length,
-            bids: new Map(),
-            trumpSuit: null,
-            highestBidder: null,
-            playingPlayers: new Set(),
-            mustyPlayers: new Set(),
-            currentTrick: [],
-            completedTricks: []
-          });
+          // Only deal new cards if we're the host (in multiplayer) or in local mode
+          if (state.multiplayerMode === 'local' || state.isMultiplayerHost) {
+            const shuffledDeck = shuffleDeck(createDeck());
+            const dealtCards = dealCards(shuffledDeck, state.players.length);
+            
+            const updatedPlayers = state.players.map((player, index) => ({
+              ...player,
+              hand: dealtCards[index] || [],
+              consecutiveSits: 0
+            }));
+            
+            set({
+              scores: newScores,
+              gamePhase: 'bidding',
+              round: state.round + 1,
+              dealerIndex: nextDealerIndex,
+              currentPlayerIndex: (nextDealerIndex + 1) % state.players.length,
+              players: updatedPlayers,
+              deck: shuffledDeck.slice(state.players.length * 5),
+              bids: new Map(),
+              trumpSuit: null,
+              highestBidder: null,
+              playingPlayers: new Set(),
+              mustyPlayers: new Set(),
+              currentTrick: [],
+              completedTricks: []
+            });
+            
+            // In multiplayer, host broadcasts new round state to all clients
+            if (state.multiplayerMode === 'online' && state.isMultiplayerHost && state.websocket) {
+              const newState = get();
+              state.websocket.send(JSON.stringify({
+                type: 'GAME_ACTION',
+                action: 'sync_state',
+                payload: {
+                  gamePhase: newState.gamePhase,
+                  players: newState.players,
+                  scores: Object.fromEntries(newState.scores),
+                  round: newState.round,
+                  dealerIndex: newState.dealerIndex,
+                  currentPlayerIndex: newState.currentPlayerIndex
+                }
+              }));
+            }
+          } else {
+            // Non-host client: just update local state, cards will come from server
+            set({
+              scores: newScores,
+              gamePhase: 'bidding',
+              round: state.round + 1,
+              dealerIndex: nextDealerIndex,
+              currentPlayerIndex: (nextDealerIndex + 1) % state.players.length,
+              bids: new Map(),
+              trumpSuit: null,
+              highestBidder: null,
+              playingPlayers: new Set(),
+              mustyPlayers: new Set(),
+              currentTrick: [],
+              completedTricks: []
+            });
+          }
           break;
         }
         

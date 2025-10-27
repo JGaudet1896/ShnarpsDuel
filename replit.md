@@ -11,6 +11,7 @@ Preferred communication style: Simple, everyday language.
 ## Recent Updates
 
 ### Critical Multiplayer Fixes (October 27, 2024)
+- **Everyone Sat Loop Fix:** Fixed infinite loop when everyone sits - penalty action now properly deals new cards for next round instead of reusing same hand, preventing repeated sit cycles and score drain
 - **Phase Synchronization Fix:** Fixed critical multiplayer desync where game phases advanced incorrectly, causing players to see trump selection before bidding completed, wrong number of cards, and other players' cards before they played. Rewrote `applyGameAction` to apply state changes directly instead of calling action functions, preventing double-execution
 - **Duplicate Plays in Trick Fix:** Fixed critical bug where same player could play multiple cards in one trick. Added checks to ignore playcard actions when not in hand_play phase and when player already played in current trick (both in applyGameAction and useAIPlayer hook)
 - **AI Multi-Play Prevention:** Fixed AI players attempting to play multiple cards per trick by adding check in useAIPlayer to skip if player already played in current trick (hook was re-triggering on currentTrick changes)
