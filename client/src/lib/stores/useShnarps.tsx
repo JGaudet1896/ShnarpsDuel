@@ -1165,7 +1165,14 @@ export const useShnarps = create<ShnarpsState>()(
                 gamePhase: 'everyone_sat'
               });
             } else {
-              const firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+              // Find first player to lead who is actually playing
+              let firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+              while (!newPlayingPlayers.has(state.players[firstPlayerIndex].id)) {
+                firstPlayerIndex = (firstPlayerIndex + 1) % state.players.length;
+              }
+              
+              console.log(`First player to lead: index ${firstPlayerIndex}, player ${state.players[firstPlayerIndex].name}`);
+              
               set({
                 playingPlayers: newPlayingPlayers,
                 mustyPlayers: newMustyPlayers,
