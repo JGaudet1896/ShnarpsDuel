@@ -1248,7 +1248,8 @@ export const useShnarps = create<ShnarpsState>()(
                         currentTrick: [],
                         currentPlayerIndex: winnerIndex,
                         completedTricks: newCompletedTricks,
-                        lastTrickWinner: null
+                        lastTrickWinner: null,
+                        playingPlayers: Array.from(state.playingPlayers)
                       }
                     }));
                   }
