@@ -1270,23 +1270,24 @@ export const useShnarps = create<ShnarpsState>()(
                   get().nextTrick();
                 } else {
                   // Move to next trick - winner leads
-                  let winnerIndex = state.players.findIndex(p => p.id === trickWinnerId);
+                  // CRITICAL: Use currentState, not the old captured state
+                  let winnerIndex = currentState.players.findIndex(p => p.id === trickWinnerId);
                   
                   // CRITICAL: Ensure winner is actually in playingPlayers
                   // This can fail if player indices don't match playing status
-                  if (!state.playingPlayers.has(state.players[winnerIndex]?.id)) {
-                    console.error(`⚠️ Winner index ${winnerIndex} not in playingPlayers! Finding first playing player...`);
+                  if (!currentState.playingPlayers.has(currentState.players[winnerIndex]?.id)) {
+                    console.error(`⚠️ Winner index ${winnerIndex} (${currentState.players[winnerIndex]?.name}) not in playingPlayers! Finding first playing player...`);
                     // Find first playing player as fallback
-                    for (let i = 0; i < state.players.length; i++) {
-                      if (state.playingPlayers.has(state.players[i].id)) {
+                    for (let i = 0; i < currentState.players.length; i++) {
+                      if (currentState.playingPlayers.has(currentState.players[i].id)) {
                         winnerIndex = i;
                         break;
                       }
                     }
-                    console.log(`Using index ${winnerIndex} instead`);
+                    console.log(`Using index ${winnerIndex} (${currentState.players[winnerIndex]?.name}) instead`);
                   }
                   
-                  console.log(`Starting next trick, winner index: ${winnerIndex}, winner: ${state.players[winnerIndex]?.name}`);
+                  console.log(`Starting next trick, winner index: ${winnerIndex}, winner: ${currentState.players[winnerIndex]?.name}`);
                   
                   // Broadcast the cleared trick state
                   if (currentState.websocket) {
@@ -1299,7 +1300,7 @@ export const useShnarps = create<ShnarpsState>()(
                         currentPlayerIndex: winnerIndex,
                         completedTricks: newCompletedTricks,
                         lastTrickWinner: null,
-                        playingPlayers: Array.from(state.playingPlayers)
+                        playingPlayers: Array.from(currentState.playingPlayers)
                       }
                     }));
                   }
