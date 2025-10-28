@@ -8,21 +8,43 @@ export interface GameRoom {
   gameState: any;
 }
 
+// Import the applyGameAction function from websocket module
+// This will be set by websocket.ts
+let applyGameActionFn: ((room: GameRoom, action: string, payload: any) => void) | null = null;
+
+export function setApplyGameAction(fn: (room: GameRoom, action: string, payload: any) => void) {
+  applyGameActionFn = fn;
+}
+
 // Execute AI turn for the current player if they're an AI
 export function processAITurn(room: GameRoom, broadcast: (message: any) => void): void {
+  // Check if current player is AI - if not, stop the loop
   const playerArray = Array.from(room.players.values());
   const currentPlayer = playerArray[room.gameState.currentPlayerIndex];
   
   if (!currentPlayer || !currentPlayer.isAI) {
-    // Not AI's turn
+    // Not AI's turn, stop processing
     return;
   }
   
   const gamePhase = room.gameState.gamePhase;
   
+  // Only proceed in these phases
+  if (!['bidding', 'trump_selection', 'sit_pass', 'hand_play', 'everyone_sat'].includes(gamePhase)) {
+    return;
+  }
+  
   // Add small delay to make AI feel more natural
   setTimeout(() => {
     try {
+      // Re-check that it's still this player's turn (state may have changed)
+      const updatedPlayerArray = Array.from(room.players.values());
+      const updatedPlayer = updatedPlayerArray[room.gameState.currentPlayerIndex];
+      if (!updatedPlayer || updatedPlayer.id !== currentPlayer.id) {
+        // Player turn changed, don't process
+        return;
+      }
+      
       switch (gamePhase) {
         case 'bidding': {
           const bidValues = Array.from(room.gameState.bids.values()) as number[];
@@ -44,12 +66,20 @@ export function processAITurn(room: GameRoom, broadcast: (message: any) => void)
           
           console.log(`🤖 AI ${currentPlayer.name} bids ${aiBid}`);
           
+          // Apply action to server state
+          if (applyGameActionFn) {
+            applyGameActionFn(room, 'bid', { playerId: currentPlayer.id, bid: aiBid });
+          }
+          
           // Broadcast bid action to all clients
           broadcast({
             type: 'GAME_STATE_UPDATE',
             action: 'bid',
             payload: { playerId: currentPlayer.id, bid: aiBid }
           });
+          
+          // Continue processing next AI turn
+          setTimeout(() => processAITurn(room, broadcast), 500);
           break;
         }
         
@@ -59,11 +89,19 @@ export function processAITurn(room: GameRoom, broadcast: (message: any) => void)
           
           console.log(`🤖 AI ${currentPlayer.name} chooses ${aiTrump} as trump`);
           
+          // Apply action to server state
+          if (applyGameActionFn) {
+            applyGameActionFn(room, 'trump', { suit: aiTrump });
+          }
+          
           broadcast({
             type: 'GAME_STATE_UPDATE',
             action: 'trump',
             payload: { suit: aiTrump }
           });
+          
+          // Continue processing next AI turn
+          setTimeout(() => processAITurn(room, broadcast), 500);
           break;
         }
         
@@ -87,11 +125,26 @@ export function processAITurn(room: GameRoom, broadcast: (message: any) => void)
           
           console.log(`🤖 AI ${currentPlayer.name} decides to ${decision}`);
           
+          // Update consecutiveSits on server
+          if (decision === 'play') {
+            currentPlayer.consecutiveSits = 0;
+          } else {
+            currentPlayer.consecutiveSits += 1;
+          }
+          
+          // Apply action to server state
+          if (applyGameActionFn) {
+            applyGameActionFn(room, 'sitpass', { playerId: currentPlayer.id, decision });
+          }
+          
           broadcast({
             type: 'GAME_STATE_UPDATE',
             action: 'sitpass',
             payload: { playerId: currentPlayer.id, decision }
           });
+          
+          // Continue processing next AI turn
+          setTimeout(() => processAITurn(room, broadcast), 500);
           break;
         }
         
@@ -113,11 +166,19 @@ export function processAITurn(room: GameRoom, broadcast: (message: any) => void)
           
           console.log(`🤖 AI ${currentPlayer.name} plays ${cardToPlay.rank}${cardToPlay.suit}`);
           
+          // Apply action to server state
+          if (applyGameActionFn) {
+            applyGameActionFn(room, 'playcard', { playerId: currentPlayer.id, card: cardToPlay });
+          }
+          
           broadcast({
             type: 'GAME_STATE_UPDATE',
             action: 'playcard',
             payload: { playerId: currentPlayer.id, card: cardToPlay }
           });
+          
+          // Continue processing next AI turn
+          setTimeout(() => processAITurn(room, broadcast), 500);
           break;
         }
         
@@ -129,11 +190,19 @@ export function processAITurn(room: GameRoom, broadcast: (message: any) => void)
           
           console.log(`🤖 AI ${currentPlayer.name} chooses penalty: ${choice}`);
           
+          // Apply action to server state
+          if (applyGameActionFn) {
+            applyGameActionFn(room, 'penalty', { choice });
+          }
+          
           broadcast({
             type: 'GAME_STATE_UPDATE',
             action: 'penalty',
             payload: { choice }
           });
+          
+          // Continue processing next AI turn
+          setTimeout(() => processAITurn(room, broadcast), 500);
           break;
         }
       }

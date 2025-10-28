@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
-import { processAITurn } from './ai/gameLoop';
+import { processAITurn, setApplyGameAction } from './ai/gameLoop';
 
 type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'everyone_sat' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
 type AIDifficulty = 'easy' | 'medium' | 'hard';
@@ -409,7 +409,101 @@ function broadcastGameState(room: GameRoom) {
   });
 }
 
+// Apply game action to server state (used by AI game loop)
+function applyGameAction(room: any, action: string, payload: any) {
+  const playerArray = Array.from(room.players.values());
+  
+  switch (action) {
+    case 'bid': {
+      room.gameState.bids.set(payload.playerId, payload.bid);
+      
+      // Check if bidding is complete
+      if (room.gameState.bids.size === playerArray.length) {
+        const highestBid = Math.max(...Array.from(room.gameState.bids.values()));
+        const highestBidderId = Array.from(room.gameState.bids.entries())
+          .find(([_, bid]) => bid === highestBid)?.[0];
+        
+        room.gameState.highestBidder = highestBidderId || null;
+        room.gameState.gamePhase = 'trump_selection';
+        room.gameState.currentPlayerIndex = playerArray.findIndex(p => p.id === highestBidderId);
+      } else {
+        room.gameState.currentPlayerIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
+      }
+      break;
+    }
+    
+    case 'trump': {
+      room.gameState.trumpSuit = payload.suit;
+      room.gameState.gamePhase = 'sit_pass';
+      room.gameState.currentPlayerIndex = 0;
+      break;
+    }
+    
+    case 'sitpass': {
+      const player = room.players.get(payload.playerId);
+      if (player) {
+        if (payload.decision === 'sit') {
+          room.gameState.playingPlayers.delete(payload.playerId);
+        } else {
+          room.gameState.playingPlayers.add(payload.playerId);
+        }
+      }
+      
+      // Check if all players have decided
+      const nextIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
+      if (nextIndex === 0) {
+        // All players have decided, move to next phase
+        if (room.gameState.playingPlayers.size === 1) {
+          room.gameState.gamePhase = 'everyone_sat';
+          const bidderId = room.gameState.highestBidder;
+          room.gameState.currentPlayerIndex = playerArray.findIndex(p => p.id === bidderId);
+        } else {
+          room.gameState.gamePhase = 'hand_play';
+          const dealerIndex = room.gameState.dealerIndex;
+          let firstPlayerIndex = (dealerIndex + 1) % playerArray.length;
+          while (!room.gameState.playingPlayers.has(playerArray[firstPlayerIndex].id)) {
+            firstPlayerIndex = (firstPlayerIndex + 1) % playerArray.length;
+          }
+          room.gameState.currentPlayerIndex = firstPlayerIndex;
+        }
+      } else {
+        room.gameState.currentPlayerIndex = nextIndex;
+      }
+      break;
+    }
+    
+    case 'playcard': {
+      const player = room.players.get(payload.playerId);
+      if (player) {
+        player.hand = player.hand.filter(c => !(c.suit === payload.card.suit && c.rank === payload.card.rank));
+        room.gameState.currentTrick.push({ playerId: payload.playerId, card: payload.card });
+        
+        const playingPlayerIds = Array.from(room.gameState.playingPlayers);
+        if (room.gameState.currentTrick.length === playingPlayerIds.length) {
+          room.gameState.gamePhase = 'trick_complete';
+        } else {
+          let nextIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
+          while (!room.gameState.playingPlayers.has(playerArray[nextIndex].id)) {
+            nextIndex = (nextIndex + 1) % playerArray.length;
+          }
+          room.gameState.currentPlayerIndex = nextIndex;
+        }
+      }
+      break;
+    }
+    
+    case 'penalty': {
+      // Handle everyone_sat penalty choice
+      // This would normally trigger scoring and new round, but we'll keep it simple for now
+      break;
+    }
+  }
+}
+
 export function setupWebSocket(server: Server) {
+  // Register applyGameAction with the AI game loop
+  setApplyGameAction(applyGameAction);
+  
   const wss = new WebSocketServer({ server, path: '/ws' });
   
   console.log('WebSocket server initialized on /ws');
