@@ -431,12 +431,13 @@ export function setupWebSocket(server: Server) {
               player.ws = ws;
             }
 
-            // For spectators, send game state with playerId but mark as spectator
+            // For spectators, send game state with null playerId but keep host status
             const gameState = serializeGameState(room, playerId);
             ws.send(JSON.stringify({
               type: 'ROOM_CREATED',
               ...gameState,
               localPlayerId: spectatorMode ? null : playerId, // Override to null for spectators
+              isHost: true, // Spectators are always host since they created the room
               isSpectator: spectatorMode
             }));
             break;
