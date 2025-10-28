@@ -480,7 +480,43 @@ function applyGameAction(room: any, action: string, payload: any) {
         
         const playingPlayerIds = Array.from(room.gameState.playingPlayers);
         if (room.gameState.currentTrick.length === playingPlayerIds.length) {
+          // Trick is complete - determine winner and continue
           room.gameState.gamePhase = 'trick_complete';
+          
+          // Determine trick winner
+          const leadCard = room.gameState.currentTrick[0].card;
+          const leadSuit = leadCard.suit;
+          const trumpSuit = room.gameState.trumpSuit;
+          
+          let winningPlay = room.gameState.currentTrick[0];
+          for (const play of room.gameState.currentTrick) {
+            if (play.card.suit === trumpSuit && winningPlay.card.suit !== trumpSuit) {
+              winningPlay = play;
+            } else if (play.card.suit === trumpSuit && winningPlay.card.suit === trumpSuit) {
+              if (play.card.value > winningPlay.card.value) {
+                winningPlay = play;
+              }
+            } else if (play.card.suit === leadSuit && winningPlay.card.suit === leadSuit) {
+              if (play.card.value > winningPlay.card.value) {
+                winningPlay = play;
+              }
+            }
+          }
+          
+          // Move trick to completed tricks
+          room.gameState.completedTricks.push([...room.gameState.currentTrick]);
+          room.gameState.currentTrick = [];
+          
+          // Set next player to winner
+          const winnerIndex = playerArray.findIndex(p => p.id === winningPlay.playerId);
+          room.gameState.currentPlayerIndex = winnerIndex;
+          
+          // Check if hand is complete (all 5 tricks played)
+          if (room.gameState.completedTricks.length >= 5) {
+            room.gameState.gamePhase = 'round_complete';
+          } else {
+            room.gameState.gamePhase = 'hand_play';
+          }
         } else {
           let nextIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
           while (!room.gameState.playingPlayers.has(playerArray[nextIndex].id)) {
