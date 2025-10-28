@@ -27,6 +27,7 @@ interface Player {
 interface GameRoom {
   id: string;
   players: Map<string, Player & { ws?: WebSocket }>;
+  spectatorWs?: WebSocket; // WebSocket for spectator (non-player host)
   gameState: {
     gamePhase: GamePhase;
     currentPlayerIndex: number;
@@ -195,11 +196,17 @@ function broadcastToRoom(roomId: string, message: any, excludePlayerId?: string)
 
   const messageStr = JSON.stringify(message);
   
+  // Send to all players
   room.players.forEach((player, playerId) => {
     if (playerId !== excludePlayerId && player.ws && player.ws.readyState === WebSocket.OPEN) {
       player.ws.send(messageStr);
     }
   });
+  
+  // Also send to spectator if present
+  if (room.spectatorWs && room.spectatorWs.readyState === WebSocket.OPEN) {
+    room.spectatorWs.send(messageStr);
+  }
 }
 
 function serializeGameState(room: GameRoom, playerId: string | null) {
@@ -425,10 +432,12 @@ export function setupWebSocket(server: Server) {
             currentPlayerId = playerId;
             currentRoomId = room.id;
             
-            // Only set ws for player if they joined as a player (not spectator)
+            // Set ws for player if they joined as a player, or store spectator ws
             if (!spectatorMode && message.playerName) {
               const player = room.players.get(playerId)!;
               player.ws = ws;
+            } else if (spectatorMode) {
+              room.spectatorWs = ws;
             }
 
             // For spectators, send game state with null playerId but keep host status
