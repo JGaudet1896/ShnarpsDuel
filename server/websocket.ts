@@ -678,6 +678,14 @@ export function setupWebSocket(server: Server) {
                 }));
               }
             });
+            
+            // Also send to spectator if present (they see all hands)
+            if (room.spectatorWs && room.spectatorWs.readyState === WebSocket.OPEN) {
+              room.spectatorWs.send(JSON.stringify({
+                type: 'GAME_STARTED',
+                ...serializeGameState(room, null) // null = spectator, sees all hands
+              }));
+            }
 
             // Check if first player is AI and process their turn
             setTimeout(() => {
