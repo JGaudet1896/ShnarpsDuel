@@ -38,8 +38,10 @@ export function useAIPlayer() {
       return;
     }
 
-    // In online multiplayer, only the host should control AI players
-    if (multiplayerMode === 'online' && !isMultiplayerHost) {
+    // IMPORTANT: In online multiplayer, ALL AI is handled by the server
+    // Client-side AI is only for local (same-device) mode
+    if (multiplayerMode === 'online') {
+      console.log('🌐 Online multiplayer: AI handled by server, skipping client-side AI');
       return;
     }
     
