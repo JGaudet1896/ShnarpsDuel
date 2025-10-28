@@ -1,5 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
+import { processAITurn } from './ai/gameLoop';
 
 type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'everyone_sat' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
 type AIDifficulty = 'easy' | 'medium' | 'hard';
@@ -571,8 +572,12 @@ export function setupWebSocket(server: Server) {
               payload
             });
 
-            // Start timer for next player's turn
-            setTimeout(() => startTurnTimer(room), 500);
+            // Check if next player is AI and process their turn automatically
+            setTimeout(() => {
+              processAITurn(room, (message) => broadcastToRoom(room.id, message));
+              // Start timer as fallback for human players
+              setTimeout(() => startTurnTimer(room), 500);
+            }, 500);
 
             break;
           }
@@ -647,8 +652,12 @@ export function setupWebSocket(server: Server) {
               }
             });
 
-            // Start turn timer for first player
-            setTimeout(() => startTurnTimer(room), 1000);
+            // Check if first player is AI and process their turn
+            setTimeout(() => {
+              processAITurn(room, (message) => broadcastToRoom(room.id, message));
+              // Start timer as fallback for human players
+              setTimeout(() => startTurnTimer(room), 500);
+            }, 1000);
 
             break;
           }
