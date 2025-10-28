@@ -202,13 +202,13 @@ function broadcastToRoom(roomId: string, message: any, excludePlayerId?: string)
   });
 }
 
-function serializeGameState(room: GameRoom, playerId: string) {
+function serializeGameState(room: GameRoom, playerId: string | null) {
   return {
     roomId: room.id,
     players: Array.from(room.players.values()).map(p => ({
       id: p.id,
       name: p.name,
-      hand: (p.id === playerId || p.isAI) ? p.hand : [], // Send hand to owner OR if it's an AI player
+      hand: (playerId && p.id === playerId) || p.isAI || !playerId ? p.hand : [], // Show all hands for spectators (null playerId) and AI
       isActive: p.isActive,
       consecutiveSits: p.consecutiveSits,
       isAI: p.isAI,
@@ -225,7 +225,7 @@ function serializeGameState(room: GameRoom, playerId: string) {
       scores: Object.fromEntries(room.gameState.scores)
     },
     localPlayerId: playerId,
-    isHost: room.host === playerId,
+    isHost: playerId ? room.host === playerId : false,
     turnTimeRemaining: room.turnStartTime ? Math.max(0, room.turnTimeLimit - Math.floor((Date.now() - room.turnStartTime) / 1000)) : null
   };
 }
@@ -431,9 +431,13 @@ export function setupWebSocket(server: Server) {
               player.ws = ws;
             }
 
+            // For spectators, send game state with playerId but mark as spectator
+            const gameState = serializeGameState(room, playerId);
             ws.send(JSON.stringify({
               type: 'ROOM_CREATED',
-              ...serializeGameState(room, spectatorMode ? null : playerId)
+              ...gameState,
+              localPlayerId: spectatorMode ? null : playerId, // Override to null for spectators
+              isSpectator: spectatorMode
             }));
             break;
           }
