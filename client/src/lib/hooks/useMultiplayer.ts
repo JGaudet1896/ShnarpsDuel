@@ -74,11 +74,11 @@ export function useMultiplayer() {
     setWebSocket(ws);
   };
 
-  const connectToRoom = (playerName: string, existingRoomCode?: string) => {
+  const connectToRoom = (playerName: string, existingRoomCode?: string, spectatorMode: boolean = false) => {
     reconnectAttempts.current = 0; // Reset reconnect counter for fresh connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    console.log('Connecting to WebSocket:', wsUrl);
+    console.log('Connecting to WebSocket:', wsUrl, 'spectatorMode:', spectatorMode);
     
     const ws = new WebSocket(wsUrl);
 
@@ -94,10 +94,11 @@ export function useMultiplayer() {
           playerName
         }));
       } else {
-        console.log('Creating new room');
+        console.log('Creating new room, spectatorMode:', spectatorMode);
         ws.send(JSON.stringify({
           type: 'CREATE_ROOM',
-          playerName
+          playerName: spectatorMode ? '' : playerName, // Empty name for spectator
+          spectatorMode
         }));
         // Mode will be set to 'online' when we receive ROOM_CREATED message
       }

@@ -139,23 +139,31 @@ function dealCards(deck: Card[], numPlayers: number): Card[][] {
   return hands;
 }
 
-function createRoom(hostId: string, hostName: string): GameRoom {
+function createRoom(hostId: string, hostName: string, spectatorMode: boolean = false): GameRoom {
   const roomId = generateRoomCode();
   
-  const hostPlayer: Player & { ws?: WebSocket } = {
-    id: hostId,
-    name: hostName,
-    hand: [],
-    isActive: true,
-    consecutiveSits: 0,
-    isAI: false,
-    wallet: 100,
-    isConnected: true
-  };
+  // If spectator mode, don't add host as a player
+  const players = new Map<string, Player & { ws?: WebSocket }>();
+  const scores = new Map<string, number>();
+  
+  if (!spectatorMode && hostName) {
+    const hostPlayer: Player & { ws?: WebSocket } = {
+      id: hostId,
+      name: hostName,
+      hand: [],
+      isActive: true,
+      consecutiveSits: 0,
+      isAI: false,
+      wallet: 100,
+      isConnected: true
+    };
+    players.set(hostId, hostPlayer);
+    scores.set(hostId, 16);
+  }
 
   const room: GameRoom = {
     id: roomId,
-    players: new Map([[hostId, hostPlayer]]),
+    players,
     gameState: {
       gamePhase: 'setup',
       currentPlayerIndex: 0,
@@ -168,7 +176,7 @@ function createRoom(hostId: string, hostName: string): GameRoom {
       highestBidder: null,
       playingPlayers: new Set(),
       mustyPlayers: new Set(),
-      scores: new Map([[hostId, 16]]),
+      scores,
       round: 1
     },
     host: hostId,
@@ -177,6 +185,7 @@ function createRoom(hostId: string, hostName: string): GameRoom {
   };
 
   rooms.set(roomId, room);
+  console.log(`🎮 Room ${roomId} created (spectatorMode: ${spectatorMode}, players: ${players.size})`);
   return room;
 }
 
@@ -410,17 +419,21 @@ export function setupWebSocket(server: Server) {
         switch (message.type) {
           case 'CREATE_ROOM': {
             const playerId = `player_${Date.now()}_${Math.random()}`;
-            const room = createRoom(playerId, message.playerName);
+            const spectatorMode = message.spectatorMode || false;
+            const room = createRoom(playerId, message.playerName, spectatorMode);
             
             currentPlayerId = playerId;
             currentRoomId = room.id;
             
-            const player = room.players.get(playerId)!;
-            player.ws = ws;
+            // Only set ws for player if they joined as a player (not spectator)
+            if (!spectatorMode && message.playerName) {
+              const player = room.players.get(playerId)!;
+              player.ws = ws;
+            }
 
             ws.send(JSON.stringify({
               type: 'ROOM_CREATED',
-              ...serializeGameState(room, playerId)
+              ...serializeGameState(room, spectatorMode ? null : playerId)
             }));
             break;
           }

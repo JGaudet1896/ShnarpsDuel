@@ -12,7 +12,7 @@ interface MultiplayerSetupProps {
 export default function MultiplayerSetup({ onBack, onConnected }: MultiplayerSetupProps) {
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
-  const [mode, setMode] = useState<'menu' | 'create' | 'join'>('menu');
+  const [mode, setMode] = useState<'menu' | 'create' | 'join' | 'spectate'>('menu');
   const { connectToRoom, isConnected, mode: multiplayerMode } = useMultiplayer();
 
   // When successfully connected to online mode, notify parent to close this dialog
@@ -27,17 +27,22 @@ export default function MultiplayerSetup({ onBack, onConnected }: MultiplayerSet
     console.log('Create room button clicked, playerName:', playerName);
     if (playerName.trim()) {
       console.log('Calling connectToRoom...');
-      connectToRoom(playerName.trim());
+      connectToRoom(playerName.trim(), undefined, false);
     } else {
       console.log('Player name is empty');
     }
+  };
+
+  const handleCreateSpectatorRoom = () => {
+    console.log('Creating spectator room (AI-only game)');
+    connectToRoom('', undefined, true); // Empty name, spectator mode
   };
 
   const handleJoinRoom = () => {
     console.log('Join room button clicked, playerName:', playerName, 'roomCode:', roomCode);
     if (playerName.trim() && roomCode.trim()) {
       console.log('Calling connectToRoom...');
-      connectToRoom(playerName.trim(), roomCode.trim().toUpperCase());
+      connectToRoom(playerName.trim(), roomCode.trim().toUpperCase(), false);
     } else {
       console.log('Player name or room code is empty');
     }
@@ -59,6 +64,9 @@ export default function MultiplayerSetup({ onBack, onConnected }: MultiplayerSet
             </Button>
             <Button onClick={() => setMode('join')} className="w-full" variant="outline" size="lg">
               Join Existing Room
+            </Button>
+            <Button onClick={handleCreateSpectatorRoom} className="w-full" variant="secondary" size="lg">
+              🤖 Spectate AI Game
             </Button>
             <Button onClick={onBack} className="w-full" variant="ghost">
               Back to Menu
