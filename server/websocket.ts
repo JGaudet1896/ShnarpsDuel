@@ -314,15 +314,41 @@ function autoPlayTurn(room: GameRoom, player: Player) {
       const trumpSuit = Object.entries(suitCounts).sort((a, b) => b[1] - a[1])[0][0];
       
       room.gameState.trumpSuit = trumpSuit;
-      room.gameState.gamePhase = 'sit_pass';
-      room.gameState.currentPlayerIndex = 0;
+      
+      // Check if sit/pass should be skipped (bid is 1 or trump is spades)
+      const playerArray = Array.from(room.players.values());
+      const highestBid = Math.max(...Array.from(room.gameState.bids.values()));
+      const shouldSkipSitPass = highestBid === 1 || trumpSuit === 'spades';
+      
+      if (shouldSkipSitPass) {
+        // Everyone plays - skip sit/pass phase
+        room.gameState.playingPlayers.clear();
+        playerArray.forEach(p => {
+          if (p.isActive) {
+            room.gameState.playingPlayers.add(p.id);
+          }
+        });
+        
+        room.gameState.gamePhase = 'hand_play';
+        const dealerIndex = room.gameState.dealerIndex;
+        let firstPlayerIndex = (dealerIndex + 1) % playerArray.length;
+        while (!room.gameState.playingPlayers.has(playerArray[firstPlayerIndex].id)) {
+          firstPlayerIndex = (firstPlayerIndex + 1) % playerArray.length;
+        }
+        room.gameState.currentPlayerIndex = firstPlayerIndex;
+      } else {
+        room.gameState.gamePhase = 'sit_pass';
+        room.gameState.currentPlayerIndex = 0;
+      }
       
       broadcastGameState(room);
       startTurnTimer(room);
     }
     else if (phase === 'sit_pass') {
-      // Auto-sit if possible, otherwise play
-      const canSit = player.consecutiveSits < 2;
+      // Check if player can sit based on game rules
+      const highestBid = Math.max(...Array.from(room.gameState.bids.values()));
+      const trumpSuit = room.gameState.trumpSuit;
+      const canSit = player.consecutiveSits < 2 && highestBid !== 1 && trumpSuit !== 'spades';
       const decision = canSit ? 'sit' : 'play';
       
       if (decision === 'sit') {
@@ -434,8 +460,32 @@ function applyGameAction(room: any, action: string, payload: any) {
     
     case 'trump': {
       room.gameState.trumpSuit = payload.suit;
-      room.gameState.gamePhase = 'sit_pass';
-      room.gameState.currentPlayerIndex = 0;
+      
+      // Check if sit/pass should be skipped (bid is 1 or trump is spades)
+      const highestBid = Math.max(...Array.from(room.gameState.bids.values()));
+      const shouldSkipSitPass = highestBid === 1 || payload.suit === 'spades';
+      
+      if (shouldSkipSitPass) {
+        // Everyone plays - skip sit/pass phase
+        room.gameState.playingPlayers.clear();
+        playerArray.forEach(p => {
+          if (p.isActive) {
+            room.gameState.playingPlayers.add(p.id);
+          }
+        });
+        
+        room.gameState.gamePhase = 'hand_play';
+        const dealerIndex = room.gameState.dealerIndex;
+        let firstPlayerIndex = (dealerIndex + 1) % playerArray.length;
+        while (!room.gameState.playingPlayers.has(playerArray[firstPlayerIndex].id)) {
+          firstPlayerIndex = (firstPlayerIndex + 1) % playerArray.length;
+        }
+        room.gameState.currentPlayerIndex = firstPlayerIndex;
+      } else {
+        // Go to sit/pass phase
+        room.gameState.gamePhase = 'sit_pass';
+        room.gameState.currentPlayerIndex = 0;
+      }
       break;
     }
     
