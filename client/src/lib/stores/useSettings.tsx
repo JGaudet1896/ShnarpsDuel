@@ -5,22 +5,19 @@ export interface GameSettings {
   // Money & Stakes
   moneyPerPoint: number;
   moneyPerPunt: number;
-  
+
   // Game Rules
   startingScore: number;
   winningScore: number;
   eliminationScore: number;
-  
+
   // Multiplayer
   turnTimeLimit: number; // in seconds, 0 = no limit
   autoPlayDisconnected: boolean;
-  
+
   // Audio
   soundEnabled: boolean;
   musicEnabled: boolean;
-  
-  // AI
-  defaultAIDifficulty: 'easy' | 'medium' | 'hard';
 }
 
 interface SettingsState extends GameSettings {
@@ -37,18 +34,17 @@ const defaultSettings: GameSettings = {
   turnTimeLimit: 30, // 30 seconds per turn
   autoPlayDisconnected: true,
   soundEnabled: true,
-  musicEnabled: true,
-  defaultAIDifficulty: 'hard'
+  musicEnabled: true
 };
 
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       ...defaultSettings,
-      
+
       resetToDefaults: () => set(defaultSettings),
-      
-      updateSettings: (newSettings: Partial<GameSettings>) => 
+
+      updateSettings: (newSettings: Partial<GameSettings>) =>
         set((state) => ({ ...state, ...newSettings }))
     }),
     {

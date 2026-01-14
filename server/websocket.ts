@@ -1,9 +1,8 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
-import { processAITurn, setApplyGameAction } from './ai/gameLoop';
+import { processAITurn, setApplyGameAction, setBroadcastGameState } from './ai/gameLoop';
 
 type GamePhase = 'setup' | 'bidding' | 'trump_selection' | 'sit_pass' | 'everyone_sat' | 'hand_play' | 'trick_complete' | 'round_complete' | 'game_over';
-type AIDifficulty = 'easy' | 'medium' | 'hard';
 
 interface Card {
   suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
@@ -18,7 +17,6 @@ interface Player {
   isActive: boolean;
   consecutiveSits: number;
   isAI: boolean;
-  aiDifficulty?: AIDifficulty;
   avatar?: { color: string; icon: string };
   wallet?: number;
   isConnected?: boolean; // Track if human player is connected
@@ -219,7 +217,6 @@ function serializeGameState(room: GameRoom, playerId: string | null) {
       isActive: p.isActive,
       consecutiveSits: p.consecutiveSits,
       isAI: p.isAI,
-      aiDifficulty: p.aiDifficulty,
       avatar: p.avatar,
       wallet: p.wallet || 100,
       isConnected: p.isConnected ?? true
@@ -328,19 +325,27 @@ function autoPlayTurn(room: GameRoom, player: Player) {
             room.gameState.playingPlayers.add(p.id);
           }
         });
-        
+
         room.gameState.gamePhase = 'hand_play';
         const dealerIndex = room.gameState.dealerIndex;
         let firstPlayerIndex = (dealerIndex + 1) % playerArray.length;
+        let loopGuard1 = 0;
         while (!room.gameState.playingPlayers.has(playerArray[firstPlayerIndex].id)) {
+          loopGuard1++;
+          if (loopGuard1 > playerArray.length) {
+            console.error('❌ Infinite loop finding first player in autoPlayTurn trump_selection');
+            break;
+          }
           firstPlayerIndex = (firstPlayerIndex + 1) % playerArray.length;
         }
         room.gameState.currentPlayerIndex = firstPlayerIndex;
       } else {
         room.gameState.gamePhase = 'sit_pass';
-        room.gameState.currentPlayerIndex = 0;
+        // Start with player after the highest bidder
+        const highestBidderIndex = playerArray.findIndex(p => p.id === room.gameState.highestBidder);
+        room.gameState.currentPlayerIndex = (highestBidderIndex + 1) % playerArray.length;
       }
-      
+
       broadcastGameState(room);
       startTurnTimer(room);
     }
@@ -353,14 +358,19 @@ function autoPlayTurn(room: GameRoom, player: Player) {
       
       if (decision === 'sit') {
         player.consecutiveSits++;
+        // Sitting penalty: if score < 5, add +1
+        const playerScore = room.gameState.scores.get(player.id) || 16;
+        if (playerScore < 5) {
+          room.gameState.scores.set(player.id, playerScore + 1);
+        }
       } else {
         player.consecutiveSits = 0;
         room.gameState.playingPlayers.add(player.id);
       }
-      
+
       const playerArray = Array.from(room.players.values());
       const nextIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
-      
+
       // Check if sit/pass is complete
       const allDecided = playerArray.every(p => 
         room.gameState.playingPlayers.has(p.id) || p.consecutiveSits > 0
@@ -407,12 +417,18 @@ function autoPlayTurn(room: GameRoom, player: Player) {
         } else {
           const playerArray = Array.from(room.players.values());
           let nextIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
+          let loopGuard2 = 0;
           while (!room.gameState.playingPlayers.has(playerArray[nextIndex].id)) {
+            loopGuard2++;
+            if (loopGuard2 > playerArray.length) {
+              console.error('❌ Infinite loop finding next player in autoPlayTurn hand_play');
+              break;
+            }
             nextIndex = (nextIndex + 1) % playerArray.length;
           }
           room.gameState.currentPlayerIndex = nextIndex;
         }
-        
+
         broadcastGameState(room);
         if (room.gameState.gamePhase === 'hand_play') {
           startTurnTimer(room);
@@ -473,27 +489,39 @@ function applyGameAction(room: any, action: string, payload: any) {
             room.gameState.playingPlayers.add(p.id);
           }
         });
-        
+
         room.gameState.gamePhase = 'hand_play';
         const dealerIndex = room.gameState.dealerIndex;
         let firstPlayerIndex = (dealerIndex + 1) % playerArray.length;
+        let loopGuard3 = 0;
         while (!room.gameState.playingPlayers.has(playerArray[firstPlayerIndex].id)) {
+          loopGuard3++;
+          if (loopGuard3 > playerArray.length) {
+            console.error('❌ Infinite loop finding first player in applyGameAction trump');
+            break;
+          }
           firstPlayerIndex = (firstPlayerIndex + 1) % playerArray.length;
         }
         room.gameState.currentPlayerIndex = firstPlayerIndex;
       } else {
-        // Go to sit/pass phase
+        // Go to sit/pass phase - start with player after the highest bidder
         room.gameState.gamePhase = 'sit_pass';
-        room.gameState.currentPlayerIndex = 0;
+        const highestBidderIndex = playerArray.findIndex(p => p.id === room.gameState.highestBidder);
+        room.gameState.currentPlayerIndex = (highestBidderIndex + 1) % playerArray.length;
       }
       break;
     }
-    
+
     case 'sitpass': {
       const player = room.players.get(payload.playerId);
       if (player) {
         if (payload.decision === 'sit') {
           room.gameState.playingPlayers.delete(payload.playerId);
+          // Sitting penalty: if score < 5, add +1
+          const playerScore = room.gameState.scores.get(payload.playerId) || 16;
+          if (playerScore < 5) {
+            room.gameState.scores.set(payload.playerId, playerScore + 1);
+          }
         } else {
           room.gameState.playingPlayers.add(payload.playerId);
         }
@@ -511,7 +539,13 @@ function applyGameAction(room: any, action: string, payload: any) {
           room.gameState.gamePhase = 'hand_play';
           const dealerIndex = room.gameState.dealerIndex;
           let firstPlayerIndex = (dealerIndex + 1) % playerArray.length;
+          let loopGuard4 = 0;
           while (!room.gameState.playingPlayers.has(playerArray[firstPlayerIndex].id)) {
+            loopGuard4++;
+            if (loopGuard4 > playerArray.length) {
+              console.error('❌ Infinite loop finding first player in applyGameAction sitpass');
+              break;
+            }
             firstPlayerIndex = (firstPlayerIndex + 1) % playerArray.length;
           }
           room.gameState.currentPlayerIndex = firstPlayerIndex;
@@ -521,7 +555,7 @@ function applyGameAction(room: any, action: string, payload: any) {
       }
       break;
     }
-    
+
     case 'playcard': {
       const player = room.players.get(payload.playerId);
       if (player) {
@@ -569,7 +603,13 @@ function applyGameAction(room: any, action: string, payload: any) {
           }
         } else {
           let nextIndex = (room.gameState.currentPlayerIndex + 1) % playerArray.length;
+          let loopGuard5 = 0;
           while (!room.gameState.playingPlayers.has(playerArray[nextIndex].id)) {
+            loopGuard5++;
+            if (loopGuard5 > playerArray.length) {
+              console.error('❌ Infinite loop finding next player in applyGameAction playcard');
+              break;
+            }
             nextIndex = (nextIndex + 1) % playerArray.length;
           }
           room.gameState.currentPlayerIndex = nextIndex;
@@ -577,7 +617,7 @@ function applyGameAction(room: any, action: string, payload: any) {
       }
       break;
     }
-    
+
     case 'penalty': {
       // Handle everyone_sat penalty choice
       // This would normally trigger scoring and new round, but we'll keep it simple for now
@@ -587,9 +627,10 @@ function applyGameAction(room: any, action: string, payload: any) {
 }
 
 export function setupWebSocket(server: Server) {
-  // Register applyGameAction with the AI game loop
+  // Register applyGameAction and broadcastGameState with the AI game loop
   setApplyGameAction(applyGameAction);
-  
+  setBroadcastGameState(broadcastGameState);
+
   const wss = new WebSocketServer({ server, path: '/ws' });
   
   console.log('WebSocket server initialized on /ws');
@@ -734,7 +775,6 @@ export function setupWebSocket(server: Server) {
               isActive: true,
               consecutiveSits: 0,
               isAI: true,
-              aiDifficulty: message.difficulty,
               wallet: 100
             };
 
@@ -743,7 +783,7 @@ export function setupWebSocket(server: Server) {
 
             broadcastToRoom(room.id, {
               type: 'PLAYER_JOINED',
-              player: { id: aiId, name: aiPlayer.name, isAI: true, aiDifficulty: aiPlayer.aiDifficulty }
+              player: { id: aiId, name: aiPlayer.name, isAI: true }
             });
 
             break;
@@ -771,13 +811,19 @@ export function setupWebSocket(server: Server) {
                 }
               }
             }
-            
-            // Broadcast the action to all players
+
+            // Apply action to server state FIRST
+            applyGameAction(room, action, payload);
+
+            // Broadcast the action to all players (for backward compatibility)
             broadcastToRoom(room.id, {
               type: 'GAME_STATE_UPDATE',
               action,
               payload
             });
+
+            // CRITICAL: Broadcast full game state to ensure all clients are in sync
+            broadcastGameState(room);
 
             // Check if next player is AI and process their turn automatically
             setTimeout(() => {

@@ -15,7 +15,6 @@ import { Settings as SettingsDialog } from '../Settings';
 import { TransactionHistory } from '../TransactionHistory';
 import { TurnTimer } from './TurnTimer';
 import { useState, useEffect } from 'react';
-import { AIDifficulty } from '../../lib/game/gameLogic';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
 import { useWallet } from '../../lib/stores/useWallet';
 import { BookOpen, HelpCircle, Settings, X, Wallet, History } from 'lucide-react';
@@ -48,7 +47,6 @@ export default function GameUI() {
   
   const [playerName, setPlayerName] = useState('');
   const [trumpSuit, setTrumpSuit] = useState<string>('');
-  const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('medium');
   const [gameMode, setGameMode] = useState<'menu' | 'local' | 'online'>('menu');
   const [showAvatarCustomizer, setShowAvatarCustomizer] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -204,7 +202,7 @@ export default function GameUI() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">
                               {player.name}
-                              {player.isAI && ` 🤖 (${player.aiDifficulty || 'medium'})`}
+                              {player.isAI && ' 🤖'}
                             </span>
                             {isOnline && !player.isAI && (
                               <span className={`text-xs ${player.isConnected === false ? 'text-red-500' : 'text-green-500'}`}>
@@ -287,48 +285,35 @@ export default function GameUI() {
             {/* Add AI - for local or if host in online */}
             {players.length < 8 && (!isOnline || isHost) && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Add AI Player:</label>
-                <div className="flex gap-2">
-                  <Select value={aiDifficulty} onValueChange={(value) => setAiDifficulty(value as AIDifficulty)}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Difficulty" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-300">
-                      <SelectItem value="easy">Easy</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="hard">Hard</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    onClick={() => {
-                      console.log('🤖 Add AI clicked - isOnline:', isOnline, 'isHost:', isHost);
-                      if (isOnline && isHost) {
-                        // Get random manly name for AI
-                        const aiPlayerNames = [
-                          'Jack', 'Luke', 'Cole', 'Ryan',
-                          'Jake', 'Tyler', 'Chase', 'Dylan',
-                          'Blake', 'Hunter', 'Mason', 'Logan',
-                          'Austin', 'Carter', 'Wyatt', 'Cody',
-                          'Trevor', 'Connor', 'Brett', 'Shane'
-                        ];
-                        const usedNames = players.map(p => p.name);
-                        const availableNames = aiPlayerNames.filter(name => !usedNames.includes(name));
-                        const aiName = availableNames.length > 0 
-                          ? availableNames[Math.floor(Math.random() * availableNames.length)]
-                          : `AI ${players.length + 1}`;
-                        console.log('Adding multiplayer AI:', aiName, aiDifficulty);
-                        addMultiplayerAI(aiName, aiDifficulty);
-                      } else {
-                        console.log('Adding local AI:', aiDifficulty);
-                        addAIPlayer(aiDifficulty);
-                      }
-                    }}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    🤖 Add AI
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => {
+                    console.log('🤖 Add AI clicked - isOnline:', isOnline, 'isHost:', isHost);
+                    if (isOnline && isHost) {
+                      // Get random manly name for AI
+                      const aiPlayerNames = [
+                        'Jack', 'Luke', 'Cole', 'Ryan',
+                        'Jake', 'Tyler', 'Chase', 'Dylan',
+                        'Blake', 'Hunter', 'Mason', 'Logan',
+                        'Austin', 'Carter', 'Wyatt', 'Cody',
+                        'Trevor', 'Connor', 'Brett', 'Shane'
+                      ];
+                      const usedNames = players.map(p => p.name);
+                      const availableNames = aiPlayerNames.filter(name => !usedNames.includes(name));
+                      const aiName = availableNames.length > 0
+                        ? availableNames[Math.floor(Math.random() * availableNames.length)]
+                        : `AI ${players.length + 1}`;
+                      console.log('Adding multiplayer AI:', aiName);
+                      addMultiplayerAI(aiName);
+                    } else {
+                      console.log('Adding local AI');
+                      addAIPlayer();
+                    }
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  🤖 Add AI Player
+                </Button>
               </div>
             )}
             

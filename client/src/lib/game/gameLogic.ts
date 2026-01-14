@@ -1,7 +1,5 @@
 import { Card } from './cardUtils';
 
-export type AIDifficulty = 'easy' | 'medium' | 'hard';
-
 export interface PlayerAvatar {
   color: string;
   icon: string;
@@ -14,7 +12,6 @@ export interface Player {
   isActive: boolean;
   consecutiveSits: number;
   isAI: boolean;
-  aiDifficulty?: AIDifficulty;
   avatar?: PlayerAvatar;
   wallet?: number;
   punts?: number; // Track total punts across game
@@ -61,13 +58,23 @@ export function calculateScore(
   playerId: string,
   bid: number,
   tricksWon: number,
-  currentScore: number
+  currentScore: number,
+  isHighestBidder: boolean = false
 ): number {
   if (bid === 0) {
-    // Punt: +5 if no tricks, -1 per trick if any
+    // Punted (bid 0): +5 if no tricks, -1 per trick if any
     return currentScore + (tricksWon === 0 ? 5 : -tricksWon);
+  } else if (isHighestBidder) {
+    // Highest bidder: must meet their bid or it's a punt
+    if (tricksWon >= bid) {
+      // Made the bid: -1 per trick won
+      return currentScore - tricksWon;
+    } else {
+      // Didn't make the bid: +5 punt
+      return currentScore + 5;
+    }
   } else {
-    // Regular bid: -1 per trick won
+    // Other players who played (not punters, not highest bidder): -1 per trick won
     return currentScore - tricksWon;
   }
 }

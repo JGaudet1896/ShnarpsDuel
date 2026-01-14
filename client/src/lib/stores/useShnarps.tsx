@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { GamePhase, Player, GameState, RoundHistory, AIDifficulty, calculateGameEndPayout } from "../game/gameLogic";
+import { GamePhase, Player, GameState, RoundHistory, calculateGameEndPayout } from "../game/gameLogic";
 import { Card, createDeck, shuffleDeck, dealCards, determineTrickWinner, sortHandBySuit } from "../game/cardUtils";
 import { useSettings } from "./useSettings";
 import { useWallet } from "./useWallet";
@@ -18,7 +18,7 @@ interface ShnarpsState extends GameState {
   setMultiplayerMode: (mode: 'local' | 'online', roomCode?: string | null, isHost?: boolean) => void;
   setWebSocket: (ws: WebSocket | null) => void;
   joinGame: (playerName: string, avatar?: { color: string; icon: string }) => void;
-  addAIPlayer: (difficulty?: AIDifficulty) => void;
+  addAIPlayer: () => void;
   startGame: () => void;
   placeBid: (playerId: string, bid: number) => void;
   chooseTrumpSuit: (suit: string) => void;
@@ -146,13 +146,12 @@ export const useShnarps = create<ShnarpsState>()(
       });
     },
 
-    addAIPlayer: (difficulty?: AIDifficulty) => {
+    addAIPlayer: () => {
       const state = get();
       if (state.players.length >= 8 || state.gamePhase !== 'setup') return;
-      
+
       const settings = useSettings.getState();
-      const aiDifficulty = difficulty || settings.defaultAIDifficulty;
-      
+
       // Random manly names for AI players
       const aiPlayerNames = [
         'Jack', 'Luke', 'Cole', 'Ryan',
@@ -161,14 +160,14 @@ export const useShnarps = create<ShnarpsState>()(
         'Austin', 'Carter', 'Wyatt', 'Cody',
         'Trevor', 'Connor', 'Brett', 'Shane'
       ];
-      
+
       // Pick a random name that hasn't been used
       const usedNames = state.players.map(p => p.name);
       const availableNames = aiPlayerNames.filter(name => !usedNames.includes(name));
-      const aiName = availableNames.length > 0 
+      const aiName = availableNames.length > 0
         ? availableNames[Math.floor(Math.random() * availableNames.length)]
         : `AI ${state.players.length + 1}`;
-      
+
       // Random avatar for AI
       const aiColors = ['#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#EAB308', '#14B8A6'];
       const aiIcons = ['🤖', '🎮', '🎯', '🎲', '🃏', '⭐', '🔥', '💎'];
@@ -176,7 +175,7 @@ export const useShnarps = create<ShnarpsState>()(
         color: aiColors[Math.floor(Math.random() * aiColors.length)],
         icon: aiIcons[Math.floor(Math.random() * aiIcons.length)]
       };
-      
+
       const newPlayer: Player = {
         id: `ai_${Date.now()}_${Math.random()}`,
         name: aiName,
@@ -184,15 +183,14 @@ export const useShnarps = create<ShnarpsState>()(
         isActive: true,
         consecutiveSits: 0,
         isAI: true,
-        aiDifficulty: aiDifficulty,
         avatar: randomAvatar,
         wallet: 100, // Default wallet for AI players
         punts: 0
       };
-      
+
       const newScores = new Map(state.scores);
       newScores.set(newPlayer.id, settings.startingScore);
-      
+
       set({
         players: [...state.players, newPlayer],
         scores: newScores
@@ -341,12 +339,18 @@ export const useShnarps = create<ShnarpsState>()(
         
         // First player to lead is to the left of the dealer
         let firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
-        
-        // Make sure the first player is actually playing
+
+        // Make sure the first player is actually playing (with loop guard)
+        let loopGuard = 0;
         while (!playingPlayers.has(state.players[firstPlayerIndex].id)) {
+          loopGuard++;
+          if (loopGuard > state.players.length) {
+            console.error('❌ Infinite loop finding first player in selectTrump');
+            break;
+          }
           firstPlayerIndex = (firstPlayerIndex + 1) % state.players.length;
         }
-        
+
         set({
           trumpSuit: suit,
           gamePhase: 'hand_play',
@@ -515,9 +519,9 @@ export const useShnarps = create<ShnarpsState>()(
       } else {
         updatedPlayers[playerIndex].consecutiveSits += 1;
         
-        // If player is at 4 or lower and sits, add +1 to their score
+        // Sitting penalty: if score < 5, add +1
         const playerScore = state.scores.get(playerId) || 16;
-        if (playerScore <= 4) {
+        if (playerScore < 5) {
           const newScores = new Map(state.scores);
           newScores.set(playerId, playerScore + 1);
           set({ scores: newScores });
@@ -555,12 +559,18 @@ export const useShnarps = create<ShnarpsState>()(
           // Start hand play phase
           // First player to lead is to the left of the dealer
           let firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
-          
-          // Make sure the first player is actually playing
+
+          // Make sure the first player is actually playing (with loop guard)
+          let loopGuard = 0;
           while (!newPlayingPlayers.has(state.players[firstPlayerIndex].id)) {
+            loopGuard++;
+            if (loopGuard > state.players.length) {
+              console.error('❌ Infinite loop finding first player in sitPass');
+              break;
+            }
             firstPlayerIndex = (firstPlayerIndex + 1) % state.players.length;
           }
-          
+
           set({
             playingPlayers: newPlayingPlayers,
             players: updatedPlayers,
@@ -666,12 +676,18 @@ export const useShnarps = create<ShnarpsState>()(
           }, 1500);
         }
       } else {
-        // Move to next playing player
+        // Move to next playing player (with loop guard)
         let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+        let loopGuard = 0;
         while (!state.playingPlayers.has(state.players[nextPlayerIndex].id)) {
+          loopGuard++;
+          if (loopGuard > state.players.length) {
+            console.error('❌ Infinite loop finding next player in playCard');
+            break;
+          }
           nextPlayerIndex = (nextPlayerIndex + 1) % state.players.length;
         }
-        
+
         set({
           players: updatedPlayers,
           currentTrick: newTrick,
@@ -733,12 +749,16 @@ export const useShnarps = create<ShnarpsState>()(
             
             let scoreChange = 0;
             let isPunt = false;
-            
+
             // Check for punt conditions
-            if (tricksWon === 0) {
-              // Didn't win any tricks: punt (+5)
-              scoreChange = 5;
-              isPunt = true;
+            if (bid === 0) {
+              // Player punted (bid 0): +5 if no tricks, -1 per trick if any
+              if (tricksWon === 0) {
+                scoreChange = 5;
+                isPunt = true;
+              } else {
+                scoreChange = -tricksWon;
+              }
             } else if (isHighestBidder && tricksWon < bid) {
               // Highest bidder didn't meet their bid: punt (+5)
               scoreChange = 5;
@@ -907,21 +927,27 @@ export const useShnarps = create<ShnarpsState>()(
         }
       } else {
         // Continue with next trick - winner of this trick leads the next
-        const winnerIndex = trickWinnerId 
+        const winnerIndex = trickWinnerId
           ? state.players.findIndex(p => p.id === trickWinnerId)
           : (state.dealerIndex + 1) % state.players.length;
-        
-        // Make sure the next player to play is actually playing
+
+        // Make sure the next player to play is actually playing (with loop guard)
         let nextPlayerIndex = winnerIndex;
+        let loopGuard = 0;
         while (!state.playingPlayers.has(state.players[nextPlayerIndex].id)) {
+          loopGuard++;
+          if (loopGuard > state.players.length) {
+            console.error('❌ Infinite loop finding next player in nextTrick');
+            break;
+          }
           nextPlayerIndex = (nextPlayerIndex + 1) % state.players.length;
         }
-        
+
         set({
           currentTrick: [],
           currentPlayerIndex: nextPlayerIndex
         });
-        
+
         // In multiplayer, host broadcasts trick completion to all clients
         if (state.multiplayerMode === 'online' && state.isMultiplayerHost && state.websocket) {
           const newState = get();
@@ -963,8 +989,7 @@ export const useShnarps = create<ShnarpsState>()(
       const playerAvatars = new Map<string, { color: string; icon: string }>();
       const playerNames = new Map<string, string>();
       const playerAI = new Map<string, boolean>();
-      const playerDifficulty = new Map<string, AIDifficulty>();
-      
+
       state.players.forEach(player => {
         playerWallets.set(player.id, player.wallet || 100);
         if (player.avatar) {
@@ -972,9 +997,6 @@ export const useShnarps = create<ShnarpsState>()(
         }
         playerNames.set(player.id, player.name);
         playerAI.set(player.id, player.isAI);
-        if (player.aiDifficulty) {
-          playerDifficulty.set(player.id, player.aiDifficulty);
-        }
       });
       
       // Initialize game
@@ -1180,14 +1202,20 @@ export const useShnarps = create<ShnarpsState>()(
                 currentPlayerIndex: bidderIndex
               });
             } else {
-              // Find first player to lead who is actually playing
+              // Find first player to lead who is actually playing (with loop guard)
               let firstPlayerIndex = (state.dealerIndex + 1) % state.players.length;
+              let loopGuard = 0;
               while (!newPlayingPlayers.has(state.players[firstPlayerIndex].id)) {
+                loopGuard++;
+                if (loopGuard > state.players.length) {
+                  console.error('❌ Infinite loop finding first player in applyGameAction sitpass');
+                  break;
+                }
                 firstPlayerIndex = (firstPlayerIndex + 1) % state.players.length;
               }
-              
+
               console.log(`First player to lead: index ${firstPlayerIndex}, player ${state.players[firstPlayerIndex].name}`);
-              
+
               set({
                 playingPlayers: newPlayingPlayers,
                 mustyPlayers: newMustyPlayers,
@@ -1198,9 +1226,15 @@ export const useShnarps = create<ShnarpsState>()(
             }
           } else {
             let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-            while (state.players[nextPlayerIndex].id === state.highestBidder || 
+            let loopGuard2 = 0;
+            while (state.players[nextPlayerIndex].id === state.highestBidder ||
                    newPlayingPlayers.has(state.players[nextPlayerIndex].id) ||
                    newMustyPlayers.has(state.players[nextPlayerIndex].id)) {
+              loopGuard2++;
+              if (loopGuard2 > state.players.length) {
+                console.error('❌ Infinite loop finding next player in applyGameAction sitpass (next decision)');
+                break;
+              }
               nextPlayerIndex = (nextPlayerIndex + 1) % state.players.length;
             }
             set({
@@ -1323,9 +1357,15 @@ export const useShnarps = create<ShnarpsState>()(
               }, 1500);
             }
           } else {
-            // Move to next playing player
+            // Move to next playing player (with loop guard)
             let nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+            let loopGuard = 0;
             while (!state.playingPlayers.has(state.players[nextPlayerIndex].id)) {
+              loopGuard++;
+              if (loopGuard > state.players.length) {
+                console.error('❌ Infinite loop finding next player in applyGameAction playcard');
+                break;
+              }
               nextPlayerIndex = (nextPlayerIndex + 1) % state.players.length;
             }
             set({
@@ -1336,7 +1376,7 @@ export const useShnarps = create<ShnarpsState>()(
           }
           break;
         }
-        
+
         case 'penalty': {
           // Handle everyone_sat penalty choice
           const { choice } = payload;

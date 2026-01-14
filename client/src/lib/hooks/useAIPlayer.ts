@@ -5,10 +5,10 @@ import { isValidPlay } from '../game/cardUtils';
 import { canPlayerSit } from '../game/gameLogic';
 
 export function useAIPlayer() {
-  const { 
-    gamePhase, 
-    players, 
-    currentPlayerIndex, 
+  const {
+    gamePhase,
+    players,
+    currentPlayerIndex,
     bids,
     placeBid,
     chooseTrumpSuit,
@@ -31,7 +31,7 @@ export function useAIPlayer() {
 
   useEffect(() => {
     const currentPlayer = players[currentPlayerIndex];
-    
+
     if (!currentPlayer || !currentPlayer.isAI) {
       // Clear pending action when it's not AI's turn
       actionPendingRef.current = null;
@@ -44,7 +44,7 @@ export function useAIPlayer() {
       console.log('🌐 Online multiplayer: AI handled by server, skipping client-side AI');
       return;
     }
-    
+
     // CRITICAL: Detect when a new trick has started (completed tricks increased AND current trick is empty)
     // This means the previous trick finished and we're starting fresh
     if (gamePhase === 'hand_play' && currentTrick.length === 0 && completedTricks.length > lastTrickCountRef.current) {
@@ -52,19 +52,19 @@ export function useAIPlayer() {
       actionPendingRef.current = null;
       lastTrickCountRef.current = completedTricks.length;
     }
-    
+
     // CRITICAL: For hand_play phase, use player+trick as the lock key
     // Include trick count so lock resets for each new trick
-    const stateKey = gamePhase === 'hand_play' 
+    const stateKey = gamePhase === 'hand_play'
       ? `${gamePhase}-${currentPlayer.id}-trick${completedTricks.length}`
       : `${gamePhase}-${currentPlayerIndex}-${currentPlayer.id}`;
-    
+
     // If we're already processing an action for this player in this trick, skip
     if (actionPendingRef.current === stateKey) {
       console.log(`AI ${currentPlayer.name} action already pending for this state, skipping`);
       return;
     }
-    
+
     // During hand_play, check if this player already played in current trick
     if (gamePhase === 'hand_play') {
       const hasPlayedInTrick = currentTrick.some(play => play.playerId === currentPlayer.id);
@@ -78,20 +78,18 @@ export function useAIPlayer() {
     // This prevents race conditions where multiple useEffect calls can schedule actions
     actionPendingRef.current = stateKey;
 
-    const difficulty = currentPlayer.aiDifficulty || 'medium';
-
     // Check if any human players are in the game
     const hasHumanInGame = players.some(p => !p.isAI);
-    
+
     // During hand_play, check if any human is actually playing (not sitting)
-    const hasHumanPlaying = gamePhase === 'hand_play' 
+    const hasHumanPlaying = gamePhase === 'hand_play'
       ? players.some(p => !p.isAI && playingPlayers.has(p.id))
       : hasHumanInGame;
-    
+
     // Speed control: instant when simulating (10ms), fast when only bots (100-200ms), normal with humans (300-500ms)
     const baseDelay = isSimulating ? 10 : (hasHumanPlaying ? 300 : 100);
     const randomDelay = isSimulating ? 0 : (hasHumanPlaying ? 200 : 100);
-    
+
     // Add delay to make AI decisions feel more natural
     const aiDelay = setTimeout(() => {
       // Bidding phase
@@ -100,21 +98,20 @@ export function useAIPlayer() {
         const isDealer = currentPlayerIndex === useShnarps.getState().dealerIndex;
         const highestBidderId = useShnarps.getState().highestBidder;
         const aiBid = makeAIBid(
-          currentPlayer.hand, 
-          currentHighestBid, 
-          isDealer, 
+          currentPlayer.hand,
+          currentHighestBid,
+          isDealer,
           players.length,
           currentPlayer.id,
           scores,
-          highestBidderId,
-          difficulty
+          highestBidderId
         );
         placeBid(currentPlayer.id, aiBid);
       }
 
       // Trump selection phase
       else if (gamePhase === 'trump_selection') {
-        const aiTrump = chooseAITrumpSuit(currentPlayer.hand, difficulty);
+        const aiTrump = chooseAITrumpSuit(currentPlayer.hand);
         chooseTrumpSuit(aiTrump);
       }
 
@@ -139,8 +136,7 @@ export function useAIPlayer() {
           highestBid,
           canSit,
           currentScore,
-          scores,
-          difficulty
+          scores
         );
         chooseSitOrPlay(currentPlayer.id, decision);
       }
@@ -152,23 +148,22 @@ export function useAIPlayer() {
         if (hasPlayedInTrick) {
           return; // Already played, don't play again
         }
-        
+
         const playableCards = currentPlayer.hand.filter(card =>
           isValidPlay(card, currentPlayer.hand, currentTrick, trumpSuit)
         );
-        
+
         if (playableCards.length > 0) {
           const cardToPlay = chooseAICardToPlay(
             currentPlayer.hand,
             currentTrick,
             trumpSuit,
-            playableCards,
-            difficulty
+            playableCards
           );
           playCard(currentPlayer.id, cardToPlay);
         }
       }
-      
+
       // Clear the pending flag after action completes
       actionPendingRef.current = null;
     }, baseDelay + Math.random() * randomDelay);

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DollarSign, Trophy, Volume2, Bot, Users } from 'lucide-react';
+import { DollarSign, Trophy, Volume2, Users } from 'lucide-react';
 
 interface SettingsProps {
   open: boolean;
@@ -24,7 +24,6 @@ export function Settings({ open, onClose }: SettingsProps) {
   const [eliminationScore, setEliminationScore] = useState(settings.eliminationScore);
   const [soundEnabled, setSoundEnabled] = useState(settings.soundEnabled);
   const [musicEnabled, setMusicEnabled] = useState(settings.musicEnabled);
-  const [defaultAIDifficulty, setDefaultAIDifficulty] = useState(settings.defaultAIDifficulty);
   const [turnTimeLimit, setTurnTimeLimit] = useState(settings.turnTimeLimit);
   const [autoPlayDisconnected, setAutoPlayDisconnected] = useState(settings.autoPlayDisconnected);
 
@@ -37,7 +36,6 @@ export function Settings({ open, onClose }: SettingsProps) {
       eliminationScore,
       soundEnabled,
       musicEnabled,
-      defaultAIDifficulty,
       turnTimeLimit,
       autoPlayDisconnected
     });
@@ -53,7 +51,6 @@ export function Settings({ open, onClose }: SettingsProps) {
     setEliminationScore(32);
     setSoundEnabled(true);
     setMusicEnabled(true);
-    setDefaultAIDifficulty('hard');
     setTurnTimeLimit(30);
     setAutoPlayDisconnected(true);
   };
@@ -66,7 +63,7 @@ export function Settings({ open, onClose }: SettingsProps) {
         </DialogHeader>
 
         <Tabs defaultValue="stakes" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="stakes">
               <DollarSign className="w-4 h-4 mr-2" />
               Stakes
@@ -82,10 +79,6 @@ export function Settings({ open, onClose }: SettingsProps) {
             <TabsTrigger value="audio">
               <Volume2 className="w-4 h-4 mr-2" />
               Audio
-            </TabsTrigger>
-            <TabsTrigger value="ai">
-              <Bot className="w-4 h-4 mr-2" />
-              AI
             </TabsTrigger>
           </TabsList>
 
@@ -249,26 +242,6 @@ export function Settings({ open, onClose }: SettingsProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="ai" className="space-y-6 mt-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="aiDifficulty" className="text-base text-gray-900">Default AI Difficulty</Label>
-                <Select value={defaultAIDifficulty} onValueChange={(value: any) => setDefaultAIDifficulty(value)}>
-                  <SelectTrigger className="max-w-[200px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="easy">Easy</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="hard">Hard</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">
-                  Default difficulty when adding AI players
-                </p>
-              </div>
-            </div>
-          </TabsContent>
         </Tabs>
 
         <DialogFooter className="gap-2">
