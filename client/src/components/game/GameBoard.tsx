@@ -1,11 +1,38 @@
 import { useShnarps } from '../../lib/stores/useShnarps';
 import PlayerHand from './PlayerHand';
 import Card from './Card';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card as CardType, isValidPlay } from '../../lib/game/cardUtils';
 import { useGameBoardStore } from '../../lib/stores/useGameBoardStore';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+
+// Hook to track window size for responsive layout
+function useWindowSize() {
+  const [size, setSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1024,
+    height: typeof window !== 'undefined' ? window.innerHeight : 768
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return size;
+}
+
+// Score color helper
+function getScoreColor(score: number): string {
+  if (score <= 0) return 'bg-green-500';
+  if (score >= 28) return 'bg-red-500';
+  if (score > 20) return 'bg-orange-500';
+  if (score > 16) return 'bg-yellow-500';
+  return 'bg-blue-500';
+}
 
 export default function GameBoard() {
   const { 
@@ -78,35 +105,44 @@ export default function GameBoard() {
     return counts;
   }, [completedTricks, trumpSuit]);
 
+  const windowSize = useWindowSize();
+  const isMobile = windowSize.width < 640;
+
   // Calculate player positions in a circle, with local player always at bottom
   const playerPositions = useMemo(() => {
     const localPlayerIndex = players.findIndex(p => p.id === localPlayerId);
-    
-    // Check if mobile (window width < 640px)
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    
+
     return players.map((_, index) => {
       // Calculate offset so local player is at bottom (Math.PI/2 = 90 degrees = bottom)
-      const positionIndex = localPlayerIndex >= 0 
-        ? (index - localPlayerIndex + players.length) % players.length 
+      const positionIndex = localPlayerIndex >= 0
+        ? (index - localPlayerIndex + players.length) % players.length
         : index;
-      
+
       // Start at bottom and go counter-clockwise
       const angle = (positionIndex / players.length) * Math.PI * 2 + Math.PI / 2;
-      const radius = 38; // percentage - slightly larger for better spacing
-      
-      // On mobile, move local player (bottom position) higher to avoid browser chrome cutting off cards
+
+      // Adjust radius based on screen size and player count
+      const baseRadius = isMobile ? 35 : 38;
+      const radius = players.length <= 4 ? baseRadius : baseRadius - 2;
+
       let x = 50 + Math.cos(angle) * radius;
       let y = 50 + Math.sin(angle) * radius;
-      
-      // If this is the local player position (bottom) on mobile, shift up by 15%
-      if (isMobile && positionIndex === 0) {
-        y = y - 15; // Move up by 15 percentage points (from ~88% to ~73%)
+
+      // On mobile, adjust positions for better layout
+      if (isMobile) {
+        // Move local player (bottom) up to avoid browser chrome
+        if (positionIndex === 0) {
+          y = y - 12;
+        }
+        // Adjust top players down slightly
+        if (positionIndex === Math.floor(players.length / 2)) {
+          y = y + 4;
+        }
       }
-      
-      return { x, y, angle };
+
+      return { x, y, angle, positionIndex };
     });
-  }, [players.length, players, localPlayerId]);
+  }, [players.length, players, localPlayerId, isMobile]);
 
   if (players.length === 0) {
     return (
@@ -117,29 +153,44 @@ export default function GameBoard() {
   }
 
   return (
-    <div 
-      className="relative w-full h-full pb-44 sm:pb-8"
-      style={{ 
-        paddingBottom: typeof window !== 'undefined' && window.innerWidth < 640 
-          ? 'max(176px, calc(env(safe-area-inset-bottom, 0px) + 140px))' 
-          : undefined 
+    <div
+      className="relative w-full h-full"
+      style={{
+        paddingBottom: isMobile ? 'max(160px, calc(env(safe-area-inset-bottom, 0px) + 130px))' : '2rem'
       }}
     >
-      {/* Game table center */}
+      {/* Game table center - enhanced with gradient and shadow */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-green-700 border-4 sm:border-8 border-green-600 shadow-2xl" />
+        <div className="relative">
+          {/* Outer glow */}
+          <div className="absolute inset-0 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-green-500 opacity-20 blur-xl" />
+          {/* Main table */}
+          <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-green-600 to-green-800 border-4 sm:border-8 border-green-500 shadow-2xl">
+            {/* Table felt texture overlay */}
+            <div className="absolute inset-2 rounded-full bg-gradient-to-br from-green-700/50 to-transparent" />
+          </div>
+        </div>
       </div>
 
-      {/* Trump suit indicator - persistent during hand play */}
-      {trumpSuit && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-full w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shadow-lg border border-gray-300">
-          <p className={`text-2xl sm:text-3xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-600' : 'text-gray-800'}`}>
-            {trumpSuit === 'hearts' ? '♥' : 
-             trumpSuit === 'diamonds' ? '♦' : 
-             trumpSuit === 'clubs' ? '♣' : '♠'}
-          </p>
-        </div>
-      )}
+      {/* Trump suit indicator - enhanced with animation */}
+      <AnimatePresence>
+        {trumpSuit && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
+          >
+            <div className="bg-white rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center shadow-xl border-2 border-gray-200">
+              <span className={`text-3xl sm:text-4xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-500' : 'text-gray-800'}`}>
+                {trumpSuit === 'hearts' ? '♥' :
+                 trumpSuit === 'diamonds' ? '♦' :
+                 trumpSuit === 'clubs' ? '♣' : '♠'}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Current trick cards positioned in front of each player */}
       <AnimatePresence>
@@ -197,141 +248,152 @@ export default function GameBoard() {
         const isPlaying = playingPlayers.has(player.id);
         const isLocalPlayer = player.id === localPlayerId;
         const score = scores.get(player.id) || 16;
+        const playerTricks = tricksWon.get(player.id) || 0;
+        const isBidder = highestBidder === player.id;
+        const playerBid = bids.get(player.id);
 
         return (
-          <div
+          <motion.div
             key={player.id}
-            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
-              !isPlaying && gamePhase === 'hand_play' ? 'opacity-30' : 'opacity-100'
-            }`}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: !isPlaying && gamePhase === 'hand_play' ? 0.4 : 1,
+              scale: 1
+            }}
+            transition={{ duration: 0.3 }}
+            className="absolute transform -translate-x-1/2 -translate-y-1/2"
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
-              zIndex: isLocalPlayer ? 30 : 10,
+              zIndex: isLocalPlayer ? 30 : isCurrentPlayer ? 20 : 10,
             }}
           >
-            <div className="flex flex-col items-center gap-0.5">
-              {/* Player info */}
-              <div className={`
-                px-2 py-0.5 sm:py-1 rounded-lg shadow-md relative
-                ${isCurrentPlayer ? 'bg-yellow-400 text-gray-900' : 'bg-gray-800 text-white'}
-              `}>
-                <div className="flex items-center gap-1">
-                  {/* Dealer chip indicator */}
+            <div className="flex flex-col items-center gap-1">
+              {/* Compact player badge */}
+              <motion.div
+                animate={isCurrentPlayer ? { scale: [1, 1.02, 1] } : {}}
+                transition={{ duration: 1.5, repeat: isCurrentPlayer ? Infinity : 0 }}
+                className={`
+                  relative rounded-xl shadow-lg backdrop-blur-sm overflow-hidden
+                  ${isCurrentPlayer
+                    ? 'ring-2 ring-yellow-400 ring-offset-1 ring-offset-transparent'
+                    : ''
+                  }
+                `}
+              >
+                {/* Main badge content */}
+                <div className={`
+                  px-2 py-1.5 sm:px-3 sm:py-2 flex items-center gap-2
+                  ${isCurrentPlayer
+                    ? 'bg-gradient-to-r from-yellow-400 to-amber-400 text-gray-900'
+                    : 'bg-gray-900/90 text-white'
+                  }
+                `}>
+                  {/* Dealer indicator */}
                   {index === dealerIndex && (
-                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white border-2 border-gray-800 flex items-center justify-center" title="Dealer">
-                      <span className="text-[7px] sm:text-[8px] font-bold text-gray-800">D</span>
+                    <div className="w-5 h-5 rounded-full bg-white border-2 border-gray-700 flex items-center justify-center flex-shrink-0" title="Dealer">
+                      <span className="text-[8px] font-bold text-gray-800">D</span>
                     </div>
                   )}
-                  
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <div>
-                      <p className="text-[10px] sm:text-xs font-semibold whitespace-nowrap">
-                        {player.name.length > 10 ? player.name.substring(0, 10) + '...' : player.name}
-                        {player.isAI && ' 🤖'}
-                      </p>
-                    </div>
-                    <div className={`text-sm sm:text-lg font-bold px-1 sm:px-1.5 py-0.5 rounded ${
-                      score <= 0 ? 'bg-green-600 text-white' : 
-                      score >= 28 ? 'bg-red-600 text-white' : 
-                      score > 16 ? 'bg-orange-500 text-white' : 
-                      'bg-blue-600 text-white'
-                    }`}>
-                      {score}
+
+                  {/* Player name */}
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs sm:text-sm font-semibold truncate max-w-[80px] sm:max-w-[100px]">
+                      {player.name}
+                    </span>
+                    {/* Status indicators row */}
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {player.isAI && (
+                        <span className="text-[9px] opacity-70">AI</span>
+                      )}
+                      {!isPlaying && gamePhase === 'hand_play' && (
+                        <span className="text-[9px] px-1 bg-gray-600 rounded">Out</span>
+                      )}
+                      {player.consecutiveSits >= 2 && gamePhase !== 'hand_play' && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-[9px] px-1 bg-red-500 rounded cursor-help">Musty</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Must play next round (sat out 2+ times)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                   </div>
+
+                  {/* Score badge */}
+                  <div className={`
+                    ${getScoreColor(score)} text-white
+                    text-sm sm:text-base font-bold
+                    w-8 h-8 sm:w-9 sm:h-9 rounded-lg
+                    flex items-center justify-center flex-shrink-0
+                    ${score >= 28 ? 'animate-pulse' : ''}
+                  `}>
+                    {score}
+                  </div>
                 </div>
-                
-                {/* Status badges - compact with tooltips */}
-                {!isPlaying && gamePhase === 'hand_play' && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="text-[10px] bg-gray-600 px-1 py-0.5 rounded mt-0.5 cursor-help">
-                          Sitting
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>This player chose to sit out this round</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+
+                {/* Danger indicator for flicker */}
+                {score >= 28 && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
                 )}
-                {player.consecutiveSits >= 2 && gamePhase !== 'hand_play' && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="text-[10px] bg-red-600 px-1 py-0.5 rounded mt-0.5 cursor-help">
-                          Musty
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Player has sat out 2+ rounds in a row and must play next round</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+              </motion.div>
+
+              {/* Context badges - shown below main badge */}
+              <div className="flex items-center gap-1 flex-wrap justify-center max-w-[120px]">
+                {/* Bidding phase - show bid */}
+                {gamePhase === 'bidding' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`
+                      text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full shadow
+                      ${playerBid !== undefined
+                        ? playerBid === 0
+                          ? 'bg-gray-500 text-white'
+                          : 'bg-yellow-400 text-gray-900'
+                        : 'bg-gray-700 text-gray-300'
+                      }
+                    `}
+                  >
+                    {playerBid !== undefined
+                      ? playerBid === 0 ? 'Pass' : `Bid ${playerBid}`
+                      : '...'}
+                  </motion.div>
+                )}
+
+                {/* Hand play phase - show bidder badge and tricks */}
+                {(gamePhase === 'hand_play' || gamePhase === 'trick_complete') && isPlaying && (
+                  <>
+                    {isBidder && (
+                      <div className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-purple-500 text-white shadow">
+                        Bid {playerBid || 0}
+                      </div>
+                    )}
+                    <div className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500 text-white shadow">
+                      {playerTricks} trick{playerTricks !== 1 ? 's' : ''}
+                    </div>
+                  </>
                 )}
               </div>
 
-              {/* Bid display during bidding phase */}
-              {gamePhase === 'bidding' && (
-                <div className="bg-yellow-400 text-gray-900 px-2 py-0.5 rounded shadow-sm">
-                  <p className="text-[10px] font-bold text-center">
-                    {bids.has(player.id) ? 
-                      (bids.get(player.id) === 0 ? 'Pass' : `Bid: ${bids.get(player.id)}`) : 
-                      '...'}
-                  </p>
-                </div>
-              )}
-
-              {/* Bidder indicator */}
-              {highestBidder === player.id && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
-                <div className="bg-purple-600 text-white px-2 py-0.5 rounded shadow-sm">
-                  <p className="text-[10px] font-bold text-center">
-                    Bid: {bids.get(player.id) || 0}
-                  </p>
-                </div>
-              )}
-
-              {/* Flicker banner for players at 28+ score */}
-              {score >= 28 && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="bg-red-600 text-white px-2 py-0.5 rounded shadow-sm animate-pulse cursor-help">
-                        <p className="text-[10px] font-bold text-center">
-                          FLICKER
-                        </p>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Danger zone! Score 28+ means close to elimination (32+)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-
-              {/* Tricks won counter during hand play */}
-              {(gamePhase === 'hand_play' || gamePhase === 'trick_complete') && isPlaying && (
-                <div className="bg-blue-600 text-white px-2 py-0.5 rounded shadow-sm">
-                  <p className="text-[10px] font-bold text-center">
-                    Tricks: {tricksWon.get(player.id) || 0}
-                  </p>
-                </div>
-              )}
-
-              {/* Player hand - always visible for local player */}
+              {/* Player hand */}
               {(isPlaying || (isLocalPlayer && (gamePhase === 'bidding' || gamePhase === 'sit_pass' || gamePhase === 'trump_selection'))) && (
-                <PlayerHand
-                  cards={player.hand}
-                  isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && isPlaying}
-                  faceUp={isLocalPlayer}
-                  selectedCard={isLocalPlayerTurn && gamePhase === 'hand_play' ? (selectedCard || undefined) : undefined}
-                  onCardClick={isLocalPlayerTurn && gamePhase === 'hand_play' ? handleCardSelect : undefined}
-                />
+                <div className="mt-1">
+                  <PlayerHand
+                    cards={player.hand}
+                    isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && isPlaying}
+                    faceUp={isLocalPlayer}
+                    selectedCard={isLocalPlayerTurn && gamePhase === 'hand_play' ? (selectedCard || undefined) : undefined}
+                    onCardClick={isLocalPlayerTurn && gamePhase === 'hand_play' ? handleCardSelect : undefined}
+                  />
+                </div>
               )}
             </div>
-          </div>
+          </motion.div>
         );
       })}
     </div>

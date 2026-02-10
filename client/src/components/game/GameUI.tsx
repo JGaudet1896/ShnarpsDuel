@@ -15,11 +15,14 @@ import { Settings as SettingsDialog } from '../Settings';
 import { TransactionHistory } from '../TransactionHistory';
 import { TurnTimer } from './TurnTimer';
 import { ErrorBoundary } from './ErrorBoundary';
+import { TurnIndicator, PhaseIndicator } from './TurnIndicator';
+import { Confetti } from './Confetti';
 import { useState, useEffect } from 'react';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
 import { useWallet } from '../../lib/stores/useWallet';
-import { BookOpen, HelpCircle, Settings, X, Wallet, History, Copy, Check } from 'lucide-react';
+import { BookOpen, HelpCircle, Settings, X, Wallet, History, Copy, Check, Trophy, Crown, Medal, Globe } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function GameUI() {
   const { 
@@ -188,74 +191,117 @@ export default function GameUI() {
   if (gamePhase === 'setup') {
     // Show room code for online games
     const isOnline = mode === 'online';
-    console.log('=== SETUP PHASE ===');
-    console.log('gameMode:', gameMode, 'mode:', mode, 'roomCode:', roomCode, 'players:', players.length);
-    
+    const playerCapacity = { current: players.length, min: 4, max: 8 };
+    const canStart = playerCapacity.current >= playerCapacity.min;
+
     return (
-      <div className="fixed inset-0 flex items-start justify-center pt-8 md:pt-16" style={{ zIndex: 9999 }}>
-        <Card className="w-full max-w-md mx-4 shadow-2xl bg-white">
-          <CardHeader>
-            <CardTitle className="text-center">Shnarps</CardTitle>
-            <p className="text-center text-sm text-muted-foreground">
-              {isOnline ? `🌐 Online Room` : '🏠 Local Game'} • {players.length}/8 players
-            </p>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 flex items-start justify-center pt-6 md:pt-12 px-4"
+        style={{ zIndex: 9999 }}
+      >
+        <Card className="w-full max-w-md shadow-2xl bg-white overflow-hidden">
+          <CardHeader className="pb-3 bg-gradient-to-r from-green-600 to-green-700 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl">Shnarps</CardTitle>
+                <p className="text-sm text-green-100 mt-0.5">
+                  {isOnline ? 'Online Room' : 'Local Game'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {isOnline ? (
+                  <Globe className="h-5 w-5 text-green-200" />
+                ) : (
+                  <span className="text-xl">🏠</span>
+                )}
+              </div>
+            </div>
+
+            {/* Room code for online */}
             {isOnline && roomCode && (
-              <div className="mt-2 p-3 bg-blue-50 rounded-lg text-center">
-                <p className="text-xs text-blue-600 font-medium mb-1">Share this code with friends:</p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 p-3 bg-white/10 backdrop-blur rounded-lg"
+              >
+                <p className="text-xs text-green-100 mb-1">Share this code:</p>
                 <div className="flex items-center justify-center gap-2">
-                  <p className="text-2xl font-bold text-blue-700 tracking-wider font-mono">{roomCode}</p>
+                  <p className="text-2xl font-bold tracking-widest font-mono">{roomCode}</p>
                   <button
                     onClick={handleCopyRoomCode}
-                    className="p-1.5 rounded-md hover:bg-blue-100 transition-colors"
+                    className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
                     aria-label={copiedRoomCode ? 'Copied!' : 'Copy room code'}
-                    title={copiedRoomCode ? 'Copied!' : 'Copy room code'}
                   >
                     {copiedRoomCode ? (
-                      <Check className="h-5 w-5 text-green-600" />
+                      <Check className="h-5 w-5" />
                     ) : (
-                      <Copy className="h-5 w-5 text-blue-600" />
+                      <Copy className="h-5 w-5" />
                     )}
                   </button>
                 </div>
-                {copiedRoomCode && (
-                  <p className="text-xs text-green-600 mt-1">Copied to clipboard!</p>
-                )}
-              </div>
+              </motion.div>
             )}
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Current players - scrollable list */}
+
+          <CardContent className="space-y-4 pt-4">
+            {/* Player capacity progress */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-gray-700">Players</span>
+                <span className={`font-bold ${canStart ? 'text-green-600' : 'text-orange-500'}`}>
+                  {playerCapacity.current} / {playerCapacity.max}
+                </span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <motion.div
+                  className={`h-full ${canStart ? 'bg-green-500' : 'bg-orange-400'}`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(playerCapacity.current / playerCapacity.max) * 100}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+              {!canStart && (
+                <p className="text-xs text-orange-600">Need {playerCapacity.min - playerCapacity.current} more player{playerCapacity.min - playerCapacity.current > 1 ? 's' : ''}</p>
+              )}
+            </div>
+
+            {/* Player list */}
             {players.length > 0 && (
               <div className="space-y-2">
-                <h3 className="font-semibold text-sm">Players:</h3>
-                <div className="max-h-48 overflow-y-auto pr-2 space-y-1">
-                  {players.map((player) => (
-                    <div key={player.id} className="flex items-center gap-3 py-1">
+                <div className="max-h-40 overflow-y-auto pr-1 space-y-1.5">
+                  {players.map((player, index) => (
+                    <motion.div
+                      key={player.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+                    >
                       {player.avatar && <Avatar avatar={player.avatar} size="sm" />}
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">
-                              {player.name}
-                              {player.isAI && ' 🤖'}
-                            </span>
-                            {isOnline && !player.isAI && (
-                              <span className={`text-xs ${player.isConnected === false ? 'text-red-500' : 'text-green-500'}`}>
-                                {player.isConnected === false ? '⚠️ Disconnected' : '🟢'}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            Score: {scores.get(player.id) || 16}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-medium truncate">
+                            {player.name}
                           </span>
+                          {player.isAI && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-gray-200 rounded text-gray-600">AI</span>
+                          )}
+                          {player.id === localPlayerId && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 rounded text-blue-600">You</span>
+                          )}
                         </div>
-                        {!player.isAI && (
-                          <div className="text-xs text-green-600 font-medium">
-                            🪙 {(player.wallet || 100).toFixed(2)} coins
+                        {isOnline && !player.isAI && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <div className={`w-1.5 h-1.5 rounded-full ${player.isConnected === false ? 'bg-red-500' : 'bg-green-500'}`} />
+                            <span className="text-[10px] text-gray-500">
+                              {player.isConnected === false ? 'Disconnected' : 'Connected'}
+                            </span>
                           </div>
                         )}
                       </div>
-                      {/* Remove button - only show if not local player and (in local mode OR host in online mode) */}
+                      {/* Remove button */}
                       {player.id !== localPlayerId && (!isOnline || isHost) && (
                         <Button
                           variant="ghost"
@@ -267,27 +313,27 @@ export default function GameUI() {
                               removePlayer(player.id);
                             }
                           }}
-                          className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                          className="h-7 w-7 p-0 hover:bg-red-100 hover:text-red-600"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-3.5 w-3.5" />
                         </Button>
                       )}
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
             )}
-            
+
             {/* Join game - only for local mode */}
             {!isOnline && players.length < 8 && !localPlayer && (
-              <div className="space-y-3">
+              <div className="space-y-3 p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div onClick={() => setShowAvatarCustomizer(true)} className="cursor-pointer">
+                  <div onClick={() => setShowAvatarCustomizer(true)} className="cursor-pointer hover:opacity-80 transition-opacity">
                     <Avatar avatar={currentAvatar} size="md" />
                   </div>
-                  <div className="flex-1 space-y-2">
+                  <div className="flex-1">
                     <Input
-                      placeholder="Enter your name"
+                      placeholder="Your name"
                       value={playerName}
                       onChange={(e) => setPlayerName(e.target.value)}
                       onKeyDown={(e) => {
@@ -296,10 +342,11 @@ export default function GameUI() {
                           setPlayerName('');
                         }
                       }}
+                      className="bg-white"
                     />
                   </div>
                 </div>
-                <Button 
+                <Button
                   onClick={() => {
                     if (playerName.trim()) {
                       joinGame(playerName.trim(), currentAvatar);
@@ -311,72 +358,72 @@ export default function GameUI() {
                 >
                   Join Game
                 </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  Click avatar to customize
-                </p>
               </div>
             )}
-            
-            {/* Add AI - for local or if host in online */}
+
+            {/* Add AI button */}
             {players.length < 8 && (!isOnline || isHost) && (
-              <div className="space-y-2">
-                <Button
-                  onClick={() => {
-                    console.log('🤖 Add AI clicked - isOnline:', isOnline, 'isHost:', isHost);
-                    if (isOnline && isHost) {
-                      // Get random manly name for AI
-                      const aiPlayerNames = [
-                        'Jack', 'Luke', 'Cole', 'Ryan',
-                        'Jake', 'Tyler', 'Chase', 'Dylan',
-                        'Blake', 'Hunter', 'Mason', 'Logan',
-                        'Austin', 'Carter', 'Wyatt', 'Cody',
-                        'Trevor', 'Connor', 'Brett', 'Shane'
-                      ];
-                      const usedNames = players.map(p => p.name);
-                      const availableNames = aiPlayerNames.filter(name => !usedNames.includes(name));
-                      const aiName = availableNames.length > 0
-                        ? availableNames[Math.floor(Math.random() * availableNames.length)]
-                        : `AI ${players.length + 1}`;
-                      console.log('Adding multiplayer AI:', aiName);
-                      addMultiplayerAI(aiName);
-                    } else {
-                      console.log('Adding local AI');
-                      addAIPlayer();
-                    }
-                  }}
-                  variant="outline"
-                  className="w-full"
-                >
-                  🤖 Add AI Player
-                </Button>
-              </div>
-            )}
-            
-            {/* Start game */}
-            {players.length >= 4 && (!isOnline || isHost) && (
-              <Button 
+              <Button
                 onClick={() => {
                   if (isOnline && isHost) {
-                    startMultiplayerGame();
+                    const aiPlayerNames = [
+                      'Jack', 'Luke', 'Cole', 'Ryan', 'Jake', 'Tyler', 'Chase', 'Dylan',
+                      'Blake', 'Hunter', 'Mason', 'Logan', 'Austin', 'Carter', 'Wyatt', 'Cody'
+                    ];
+                    const usedNames = players.map(p => p.name);
+                    const availableNames = aiPlayerNames.filter(name => !usedNames.includes(name));
+                    const aiName = availableNames.length > 0
+                      ? availableNames[Math.floor(Math.random() * availableNames.length)]
+                      : `AI ${players.length + 1}`;
+                    addMultiplayerAI(aiName);
                   } else {
-                    startGame();
+                    addAIPlayer();
                   }
-                }} 
-                className="w-full" 
-                variant="default"
+                }}
+                variant="outline"
+                className="w-full"
               >
-                Start Game ({players.length} players)
+                <span className="mr-2">🤖</span> Add AI Player
               </Button>
             )}
-            
-            {players.length < 4 && (
-              <p className="text-center text-sm text-muted-foreground">
-                Need at least 4 players to start
-              </p>
+
+            {/* Start game button */}
+            {canStart && (!isOnline || isHost) && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Button
+                  onClick={() => {
+                    if (isOnline && isHost) {
+                      startMultiplayerGame();
+                    } else {
+                      startGame();
+                    }
+                  }}
+                  className="w-full h-12 text-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500"
+                >
+                  Start Game
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Back button for local mode */}
+            {!isOnline && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setGameMode('menu');
+                  resetGame();
+                }}
+                className="w-full text-gray-500"
+              >
+                Back to Menu
+              </Button>
             )}
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     );
   }
 
@@ -509,13 +556,14 @@ export default function GameUI() {
     // Get the last round history to see money changes
     const lastRound = history[history.length - 1];
     const moneyChanges = lastRound?.moneyChanges || new Map<string, number>();
-    
+
     // Combine active players and eliminated players for final scoreboard
     const allPlayers = [...players, ...(eliminatedPlayers || [])];
-    
+
     // Find the winner (player with score <= 0)
     const winner = allPlayers.find(p => (scores.get(p.id) ?? 16) <= 0);
-    
+    const isLocalPlayerWinner = winner?.id === localPlayerId;
+
     // Sort players: winner first, then by score (lowest to highest)
     const sortedPlayers = allPlayers
       .map(player => ({
@@ -533,7 +581,7 @@ export default function GameUI() {
         // Then sort by score
         return a.score - b.score;
       });
-    
+
     // Calculate total pot
     const totalPot = sortedPlayers.reduce((sum, p) => {
       if (p.id !== winner?.id) {
@@ -543,91 +591,170 @@ export default function GameUI() {
       }
       return sum;
     }, 0);
-    
+
+    // Get placement icon
+    const getPlacementIcon = (index: number, isWinner: boolean) => {
+      if (isWinner) return <Crown className="h-5 w-5 text-yellow-400" />;
+      if (index === 1) return <Medal className="h-4 w-4 text-gray-400" />;
+      if (index === 2) return <Medal className="h-4 w-4 text-amber-700" />;
+      return null;
+    };
+
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white flex flex-col max-h-[90vh]">
-          <CardHeader className="pb-3 flex-shrink-0">
-            <CardTitle className="text-center text-white text-xl md:text-2xl">Game Over!</CardTitle>
-            <div className="text-center mt-2 mb-3 py-2 bg-green-900 bg-opacity-40 rounded border border-green-500">
-              <p className="text-2xl md:text-3xl font-bold text-green-400">
-                🎉 {winner?.name} 🎉
-              </p>
-              <p className="text-sm text-green-300 mt-1">Winner!</p>
-            </div>
-            <p className="text-center text-sm text-yellow-400 font-bold">
-              Total Pot: ${totalPot.toFixed(2)}
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-3 overflow-y-auto flex-1">
-            <div className="space-y-2 pb-2">
-              <h3 className="font-semibold text-sm text-white sticky top-0 bg-gray-900 py-1 z-10">Final Results:</h3>
-              {sortedPlayers.map((player, index) => {
-                const isWinner = player.id === winner?.id;
-                const pointsCost = player.score * 0.25;
-                const puntsCost = player.punts * 1.0;
-                const totalOwed = pointsCost + puntsCost;
-                
-                return (
-                  <div key={player.id} className={`bg-gray-800 bg-opacity-50 rounded p-2 space-y-1 ${player.isEliminated ? 'opacity-75' : ''}`}>
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-1 truncate max-w-[140px] font-semibold">
-                        {isWinner && <span className="text-yellow-400">👑</span>}
-                        {player.name}
-                        {player.isEliminated && <span className="text-red-400 text-xs ml-1">(Elim)</span>}
-                      </span>
-                      <span className={`font-mono text-sm ${player.score <= 0 ? 'text-green-400' : player.score > 32 ? 'text-red-400' : 'text-gray-200'}`}>
-                        {player.score} pts
-                      </span>
-                    </div>
-                    
-                    <div className="text-xs text-gray-300">
-                      <div className="flex justify-between">
-                        <span>Punts: {player.punts}</span>
-                        <span>🪙 {player.wallet.toFixed(2)} coins</span>
-                      </div>
-                    </div>
-                    
-                    {!isWinner && (
-                      <div className="text-xs border-t border-gray-600 pt-1">
-                        <div className="flex justify-between text-gray-400">
-                          <span>{player.score} pts × 🪙0.25</span>
-                          <span>🪙{pointsCost.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-gray-400">
-                          <span>{player.punts} punts × 🪙1.00</span>
-                          <span>🪙{puntsCost.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between font-semibold text-red-400 border-t border-gray-700 pt-1">
-                          <span>Total Owed:</span>
-                          <span>-🪙{totalOwed.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {isWinner && (
-                      <div className="text-xs border-t border-gray-600 pt-1">
-                        <div className="flex justify-between font-semibold text-green-400">
-                          <span>Won:</span>
-                          <span>+🪙{totalPot.toFixed(2)}</span>
-                        </div>
-                        <div className="text-[10px] text-gray-400 mt-1">
-                          Owes: 🪙0.00
-                        </div>
-                      </div>
-                    )}
+      <>
+        <Confetti isActive={true} duration={5000} />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.8, y: 50, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            transition={{
+              duration: 0.5,
+              delay: 0.2,
+              type: "spring",
+              stiffness: 200,
+              damping: 20
+            }}
+          >
+            <Card className="w-full max-w-md bg-gradient-to-b from-gray-900 to-gray-950 text-white flex flex-col max-h-[90vh] border border-gray-700 shadow-2xl">
+              <CardHeader className="pb-3 flex-shrink-0">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
+                >
+                  <CardTitle className="text-center text-white text-xl md:text-2xl flex items-center justify-center gap-2">
+                    <Trophy className="h-6 w-6 text-yellow-400" />
+                    Game Over!
+                    <Trophy className="h-6 w-6 text-yellow-400" />
+                  </CardTitle>
+                </motion.div>
+
+                <motion.div
+                  initial={{ scale: 0, rotate: -10 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
+                  className="text-center mt-3 mb-3 py-4 bg-gradient-to-r from-yellow-900/40 via-yellow-800/40 to-yellow-900/40 rounded-lg border border-yellow-500/50 shadow-lg"
+                >
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Crown className="h-8 w-8 text-yellow-400" />
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-          <div className="p-6 pt-0 flex-shrink-0">
-            <Button onClick={resetGame} className="w-full h-12 text-base touch-manipulation">
-              {mode === 'online' ? 'Return to Menu' : 'Play Again'}
-            </Button>
-          </div>
-        </Card>
-      </div>
+                  <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200 bg-clip-text text-transparent">
+                    {winner?.name}
+                  </p>
+                  <p className="text-sm text-yellow-300 mt-1 font-medium">
+                    {isLocalPlayerWinner ? 'You won!' : 'Winner!'}
+                  </p>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="text-center"
+                >
+                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-900/50 to-emerald-900/50 px-4 py-2 rounded-full border border-green-500/40">
+                    <span className="text-lg">💰</span>
+                    <span className="text-lg font-bold text-green-400">
+                      ${totalPot.toFixed(2)} pot
+                    </span>
+                  </div>
+                </motion.div>
+              </CardHeader>
+
+              <CardContent className="space-y-3 overflow-y-auto flex-1 px-4">
+                <div className="space-y-2 pb-2">
+                  <h3 className="font-semibold text-sm text-gray-400 sticky top-0 bg-gray-900 py-1 z-10">Final Standings:</h3>
+                  {sortedPlayers.map((player, index) => {
+                    const isWinner = player.id === winner?.id;
+                    const pointsCost = player.score * 0.25;
+                    const puntsCost = player.punts * 1.0;
+                    const totalOwed = pointsCost + puntsCost;
+
+                    return (
+                      <motion.div
+                        key={player.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 1 + index * 0.1 }}
+                        className={`
+                          rounded-lg p-3 space-y-2 transition-all
+                          ${isWinner
+                            ? 'bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border border-yellow-500/30'
+                            : player.isEliminated
+                              ? 'bg-gray-800/30 opacity-60 border border-gray-700/30'
+                              : 'bg-gray-800/50 border border-gray-700/30'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-gray-500 w-6">#{index + 1}</span>
+                            {getPlacementIcon(index, isWinner)}
+                            <span className="font-semibold truncate max-w-[120px]">
+                              {player.name}
+                              {player.isAI && <span className="ml-1 text-xs text-gray-500">AI</span>}
+                            </span>
+                          </div>
+                          <div className={`
+                            font-mono font-bold text-lg px-2 py-0.5 rounded
+                            ${player.score <= 0
+                              ? 'text-green-400 bg-green-900/30'
+                              : player.score > 32
+                                ? 'text-red-400 bg-red-900/30'
+                                : 'text-gray-200'
+                            }
+                          `}>
+                            {player.score}
+                          </div>
+                        </div>
+
+                        {player.isEliminated && (
+                          <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded inline-block">
+                            Eliminated
+                          </div>
+                        )}
+
+                        {isWinner && (
+                          <div className="text-sm bg-green-900/30 rounded p-2 flex justify-between items-center">
+                            <span className="text-green-300">Winnings:</span>
+                            <span className="font-bold text-green-400">+${totalPot.toFixed(2)}</span>
+                          </div>
+                        )}
+
+                        {!isWinner && !player.isEliminated && (
+                          <div className="text-xs text-gray-400 flex justify-between">
+                            <span>Owes to winner:</span>
+                            <span className="text-red-400">-${totalOwed.toFixed(2)}</span>
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5 }}
+                className="p-4 pt-0 flex-shrink-0"
+              >
+                <Button
+                  onClick={resetGame}
+                  className="w-full h-12 text-base touch-manipulation bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
+                >
+                  {mode === 'online' ? 'Return to Menu' : 'Play Again'}
+                </Button>
+              </motion.div>
+            </Card>
+          </motion.div>
+        </motion.div>
+      </>
     );
   }
 
@@ -638,6 +765,10 @@ export default function GameUI() {
   // Phase-specific UI overlays
   return (
     <div>
+      {/* Turn indicator and phase display */}
+      <TurnIndicator />
+      <PhaseIndicator />
+
       {/* Turn timer (multiplayer only) */}
       <TurnTimer />
 

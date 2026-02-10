@@ -28,3 +28,117 @@ canvas {
   height: 100% !important;
   touch-action: none;
 }
+
+/* Game-specific styles */
+@layer components {
+  /* Turn indicator glow effect */
+  .turn-glow {
+    @apply relative;
+  }
+
+  .turn-glow::before {
+    content: '';
+    @apply absolute inset-0 rounded-lg;
+    background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.4), transparent);
+    animation: shimmer 2s linear infinite;
+    background-size: 200% 100%;
+  }
+
+  /* Card selection glow */
+  .card-selected {
+    box-shadow: 0 0 20px 6px rgba(34, 197, 94, 0.6),
+                0 0 40px 12px rgba(34, 197, 94, 0.3),
+                0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-playable:hover {
+    box-shadow: 0 0 15px 4px rgba(59, 130, 246, 0.5),
+                0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    transform: translateY(-4px) scale(1.02);
+  }
+
+  /* Score change flash */
+  .score-increase {
+    animation: score-pop 0.4s ease-out;
+    color: #22c55e !important;
+  }
+
+  .score-decrease {
+    animation: score-pop 0.4s ease-out;
+    color: #ef4444 !important;
+  }
+
+  /* Phase transition overlay */
+  .phase-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.9) 100%);
+    animation: fade-in 0.3s ease-out;
+  }
+
+  /* Trick won celebration */
+  .trick-won {
+    animation: bounce-in 0.5s ease-out;
+  }
+
+  /* Player badge improvements */
+  .player-badge {
+    @apply relative overflow-hidden;
+    backdrop-filter: blur(8px);
+  }
+
+  .player-badge-active {
+    @apply ring-2 ring-yellow-400 ring-offset-2 ring-offset-transparent;
+    animation: turn-pulse 1.5s ease-in-out infinite;
+  }
+
+  /* Improved button states */
+  .game-button {
+    @apply transition-all duration-200 transform;
+  }
+
+  .game-button:active:not(:disabled) {
+    @apply scale-95;
+  }
+
+  .game-button:disabled {
+    @apply opacity-50 cursor-not-allowed saturate-50;
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    .mobile-safe-bottom {
+      padding-bottom: max(env(safe-area-inset-bottom, 20px), 20px);
+    }
+
+    .mobile-action-area {
+      @apply fixed left-0 right-0 px-4;
+      bottom: max(env(safe-area-inset-bottom, 16px), 16px);
+    }
+  }
+
+  /* Confetti styles */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -20px;
+    animation: confetti-fall 3s linear forwards;
+  }
+}
+
+/* Keyframe for shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  .safe-area-inset-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+  }
+}
