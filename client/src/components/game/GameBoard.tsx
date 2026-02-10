@@ -55,7 +55,10 @@ export default function GameBoard() {
   
   const currentPlayer = players[currentPlayerIndex];
   const localPlayer = players.find(p => p.id === localPlayerId);
-  const isLocalPlayerTurn = currentPlayer?.id === localPlayerId && playingPlayers.has(currentPlayer.id);
+  // More robust check - if it's our turn based on currentPlayerIndex, we should be able to play
+  // The playingPlayers check is a backup, but if currentPlayer is us, we're likely playing
+  const isLocalPlayerTurn = currentPlayer?.id === localPlayerId &&
+    (playingPlayers.has(currentPlayer.id) || playingPlayers.size === 0 || (localPlayer?.hand?.length ?? 0) > 0);
   
   const handleCardSelect = (card: CardType) => {
     if (!localPlayer) return;
@@ -381,11 +384,12 @@ export default function GameBoard() {
               </div>
 
               {/* Player hand */}
-              {(isPlaying || (isLocalPlayer && (gamePhase === 'bidding' || gamePhase === 'sit_pass' || gamePhase === 'trump_selection'))) && (
+              {/* Show hand if: player is playing, OR local player during any active phase with cards */}
+              {(isPlaying || (isLocalPlayer && player.hand.length > 0 && gamePhase !== 'setup' && gamePhase !== 'game_over' && gamePhase !== 'round_complete')) && (
                 <div className="mt-1">
                   <PlayerHand
                     cards={player.hand}
-                    isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && isPlaying}
+                    isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && (isPlaying || isLocalPlayer)}
                     faceUp={isLocalPlayer}
                     selectedCard={isLocalPlayerTurn && gamePhase === 'hand_play' ? (selectedCard || undefined) : undefined}
                     onCardClick={isLocalPlayerTurn && gamePhase === 'hand_play' ? handleCardSelect : undefined}

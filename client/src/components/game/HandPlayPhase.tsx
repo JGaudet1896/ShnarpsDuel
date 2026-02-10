@@ -19,7 +19,10 @@ export default function HandPlayPhase() {
   const { selectedCard, setSelectedCard } = useGameBoardStore();
 
   const currentPlayer = players[currentPlayerIndex];
-  const isLocalPlayerTurn = currentPlayer?.id === localPlayerId && playingPlayers.has(currentPlayer.id);
+  const localPlayer = players.find(p => p.id === localPlayerId);
+  // More robust check - if currentPlayer is us and we have cards, we can play
+  const isLocalPlayerTurn = currentPlayer?.id === localPlayerId &&
+    (playingPlayers.has(currentPlayer.id) || playingPlayers.size === 0 || (localPlayer?.hand?.length ?? 0) > 0);
 
   const handleCardPlay = () => {
     if (selectedCard && currentPlayer) {
