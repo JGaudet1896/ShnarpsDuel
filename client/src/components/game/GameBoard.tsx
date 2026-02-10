@@ -111,7 +111,7 @@ export default function GameBoard() {
   const windowSize = useWindowSize();
   const isMobile = windowSize.width < 640;
 
-  // Calculate player positions in a circle, with local player always at bottom
+  // Calculate player positions in a symmetric circle, with local player at bottom
   const playerPositions = useMemo(() => {
     const localPlayerIndex = players.findIndex(p => p.id === localPlayerId);
 
@@ -124,23 +124,14 @@ export default function GameBoard() {
       // Start at bottom and go counter-clockwise
       const angle = (positionIndex / players.length) * Math.PI * 2 + Math.PI / 2;
 
-      // Use smaller radius to keep cards on screen - cards are tall!
-      const baseRadius = isMobile ? 32 : 34;
-      const radius = players.length <= 4 ? baseRadius : baseRadius - 2;
+      // Use consistent radius for symmetry - smaller to keep content on screen
+      const baseRadius = isMobile ? 30 : 32;
+      const radius = players.length <= 4 ? baseRadius : baseRadius - 3;
 
-      let x = 50 + Math.cos(angle) * radius;
-      let y = 50 + Math.sin(angle) * radius;
-
-      // Adjust local player (bottom) position to keep cards visible
-      if (positionIndex === 0) {
-        // Move up significantly to prevent cards from being cut off
-        y = isMobile ? y - 15 : y - 10;
-      }
-
-      // Adjust top players down slightly for balance
-      if (positionIndex === Math.floor(players.length / 2)) {
-        y = y + 3;
-      }
+      // Center point is shifted up slightly to account for bottom cards being taller
+      const centerY = isMobile ? 45 : 46;
+      const x = 50 + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius;
 
       return { x, y, angle, positionIndex };
     });
@@ -156,35 +147,37 @@ export default function GameBoard() {
 
   return (
     <div
-      className="relative w-full h-full"
+      className="relative w-full h-full overflow-hidden"
       style={{
-        paddingBottom: isMobile ? 'max(160px, calc(env(safe-area-inset-bottom, 0px) + 130px))' : '2rem'
+        paddingBottom: isMobile ? 'max(120px, calc(env(safe-area-inset-bottom, 0px) + 100px))' : '1.5rem',
+        paddingTop: isMobile ? '1rem' : '0.5rem'
       }}
     >
       {/* Game table center - enhanced with gradient and shadow */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: isMobile ? '-5%' : '-3%' }}>
         <div className="relative">
           {/* Outer glow */}
-          <div className="absolute inset-0 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-green-500 opacity-20 blur-xl" />
+          <div className="absolute inset-0 w-48 h-48 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-full bg-green-500 opacity-20 blur-xl" />
           {/* Main table */}
-          <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full bg-gradient-to-br from-green-600 to-green-800 border-4 sm:border-8 border-green-500 shadow-2xl">
+          <div className="w-48 h-48 sm:w-64 sm:h-64 lg:w-80 lg:h-80 rounded-full bg-gradient-to-br from-green-600 to-green-800 border-4 lg:border-8 border-green-500 shadow-2xl">
             {/* Table felt texture overlay */}
             <div className="absolute inset-2 rounded-full bg-gradient-to-br from-green-700/50 to-transparent" />
           </div>
         </div>
       </div>
 
-      {/* Trump suit indicator - enhanced with animation */}
+      {/* Trump suit indicator - fixed center of screen */}
       <AnimatePresence>
         {trumpSuit && (gamePhase === 'hand_play' || gamePhase === 'trick_complete') && (
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
+            className="fixed top-1/2 left-1/2 z-10"
+            style={{ transform: 'translate(-50%, -50%)' }}
           >
-            <div className="bg-white rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center shadow-xl border-2 border-gray-200">
-              <span className={`text-3xl sm:text-4xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-500' : 'text-gray-800'}`}>
+            <div className="bg-white rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center shadow-2xl border-4 border-gray-300">
+              <span className={`text-4xl sm:text-5xl ${trumpSuit === 'hearts' || trumpSuit === 'diamonds' ? 'text-red-500' : 'text-gray-800'}`}>
                 {trumpSuit === 'hearts' ? '♥' :
                  trumpSuit === 'diamonds' ? '♦' :
                  trumpSuit === 'clubs' ? '♣' : '♠'}

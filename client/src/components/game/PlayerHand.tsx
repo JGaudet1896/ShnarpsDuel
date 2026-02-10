@@ -21,8 +21,8 @@ export default function PlayerHand({
     return (
       <div className="flex justify-center items-center">
         {cards.slice(0, 5).map((card, index) => (
-          <div key={`${card.suit}-${card.rank}-${index}`} 
-               className={index > 0 ? '-ml-5' : ''}>
+          <div key={`${card.suit}-${card.rank}-${index}`}
+               className={index > 0 ? '-ml-4 sm:-ml-5' : ''}>
             <Card
               card={card}
               faceDown={true}
@@ -35,10 +35,10 @@ export default function PlayerHand({
   }
 
   return (
-    <div className="flex overflow-x-auto pb-2 touch-pan-x scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
+    <div className="flex justify-center max-w-[280px] sm:max-w-[320px] lg:max-w-[400px] overflow-x-auto pb-2 touch-pan-x scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-transparent">
       {cards.map((card, index) => (
-        <div key={`${card.suit}-${card.rank}-${index}`} 
-             className={index > 0 ? '-ml-4 sm:-ml-6' : ''}>
+        <div key={`${card.suit}-${card.rank}-${index}`}
+             className={index > 0 ? '-ml-3 sm:-ml-4 lg:-ml-5' : ''}>
           <Card
             card={card}
             isSelected={selectedCard?.suit === card.suit && selectedCard?.rank === card.rank}

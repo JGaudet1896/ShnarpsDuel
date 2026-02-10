@@ -38,14 +38,14 @@ export default function Card({
         initial={{ opacity: 0, scale: 0.5, rotateY: 180 }}
         animate={{ opacity: 1, scale: 1, rotateY: 0 }}
         transition={{ duration: 0.3, delay }}
-        className={`w-7 h-10 sm:w-8 sm:h-12 rounded shadow-md overflow-hidden ${className}`}
+        className={`w-8 h-11 sm:w-10 sm:h-14 rounded-md shadow-md overflow-hidden ${className}`}
         aria-label="Face-down card"
         role="img"
       >
         {/* Card back design */}
-        <div className="w-full h-full bg-gradient-to-br from-blue-600 to-blue-800 border border-blue-900 flex items-center justify-center">
-          <div className="w-4 h-6 sm:w-5 sm:h-8 rounded-sm bg-blue-500 bg-opacity-30 border border-blue-400 border-opacity-40 flex items-center justify-center">
-            <div className="w-2 h-3 sm:w-3 sm:h-4 rounded-sm bg-gradient-to-br from-blue-300 to-blue-500 opacity-60" />
+        <div className="w-full h-full bg-gradient-to-br from-blue-600 to-blue-800 border-2 border-blue-500 flex items-center justify-center">
+          <div className="w-5 h-7 sm:w-6 sm:h-9 rounded-sm bg-blue-500 bg-opacity-30 border border-blue-400 border-opacity-50 flex items-center justify-center">
+            <div className="w-3 h-4 sm:w-4 sm:h-5 rounded-sm bg-gradient-to-br from-blue-300 to-blue-500 opacity-70" />
           </div>
         </div>
       </motion.div>
@@ -102,7 +102,7 @@ export default function Card({
       aria-pressed={isSelected}
       style={cardStyles}
       className={`
-        w-20 h-28 sm:w-16 sm:h-24 bg-white border-2 rounded-lg
+        w-12 h-[68px] sm:w-14 sm:h-20 lg:w-16 lg:h-24 bg-white border-2 rounded-lg
         flex flex-col relative touch-manipulation transition-colors
         ${isSelected ? 'animate-card-glow z-10' : ''}
         ${isPlayable ? 'cursor-pointer active:scale-95' : 'opacity-50 cursor-not-allowed grayscale-[30%]'}
