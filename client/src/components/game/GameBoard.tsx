@@ -124,23 +124,22 @@ export default function GameBoard() {
       // Start at bottom and go counter-clockwise
       const angle = (positionIndex / players.length) * Math.PI * 2 + Math.PI / 2;
 
-      // Adjust radius based on screen size and player count
-      const baseRadius = isMobile ? 35 : 38;
+      // Use smaller radius to keep cards on screen - cards are tall!
+      const baseRadius = isMobile ? 32 : 34;
       const radius = players.length <= 4 ? baseRadius : baseRadius - 2;
 
       let x = 50 + Math.cos(angle) * radius;
       let y = 50 + Math.sin(angle) * radius;
 
-      // On mobile, adjust positions for better layout
-      if (isMobile) {
-        // Move local player (bottom) up to avoid browser chrome
-        if (positionIndex === 0) {
-          y = y - 12;
-        }
-        // Adjust top players down slightly
-        if (positionIndex === Math.floor(players.length / 2)) {
-          y = y + 4;
-        }
+      // Adjust local player (bottom) position to keep cards visible
+      if (positionIndex === 0) {
+        // Move up significantly to prevent cards from being cut off
+        y = isMobile ? y - 15 : y - 10;
+      }
+
+      // Adjust top players down slightly for balance
+      if (positionIndex === Math.floor(players.length / 2)) {
+        y = y + 3;
       }
 
       return { x, y, angle, positionIndex };
