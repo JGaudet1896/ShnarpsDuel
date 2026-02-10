@@ -1,5 +1,5 @@
 // Helper functions for card validation
-import { Card, Player } from './aiEngine';
+import type { Card, Player, Suit, TrickPlay } from '@shared/types';
 
 export function canPlayerSit(player: Player, bid: number, trumpSuit: string | null): boolean {
   // Cannot sit if bid is 1

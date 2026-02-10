@@ -49,14 +49,17 @@ export default function SitPassPhase() {
         <Button
           onClick={() => handleSitOrPlay('sit')}
           disabled={!canSit}
-          className="min-w-[100px] h-12 touch-manipulation bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-30"
+          aria-label={!canSit ? 'Cannot sit out this round' : 'Sit out this round'}
+          className="min-w-[100px] h-12 touch-manipulation bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-50 disabled:bg-gray-500 disabled:cursor-not-allowed"
         >
           Out
         </Button>
       </div>
       {!canSit && (
-        <p className="text-xs text-orange-400 font-medium text-center mt-2 bg-black bg-opacity-70 px-3 py-1 rounded">
-          Must play{highestBid === 1 ? ' (bid 1)' : trumpSuit === 'spades' ? ' (spades)' : currentPlayer.consecutiveSits >= 2 ? ' (musty)' : ''}
+        <p className="text-xs text-yellow-300 font-medium text-center mt-2 bg-black bg-opacity-80 px-3 py-1.5 rounded" role="alert">
+          {highestBid === 1 ? 'Must play: Bid is 1' :
+           trumpSuit === 'spades' ? 'Must play: Trump is Spades' :
+           currentPlayer.consecutiveSits >= 2 ? 'Must play: You sat out twice (Musty)' : 'Must play this round'}
         </p>
       )}
     </div>

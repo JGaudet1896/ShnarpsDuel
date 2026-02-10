@@ -4,6 +4,15 @@ import { GamePhase, Player, GameState, RoundHistory, calculateGameEndPayout } fr
 import { Card, createDeck, shuffleDeck, dealCards, determineTrickWinner, sortHandBySuit } from "../game/cardUtils";
 import { useSettings } from "./useSettings";
 import { useWallet } from "./useWallet";
+// Import shared types for type safety
+import type {
+  ServerMessage,
+  ErrorMessage,
+  GameStateSyncMessage,
+  GameStateUpdateMessage,
+} from "@shared/messages";
+import type { SerializedGameState, SerializedPlayer } from "@shared/types";
+import { isErrorMessage } from "@shared/messages";
 
 interface ShnarpsState extends GameState {
   localPlayerId: string | null;
@@ -13,6 +22,8 @@ interface ShnarpsState extends GameState {
   isMultiplayerHost: boolean;
   websocket: WebSocket | null;
   turnTimeRemaining: number | null;
+  // Error handling
+  lastError: { code?: string; message: string; timestamp: number } | null;
   // Actions
   initializeGame: () => void;
   setMultiplayerMode: (mode: 'local' | 'online', roomCode?: string | null, isHost?: boolean) => void;
@@ -35,6 +46,9 @@ interface ShnarpsState extends GameState {
   removePlayer: (playerId: string) => void;
   applyGameAction: (action: string, payload: any) => void;
   syncGameState: (gameState: any) => void;
+  // Error handling
+  handleServerError: (error: ErrorMessage) => void;
+  clearError: () => void;
 }
 
 export const useShnarps = create<ShnarpsState>()(
@@ -64,7 +78,8 @@ export const useShnarps = create<ShnarpsState>()(
     round: 1,
     history: [],
     lastTrickWinner: null as string | null,
-    
+    lastError: null,
+
     setMultiplayerMode: (mode, roomCode, isHost) => {
       set({
         multiplayerMode: mode,
@@ -250,7 +265,7 @@ export const useShnarps = create<ShnarpsState>()(
       // Find highest bid and bidder
       let highestBid = 0;
       let highestBidder = null;
-      for (const [id, playerBid] of newBids) {
+      for (const [id, playerBid] of Array.from(newBids.entries())) {
         if (playerBid > highestBid) {
           highestBid = playerBid;
           highestBidder = id;
@@ -741,7 +756,7 @@ export const useShnarps = create<ShnarpsState>()(
           scoreChanges.set(state.highestBidder!, -bidderScore);
         } else {
           // Update scores based on tricks won and bids
-          for (const playerId of state.playingPlayers) {
+          for (const playerId of Array.from(state.playingPlayers)) {
             const tricksWon = tricksWonByPlayer.get(playerId) || 0;
             const bid = state.bids.get(playerId) || 0;
             const currentScore = newScores.get(playerId) || 16;
@@ -1100,13 +1115,13 @@ export const useShnarps = create<ShnarpsState>()(
           // Find highest bid and bidder
           let highestBid = 0;
           let highestBidder = null;
-          for (const [id, playerBid] of newBids) {
+          for (const [id, playerBid] of Array.from(newBids.entries())) {
             if (playerBid > highestBid) {
               highestBid = playerBid;
               highestBidder = id;
             }
           }
-          
+
           // Check if bidding is complete
           const allPlayersBid = state.players.every(player => newBids.has(player.id));
           
@@ -1293,11 +1308,16 @@ export const useShnarps = create<ShnarpsState>()(
             });
             
             // Only the host handles trick completion and broadcasts the next state
-            if (state.isMultiplayerHost) {
-              console.log('Host handling trick completion');
+            // CRITICAL: Only send sync_state for HUMAN card plays, not AI
+            // Server handles AI turns autonomously, sending sync_state would interfere
+            const cardPlayer = state.players.find(p => p.id === playerId);
+            const isAICardPlay = cardPlayer?.isAI === true;
+
+            if (state.isMultiplayerHost && !isAICardPlay) {
+              console.log('Host handling trick completion (human card play)');
               setTimeout(() => {
                 const currentState = get();
-                
+
                 // CRITICAL: Use currentState.completedTricks, not the captured newCompletedTricks
                 if (currentState.completedTricks.length === 5) {
                   // Hand complete - trigger scoring
@@ -1309,11 +1329,11 @@ export const useShnarps = create<ShnarpsState>()(
                   console.log(`🔍 Finding winner of trick. Winner ID: ${trickWinnerId}`);
                   console.log(`🔍 Current players:`, currentState.players.map(p => `${p.name}(${p.id})`));
                   console.log(`🔍 Playing players:`, Array.from(currentState.playingPlayers));
-                  
+
                   let winnerIndex = currentState.players.findIndex(p => p.id === trickWinnerId);
-                  
+
                   console.log(`🔍 findIndex returned: ${winnerIndex}, player at index: ${currentState.players[winnerIndex]?.name}`);
-                  
+
                   // CRITICAL: Ensure winner is actually in playingPlayers
                   // This can fail if player indices don't match playing status
                   if (winnerIndex === -1 || !currentState.playingPlayers.has(currentState.players[winnerIndex]?.id)) {
@@ -1328,9 +1348,9 @@ export const useShnarps = create<ShnarpsState>()(
                     }
                     console.log(`Using index ${winnerIndex} (${currentState.players[winnerIndex]?.name}) instead`);
                   }
-                  
+
                   console.log(`Starting next trick, winner index: ${winnerIndex}, winner: ${currentState.players[winnerIndex]?.name}`);
-                  
+
                   // Broadcast the cleared trick state
                   if (currentState.websocket) {
                     currentState.websocket.send(JSON.stringify({
@@ -1346,8 +1366,8 @@ export const useShnarps = create<ShnarpsState>()(
                       }
                     }));
                   }
-                  
-                  set({ 
+
+                  set({
                     gamePhase: 'hand_play',
                     currentTrick: [],
                     currentPlayerIndex: winnerIndex,
@@ -1355,6 +1375,8 @@ export const useShnarps = create<ShnarpsState>()(
                   });
                 }
               }, 1500);
+            } else if (isAICardPlay) {
+              console.log('AI card play completed trick - server handles state transition');
             }
           } else {
             // Move to next playing player (with loop guard)
@@ -1507,6 +1529,30 @@ export const useShnarps = create<ShnarpsState>()(
         scores: new Map(Object.entries(gameState.scores || {})),
         round: gameState.round
       });
+    },
+
+    // Error handling methods
+    handleServerError: (error: ErrorMessage) => {
+      console.error(`Server error: ${error.code || 'UNKNOWN'} - ${error.message}`);
+      set({
+        lastError: {
+          code: error.code,
+          message: error.message,
+          timestamp: Date.now()
+        }
+      });
+
+      // Auto-clear error after 5 seconds
+      setTimeout(() => {
+        const state = get();
+        if (state.lastError && state.lastError.timestamp <= Date.now() - 4900) {
+          set({ lastError: null });
+        }
+      }, 5000);
+    },
+
+    clearError: () => {
+      set({ lastError: null });
     }
   }))
 );

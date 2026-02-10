@@ -1,20 +1,7 @@
 // Server-side AI decision engine
-// Ported from client/src/lib/game/aiPlayer.ts
+// Uses shared types from @shared/types
 
-export interface Card {
-  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
-  rank: 'A' | 'K' | 'Q' | 'J' | '10' | '9' | '8' | '7' | '6' | '5' | '4' | '3' | '2';
-  value: number;
-}
-
-export interface Player {
-  id: string;
-  name: string;
-  hand: Card[];
-  isActive: boolean;
-  consecutiveSits: number;
-  isAI: boolean;
-}
+import type { Card, Player, Suit, TrickPlay } from '@shared/types';
 
 // Evaluate hand strength (0-5 scale)
 export function evaluateHandStrength(hand: Card[], trumpSuit: string | null): number {

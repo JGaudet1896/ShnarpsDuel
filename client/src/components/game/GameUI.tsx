@@ -14,10 +14,12 @@ import AppWalkthrough from './AppWalkthrough';
 import { Settings as SettingsDialog } from '../Settings';
 import { TransactionHistory } from '../TransactionHistory';
 import { TurnTimer } from './TurnTimer';
+import { ErrorBoundary } from './ErrorBoundary';
 import { useState, useEffect } from 'react';
 import { useMultiplayer } from '../../lib/hooks/useMultiplayer';
 import { useWallet } from '../../lib/stores/useWallet';
-import { BookOpen, HelpCircle, Settings, X, Wallet, History } from 'lucide-react';
+import { BookOpen, HelpCircle, Settings, X, Wallet, History, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function GameUI() {
   const { 
@@ -57,6 +59,22 @@ export default function GameUI() {
     color: '#3B82F6',
     icon: '👤'
   });
+  const [copiedRoomCode, setCopiedRoomCode] = useState(false);
+
+  // Copy room code to clipboard
+  const handleCopyRoomCode = async () => {
+    if (roomCode) {
+      try {
+        await navigator.clipboard.writeText(roomCode);
+        setCopiedRoomCode(true);
+        toast.success('Room code copied!');
+        setTimeout(() => setCopiedRoomCode(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy room code:', err);
+        toast.error('Failed to copy room code');
+      }
+    }
+  };
   
   const isHighestBidder = highestBidder === localPlayerId;
   const localPlayer = players.find(p => p.id === localPlayerId);
@@ -184,7 +202,24 @@ export default function GameUI() {
             {isOnline && roomCode && (
               <div className="mt-2 p-3 bg-blue-50 rounded-lg text-center">
                 <p className="text-xs text-blue-600 font-medium mb-1">Share this code with friends:</p>
-                <p className="text-2xl font-bold text-blue-700 tracking-wider">{roomCode}</p>
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-2xl font-bold text-blue-700 tracking-wider font-mono">{roomCode}</p>
+                  <button
+                    onClick={handleCopyRoomCode}
+                    className="p-1.5 rounded-md hover:bg-blue-100 transition-colors"
+                    aria-label={copiedRoomCode ? 'Copied!' : 'Copy room code'}
+                    title={copiedRoomCode ? 'Copied!' : 'Copy room code'}
+                  >
+                    {copiedRoomCode ? (
+                      <Check className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <Copy className="h-5 w-5 text-blue-600" />
+                    )}
+                  </button>
+                </div>
+                {copiedRoomCode && (
+                  <p className="text-xs text-green-600 mt-1">Copied to clipboard!</p>
+                )}
               </div>
             )}
           </CardHeader>
@@ -396,6 +431,31 @@ export default function GameUI() {
     );
   }
 
+  // Trump selection phase - waiting state for non-bidders
+  if (gamePhase === 'trump_selection' && !isHighestBidder) {
+    const bidder = players.find(p => p.id === highestBidder);
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-md bg-gray-900 bg-opacity-80 text-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-center text-white text-lg md:text-xl">Waiting for Trump</CardTitle>
+            <p className="text-center text-sm text-gray-300">
+              {bidder?.name || 'The bidder'} is choosing the trump suit...
+            </p>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <div className="flex gap-4 text-4xl animate-pulse">
+              <span className="text-red-500">♥</span>
+              <span className="text-red-500">♦</span>
+              <span className="text-white">♣</span>
+              <span className="text-white">♠</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Everyone sat out phase
   if (gamePhase === 'everyone_sat') {
     const bidder = players.find(p => p.id === highestBidder);
@@ -581,16 +641,28 @@ export default function GameUI() {
       {/* Turn timer (multiplayer only) */}
       <TurnTimer />
 
-      {/* Phase-specific overlays */}
-      {gamePhase === 'bidding' && <BiddingPhase />}
-      {gamePhase === 'sit_pass' && <SitPassPhase />}
-      {gamePhase === 'hand_play' && <HandPlayPhase />}
+      {/* Phase-specific overlays with error boundaries */}
+      {gamePhase === 'bidding' && (
+        <ErrorBoundary componentName="Bidding Phase" onReset={() => window.location.reload()}>
+          <BiddingPhase />
+        </ErrorBoundary>
+      )}
+      {gamePhase === 'sit_pass' && (
+        <ErrorBoundary componentName="Sit/Pass Phase" onReset={() => window.location.reload()}>
+          <SitPassPhase />
+        </ErrorBoundary>
+      )}
+      {gamePhase === 'hand_play' && (
+        <ErrorBoundary componentName="Hand Play Phase" onReset={() => window.location.reload()}>
+          <HandPlayPhase />
+        </ErrorBoundary>
+      )}
 
-      {/* Game history */}
-      {gamePhase !== 'setup' && <GameHistory />}
+      {/* Game history - always shown after setup/game_over phases (handled by early returns above) */}
+      <GameHistory />
 
       {/* Eliminated player - Simulate to End option */}
-      {isLocalPlayerEliminated && !isSimulating && gamePhase !== 'game_over' && (
+      {isLocalPlayerEliminated && !isSimulating && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md bg-gray-900 bg-opacity-95 text-white">
             <CardHeader>
@@ -614,8 +686,8 @@ export default function GameUI() {
         </div>
       )}
 
-      {/* Simulating overlay */}
-      {isSimulating && gamePhase !== 'game_over' && (
+      {/* Simulating overlay - game_over already handled by early return above */}
+      {isSimulating && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <Card className="w-full max-w-sm bg-gray-900 bg-opacity-95 text-white">
             <CardContent className="py-8 text-center">

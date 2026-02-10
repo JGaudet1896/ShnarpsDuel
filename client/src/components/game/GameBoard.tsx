@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card as CardType, isValidPlay } from '../../lib/game/cardUtils';
 import { useGameBoardStore } from '../../lib/stores/useGameBoardStore';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export default function GameBoard() {
   const { 
@@ -241,16 +242,34 @@ export default function GameBoard() {
                   </div>
                 </div>
                 
-                {/* Status badges - compact */}
+                {/* Status badges - compact with tooltips */}
                 {!isPlaying && gamePhase === 'hand_play' && (
-                  <div className="text-[10px] bg-gray-600 px-1 py-0.5 rounded mt-0.5">
-                    Sitting
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-[10px] bg-gray-600 px-1 py-0.5 rounded mt-0.5 cursor-help">
+                          Sitting
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>This player chose to sit out this round</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 {player.consecutiveSits >= 2 && gamePhase !== 'hand_play' && (
-                  <div className="text-[10px] bg-red-600 px-1 py-0.5 rounded mt-0.5">
-                    Musty
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="text-[10px] bg-red-600 px-1 py-0.5 rounded mt-0.5 cursor-help">
+                          Musty
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Player has sat out 2+ rounds in a row and must play next round</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
 
@@ -276,11 +295,20 @@ export default function GameBoard() {
 
               {/* Flicker banner for players at 28+ score */}
               {score >= 28 && (
-                <div className="bg-red-600 text-white px-2 py-0.5 rounded shadow-sm animate-pulse">
-                  <p className="text-[10px] font-bold text-center">
-                    FLICKER
-                  </p>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="bg-red-600 text-white px-2 py-0.5 rounded shadow-sm animate-pulse cursor-help">
+                        <p className="text-[10px] font-bold text-center">
+                          FLICKER
+                        </p>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Danger zone! Score 28+ means close to elimination (32+)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
 
               {/* Tricks won counter during hand play */}

@@ -1,11 +1,37 @@
 // Server-side game loop for AI players
 import { makeAIBid, chooseAITrumpSuit, makeAISitPlayDecision, chooseAICardToPlay } from './aiEngine';
 import { canPlayerSit, getPlayableCards } from './cardHelpers';
+import type { Card, Player, GamePhase, Suit, TrickPlay } from '@shared/types';
 
+// GameRoom interface for AI game loop
+// Uses `any` for WebSocket/Timeout types to avoid Node.js type coupling
 export interface GameRoom {
-  roomCode: string;
-  players: Map<string, any>;
-  gameState: any;
+  id: string;
+  players: Map<string, Player & { ws?: any }>;
+  gameState: {
+    gamePhase: GamePhase;
+    currentPlayerIndex: number;
+    dealerIndex: number;
+    deck: Card[];
+    currentTrick: TrickPlay[];
+    completedTricks: TrickPlay[][];
+    bids: Map<string, number>;
+    trumpSuit: Suit | null;
+    highestBidder: string | null;
+    playingPlayers: Set<string>;
+    mustyPlayers: Set<string>;
+    scores: Map<string, number>;
+    round: number;
+  };
+  host: string;
+  createdAt: number;
+  turnTimer?: any;
+  turnTimeLimit: number;
+  turnStartTime?: number;
+  stateLocked: boolean;
+  aiProcessing: boolean;
+  aiTimeouts: Set<any>;
+  stateLockTimeout?: any;
 }
 
 // Import the applyGameAction function from websocket module

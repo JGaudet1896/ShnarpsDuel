@@ -45,7 +45,8 @@ export default function BiddingPhase() {
             key={bid}
             onClick={() => handleBid(bid)}
             disabled={!canBid(bid)}
-            className="min-w-[50px] h-12 touch-manipulation bg-blue-600 hover:bg-blue-700 text-white font-bold disabled:opacity-30"
+            aria-label={`Bid ${bid}${!canBid(bid) ? ' (not available - must bid higher than current bid)' : ''}`}
+            className="min-w-[50px] h-12 touch-manipulation bg-blue-600 hover:bg-blue-700 text-white font-bold disabled:opacity-50 disabled:bg-gray-500 disabled:cursor-not-allowed"
           >
             {bid}
           </Button>

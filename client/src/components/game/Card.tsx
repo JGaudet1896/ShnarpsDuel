@@ -23,13 +23,22 @@ export default function Card({
   const suitColor = getSuitColor(card.suit);
   const suitSymbol = getSuitSymbol(card.suit);
   
+  // Get suit name for accessibility
+  const suitName = card.suit.charAt(0).toUpperCase() + card.suit.slice(1);
+  const rankName = card.rank === 'A' ? 'Ace' :
+                   card.rank === 'K' ? 'King' :
+                   card.rank === 'Q' ? 'Queen' :
+                   card.rank === 'J' ? 'Jack' : card.rank;
+
   if (faceDown) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.5, rotateY: 180 }}
         animate={{ opacity: 1, scale: 1, rotateY: 0 }}
         transition={{ duration: 0.3, delay }}
         className={`w-7 h-10 sm:w-8 sm:h-12 bg-blue-700 border border-blue-900 rounded shadow-md ${className}`}
+        aria-label="Face-down card"
+        role="img"
       >
         <div className="w-full h-full flex items-center justify-center">
           <div className="text-blue-900 text-sm sm:text-base">🂠</div>
@@ -41,16 +50,18 @@ export default function Card({
   return (
     <motion.button
       initial={{ opacity: 0, scale: 0.5, y: -50 }}
-      animate={{ 
-        opacity: 1, 
-        scale: 1, 
-        y: isSelected ? -8 : 0 
+      animate={{
+        opacity: 1,
+        scale: 1,
+        y: isSelected ? -8 : 0
       }}
       whileHover={isPlayable ? { scale: 1.05 } : {}}
       whileTap={isPlayable ? { scale: 0.95 } : {}}
       transition={{ duration: 0.3, delay }}
       onClick={isPlayable ? onClick : undefined}
       disabled={!isPlayable}
+      aria-label={`${rankName} of ${suitName}${isSelected ? ', selected' : ''}${!isPlayable ? ', not playable' : ''}`}
+      aria-pressed={isSelected}
       className={`
         w-20 h-28 sm:w-16 sm:h-24 bg-white border-2 rounded-lg shadow-lg
         flex flex-col relative touch-manipulation

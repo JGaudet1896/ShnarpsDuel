@@ -7,6 +7,8 @@ import GameBoard from "./components/game/GameBoard";
 import GameUI from "./components/game/GameUI";
 import { useShnarps } from "./lib/stores/useShnarps";
 import { useAIPlayer } from "./lib/hooks/useAIPlayer";
+import { Toaster } from "./components/ui/sonner";
+import { ConnectionBanner } from "./components/game/ConnectionBanner";
 
 const queryClient = new QueryClient();
 
@@ -26,8 +28,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="w-screen h-screen bg-gradient-to-br from-green-800 to-green-900 overflow-hidden">
+        <ConnectionBanner />
         <GameBoard />
         <GameUI />
+        <Toaster />
       </div>
     </QueryClientProvider>
   );
