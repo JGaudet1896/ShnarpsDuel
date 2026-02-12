@@ -4,15 +4,13 @@ import { Card as CardType } from '../../lib/game/cardUtils';
 interface PlayerHandProps {
   cards: CardType[];
   isCurrentPlayer: boolean;
-  selectedCard?: CardType;
   onCardClick?: (card: CardType) => void;
   faceUp?: boolean;
 }
 
-export default function PlayerHand({ 
-  cards, 
+export default function PlayerHand({
+  cards,
   isCurrentPlayer,
-  selectedCard,
   onCardClick,
   faceUp = true
 }: PlayerHandProps) {
@@ -41,7 +39,6 @@ export default function PlayerHand({
              className={index > 0 ? '-ml-3 sm:-ml-4 lg:-ml-5' : ''}>
           <Card
             card={card}
-            isSelected={selectedCard?.suit === card.suit && selectedCard?.rank === card.rank}
             isPlayable={isCurrentPlayer}
             onClick={() => isCurrentPlayer && onCardClick?.(card)}
             delay={index * 0.1}

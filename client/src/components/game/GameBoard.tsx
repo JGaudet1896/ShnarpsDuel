@@ -4,7 +4,6 @@ import Card from './Card';
 import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card as CardType, isValidPlay } from '../../lib/game/cardUtils';
-import { useGameBoardStore } from '../../lib/stores/useGameBoardStore';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 // Hook to track window size for responsive layout
@@ -35,10 +34,10 @@ function getScoreColor(score: number): string {
 }
 
 export default function GameBoard() {
-  const { 
-    players, 
-    currentTrick, 
-    gamePhase, 
+  const {
+    players,
+    currentTrick,
+    gamePhase,
     currentPlayerIndex,
     dealerIndex,
     trumpSuit,
@@ -48,23 +47,23 @@ export default function GameBoard() {
     localPlayerId,
     highestBidder,
     lastTrickWinner,
-    completedTricks
+    completedTricks,
+    playCard
   } = useShnarps();
 
-  const { selectedCard, setSelectedCard } = useGameBoardStore();
-  
   const currentPlayer = players[currentPlayerIndex];
   const localPlayer = players.find(p => p.id === localPlayerId);
   // More robust check - if it's our turn based on currentPlayerIndex, we should be able to play
   // The playingPlayers check is a backup, but if currentPlayer is us, we're likely playing
   const isLocalPlayerTurn = currentPlayer?.id === localPlayerId &&
     (playingPlayers.has(currentPlayer.id) || playingPlayers.size === 0 || (localPlayer?.hand?.length ?? 0) > 0);
-  
-  const handleCardSelect = (card: CardType) => {
-    if (!localPlayer) return;
+
+  // Directly play the card when tapped (no confirmation needed)
+  const handleCardPlay = (card: CardType) => {
+    if (!localPlayer || !currentPlayer) return;
     const isValid = isValidPlay(card, localPlayer.hand, currentTrick, trumpSuit);
     if (isValid) {
-      setSelectedCard(card);
+      playCard(currentPlayer.id, card);
     }
   };
 
@@ -383,8 +382,7 @@ export default function GameBoard() {
                     cards={player.hand}
                     isCurrentPlayer={isCurrentPlayer && gamePhase === 'hand_play' && (isPlaying || isLocalPlayer)}
                     faceUp={isLocalPlayer}
-                    selectedCard={isLocalPlayerTurn && gamePhase === 'hand_play' ? (selectedCard || undefined) : undefined}
-                    onCardClick={isLocalPlayerTurn && gamePhase === 'hand_play' ? handleCardSelect : undefined}
+                    onCardClick={isLocalPlayerTurn && gamePhase === 'hand_play' ? handleCardPlay : undefined}
                   />
                 </div>
               )}
